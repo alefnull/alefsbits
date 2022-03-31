@@ -1,0 +1,33 @@
+{
+  "slug": "alefsbits",
+  "name": "alef's bits",
+  "version": "2.0.0",
+  "license": "GPL-3.0-or-later",
+  "brand": "alef's bits",
+  "author": "alefnull",
+  "authorEmail": "",
+  "authorUrl": "https://twitter.com/alefnull",
+  "pluginUrl": "https://github.com/alefnull/alefsbits",
+  "manualUrl": "",
+  "sourceUrl": "https://github.com/alefnull/alefsbits",
+  "donateUrl": "",
+  "changelogUrl": "",
+  "modules": [
+    {
+      "slug": "simplexandhold",
+      "name": "simplex & hold",
+      "description": "sample & hold module using internal simplex noise source",
+      "tags": [
+        "S&H"
+      ]
+    },
+    {
+      "slug": "blank6hp",
+      "name": "blank 6hp",
+      "description": "a simple blank",
+      "tags": [
+        "Blank"
+      ]
+    }
+  ]
+}
