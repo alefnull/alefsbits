@@ -9,6 +9,7 @@ void init(Plugin* p) {
 
 	// Add modules here
 	p->addModel(modelSimplexandhold);
+	p->addModel(modelSimplexvco);
 	p->addModel(modelBlank6hp);
 
 	// Any other plugin initialization may go here.
