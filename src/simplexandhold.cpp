@@ -23,6 +23,7 @@ struct Simplexandhold : Module {
 	dsp::SchmittTrigger trigger;
 	float last_sample = 0.0f;
 	float x = 0.0f;
+	float range = 1.0f;
 
 	Simplexandhold() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -37,7 +38,6 @@ struct Simplexandhold : Module {
 		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
 			// get the desired output range (-1.0 to 1.0, -3.0 to 3.0, -5.0 to 5.0)
 			float range_param = params[RANGE_PARAM].getValue();
-			float range = 1.0f;
 			if (range_param == 0.0f) {
 				range = 1.0f;
 			}
