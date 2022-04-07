@@ -3,8 +3,8 @@
 
 #define MAX_POLY 16
 
-const float SCALE_MAX = 5.5f;
-const float SCALE_MIN = 0.5f;
+const float SCALE_MAX = 3.f;
+const float SCALE_MIN = 0.1f;
 const float DETAIL_MIN = 1.f;
 const float DETAIL_MAX = 8.f;
 
@@ -39,9 +39,9 @@ struct Simplexvco : Module {
 	Simplexvco() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configParam(FREQUENCY_PARAM, -3.f, 3.f, 0.f, "pitch");
-		configParam(X_PARAM, 0.f, 5.f, 2.5f, "x");
-		configParam(Y_PARAM, 0.f, 5.f, 2.5f, "y");
-		configParam(SCALE_PARAM, SCALE_MIN, SCALE_MAX, 2.5f, "scale");
+		configParam(X_PARAM, 0.f, 2.f, 1.f, "x");
+		configParam(Y_PARAM, 0.f, 2.f, 1.f, "y");
+		configParam(SCALE_PARAM, SCALE_MIN, SCALE_MAX, 1.5f, "scale");
 		configParam(DETAIL_PARAM, DETAIL_MIN, DETAIL_MAX, DETAIL_MIN, "detail");
 		configInput(FREQUENCY_INPUT, "frequency");
 		configInput(X_INPUT, "x");
@@ -49,8 +49,8 @@ struct Simplexvco : Module {
 		configInput(SCALE_INPUT, "scale");
 		configInput(DETAIL_INPUT, "detail");
 		configOutput(OUT_OUTPUT, "signal");
-		for (auto i = 0; i < MAX_POLY; i++) {
-			prev_pitch[i] = 0.f;
+		for (auto i = 0; i < MAX_POLY; ++i) {
+			prev_pitch[i] = 999999.f;
 		}
 	}
 
@@ -61,7 +61,8 @@ struct Simplexvco : Module {
 		for (auto c = 0; c < chans; c++) {
 			float pitch = params[FREQUENCY_PARAM].getValue();
 			if (inputs[FREQUENCY_INPUT].isConnected()) {
-				pitch += inputs[FREQUENCY_INPUT].getVoltage(c);
+				pitch += inputs[FREQUENCY_INPUT].getPolyVoltage(c);
+				pitch = clamp(pitch, -3.f, 3.f);
 			}
 			pitch = clamp(pitch, -3.f, 3.f);
 			if (pitch != prev_pitch[c]) {
@@ -70,7 +71,7 @@ struct Simplexvco : Module {
 			}
 			float scale = params[SCALE_PARAM].getValue();
 			if (inputs[SCALE_INPUT].isConnected()) {
-				scale += inputs[SCALE_INPUT].getPolyVoltage(c) / 4.f;
+				scale += inputs[SCALE_INPUT].getPolyVoltage(c) / 5.f;
 				scale = clamp(scale, SCALE_MIN, SCALE_MAX);
 			}
 			float detail = params[DETAIL_PARAM].getValue();
@@ -80,13 +81,13 @@ struct Simplexvco : Module {
 			}
 			float x = params[X_PARAM].getValue();
 			if (inputs[X_INPUT].isConnected()) {
-				x += inputs[X_INPUT].getPolyVoltage(c) / 4.f;
-				x = clamp(x, 0.f, 5.f);
+				x += inputs[X_INPUT].getPolyVoltage(c) / 5.f;
+				x = clamp(x, 0.f, 3.f);
 			}
 			float y = params[Y_PARAM].getValue();
 			if (inputs[Y_INPUT].isConnected()) {
-				y += inputs[Y_INPUT].getPolyVoltage(c) / 4.f;
-				y = clamp(y, 0.f, 5.f);
+				y += inputs[Y_INPUT].getPolyVoltage(c) / 5.f;
+				y = clamp(y, 0.f, 3.f);
 			}
 			osc[c].step(args.sampleTime);
 			float out = osc[c].get_norm_osc(detail, x, y, 0.5f, scale);
