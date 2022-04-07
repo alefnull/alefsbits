@@ -108,19 +108,19 @@ struct SimplexvcoWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<Trimpot>(mm2px(Vec(5.498, 33.666)), module, Simplexvco::FREQUENCY_PARAM));
-		addParam(createParamCentered<Trimpot>(mm2px(Vec(5.498, 50.808)), module, Simplexvco::X_PARAM));
-		addParam(createParamCentered<Trimpot>(mm2px(Vec(5.498, 64.027)), module, Simplexvco::Y_PARAM));
-		addParam(createParamCentered<Trimpot>(mm2px(Vec(5.498, 77.93)), module, Simplexvco::SCALE_PARAM));
-		addParam(createParamCentered<Trimpot>(mm2px(Vec(5.498, 92.8)), module, Simplexvco::DETAIL_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(5.498, 26.85)), module, Simplexvco::FREQUENCY_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(5.498, 43.993)), module, Simplexvco::X_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(5.498, 57.211)), module, Simplexvco::Y_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(5.498, 71.114)), module, Simplexvco::SCALE_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(5.498, 85.985)), module, Simplexvco::DETAIL_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(14.792, 33.666)), module, Simplexvco::FREQUENCY_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(14.792, 50.808)), module, Simplexvco::X_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(14.792, 64.027)), module, Simplexvco::Y_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(14.792, 77.93)), module, Simplexvco::SCALE_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(14.792, 92.8)), module, Simplexvco::DETAIL_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(14.792, 26.85)), module, Simplexvco::FREQUENCY_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(14.792, 43.993)), module, Simplexvco::X_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(14.792, 57.211)), module, Simplexvco::Y_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(14.792, 71.114)), module, Simplexvco::SCALE_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(14.792, 85.985)), module, Simplexvco::DETAIL_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(10.16, 111.388)), module, Simplexvco::OUT_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(10.16, 104.573)), module, Simplexvco::OUT_OUTPUT));
 	}
 };
 
