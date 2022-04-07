@@ -28,6 +28,14 @@
       "tags": [
         "Blank"
       ]
+    },
+    {
+      "slug": "simplexvco",
+      "name": "simplex vco",
+      "description": "a voltage-controlled oscillator based on simplex noise",
+      "tags": [
+        "Oscillator"
+      ]
     }
   ]
 }
