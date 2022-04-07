@@ -35,18 +35,18 @@ struct Simplexandhold : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
+		// get the desired output range (-1.0 to 1.0, -3.0 to 3.0, -5.0 to 5.0)
+		float range_param = params[RANGE_PARAM].getValue();
+		if (range_param == 0.0f) {
+			range = 1.0f;
+		}
+		else if (range_param == 1.0f) {
+			range = 3.0f;
+		}
+		else if (range_param == 2.0f) {
+			range = 5.0f;
+		}
 		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
-			// get the desired output range (-1.0 to 1.0, -3.0 to 3.0, -5.0 to 5.0)
-			float range_param = params[RANGE_PARAM].getValue();
-			if (range_param == 0.0f) {
-				range = 1.0f;
-			}
-			else if (range_param == 1.0f) {
-				range = 3.0f;
-			}
-			else if (range_param == 2.0f) {
-				range = 5.0f;
-			}
 			last_sample = noise.noise(x, 0.0f) * range;
 		}
 		x += args.sampleTime;
