@@ -36,6 +36,15 @@
       "tags": [
         "Oscillator"
       ]
+    },
+    {
+      "slug": "polyrand",
+      "name": "polyrand",
+      "description": "output a random channel of a poly input with a trigger",
+      "tags": [
+        "Utility",
+        "Polyphonic"
+      ]
     }
   ]
 }

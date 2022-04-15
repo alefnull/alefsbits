@@ -11,3 +11,4 @@ extern Plugin* pluginInstance;
 extern Model* modelSimplexandhold;
 extern Model* modelBlank6hp;
 extern Model* modelSimplexvco;
+extern Model* modelPolyrand;
