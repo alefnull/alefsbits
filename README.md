@@ -2,6 +2,10 @@
 
 a small collection of my VCV Rack modules in a single plugin.
 
+## polyrand
+
+a simple module that takes a trigger input and a polyphonic input, and outputs a random channel from that polyphonic input with each trigger, holding it's last output until the next trigger.
+
 ## simplex & hold
 
 a simple sample & hold module using an internal simplex noise source. range parameter sets output range (+/-1, +/-3, or +/-5).
