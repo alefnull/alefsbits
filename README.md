@@ -2,7 +2,7 @@
 
 ![plugin screenshot](/screenshot.png "plugin screenshot")
 
-a small collection of my VCV Rack modules in a single plugin.
+a small collection of my VCV Rack modules in a single plugin. [click here](https://github.com/alefnull/alefsbits/releases) for the latest release.
 
 ## polyrand
 
