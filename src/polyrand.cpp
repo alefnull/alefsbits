@@ -30,14 +30,16 @@ struct Polyrand : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		int channels = inputs[POLY_INPUT].getChannels();
-		if (channels > MAX_POLY) {
-			channels = MAX_POLY;
-		}
-		if (inputs[TRIGGER_INPUT].isConnected()) {
-			if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
-				int chan = random::u32() % channels;
-				last_value = inputs[POLY_INPUT].getVoltage(chan);	
+		if (inputs[TRIGGER_INPUT].isConnected() && inputs[POLY_INPUT].isConnected()) {
+			int channels = inputs[POLY_INPUT].getChannels();
+			if (channels > MAX_POLY) {
+				channels = MAX_POLY;
+			}
+			if (inputs[TRIGGER_INPUT].isConnected()) {
+				if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
+					int chan = random::u32() % channels;
+					last_value = inputs[POLY_INPUT].getVoltage(chan);	
+				}
 			}
 		}
 		outputs[RANDOM_OUTPUT].setVoltage(last_value);
