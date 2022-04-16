@@ -1,5 +1,7 @@
 # alef's bits
 
+![plugin screenshot](/screenshot.png "plugin screenshot")
+
 a small collection of my VCV Rack modules in a single plugin.
 
 ## polyrand
