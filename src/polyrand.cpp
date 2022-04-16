@@ -60,7 +60,7 @@ struct PolyrandWidget : ModuleWidget {
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(5.08, 30.154)), module, Polyrand::TRIGGER_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(5.08, 46.058)), module, Polyrand::POLY_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(5.08, 112.356)), module, Polyrand::RANDOM_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(5.08, 105.127)), module, Polyrand::RANDOM_OUTPUT));
 	}
 };
 
