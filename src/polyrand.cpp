@@ -21,6 +21,7 @@ struct Polyrand : Module {
 
 	dsp::SchmittTrigger trigger;
 	float last_value = 0.0f;
+	int current_channel = 0;
 
 	Polyrand() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -38,10 +39,11 @@ struct Polyrand : Module {
 			if (inputs[TRIGGER_INPUT].isConnected()) {
 				if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
 					int chan = random::u32() % channels;
-					last_value = inputs[POLY_INPUT].getVoltage(chan);	
+					current_channel = chan;
 				}
 			}
 		}
+		last_value = inputs[POLY_INPUT].getVoltage(current_channel);
 		outputs[RANDOM_OUTPUT].setVoltage(last_value);
 	}
 };
