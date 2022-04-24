@@ -36,7 +36,7 @@ struct Simplexandhold : Module {
 
 	void process(const ProcessArgs& args) override {
 		// get the desired output range (-1.0 to 1.0, -3.0 to 3.0, -5.0 to 5.0)
-		float range_param = params[RANGE_PARAM].getValue();
+		double range_param = params[RANGE_PARAM].getValue();
 		if (range_param == 0.0) {
 			range = 1.0;
 		}
