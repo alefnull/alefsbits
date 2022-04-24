@@ -21,13 +21,13 @@ struct Simplexandhold : Module {
 
 	SimplexNoise noise;
 	dsp::SchmittTrigger trigger;
-	float last_sample = 0.0f;
-	float x = 0.0f;
-	float range = 1.0f;
+	double last_sample = 0.0;
+	double x = 0.0;
+	double range = 1.0;
 
 	Simplexandhold() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configParam(RANGE_PARAM, 0.f, 2.f, 0.f, "noise range", "" );
+		configParam(RANGE_PARAM, 0.0, 2.0, 0.0, "noise range", "" );
 		getParamQuantity(RANGE_PARAM)->snapEnabled = true;
 		configInput(TRIGGER_INPUT, "trigger");
 		configOutput(SAMPLE_OUTPUT, "sample");
@@ -37,17 +37,17 @@ struct Simplexandhold : Module {
 	void process(const ProcessArgs& args) override {
 		// get the desired output range (-1.0 to 1.0, -3.0 to 3.0, -5.0 to 5.0)
 		float range_param = params[RANGE_PARAM].getValue();
-		if (range_param == 0.0f) {
-			range = 1.0f;
+		if (range_param == 0.0) {
+			range = 1.0;
 		}
-		else if (range_param == 1.0f) {
-			range = 3.0f;
+		else if (range_param == 1.0) {
+			range = 3.0;
 		}
-		else if (range_param == 2.0f) {
-			range = 5.0f;
+		else if (range_param == 2.0) {
+			range = 5.0;
 		}
 		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
-			last_sample = noise.noise(x, 0.0f) * range;
+			last_sample = noise.noise(x, 0.0) * range;
 		}
 		x += args.sampleTime;
 		outputs[SAMPLE_OUTPUT].setVoltage(last_sample);
