@@ -10,7 +10,7 @@ a simple module that takes a trigger input and a polyphonic input, and outputs a
 
 ## simplex & hold
 
-a simple sample & hold module using an internal simplex noise source. range parameter sets output range (+/-1, +/-3, or +/-5).
+a simple sample & hold module using an internal simplex noise source. range parameter sets output range (+/-1, +/-3, or +/-5). use a polyphonic trigger input to output multiple samples at once.
 
 ## simplex vco (in development)
 
