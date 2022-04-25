@@ -1,6 +1,7 @@
 #include "plugin.hpp"
 #include "inc/SimplexNoise.cpp"
 
+#define MAX_POLY 16
 
 struct Simplexandhold : Module {
 	enum ParamId {
@@ -20,9 +21,9 @@ struct Simplexandhold : Module {
 	};
 
 	SimplexNoise noise;
-	dsp::SchmittTrigger trigger;
-	double last_sample = 0.0;
-	double x = 0.0;
+	dsp::SchmittTrigger trigger[MAX_POLY];
+	double last_sample[MAX_POLY] = {0.0};
+	double x[MAX_POLY] = {0.0};
 	double range = 1.0;
 
 	Simplexandhold() {
@@ -34,6 +35,8 @@ struct Simplexandhold : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
+		int chans = std::max(1, inputs[TRIGGER_INPUT].getChannels());
+		outputs[SAMPLE_OUTPUT].setChannels(chans);
 		// get the desired output range (-1.0 to 1.0, -3.0 to 3.0, -5.0 to 5.0)
 		double range_param = params[RANGE_PARAM].getValue();
 		if (range_param == 0.0) {
@@ -45,11 +48,13 @@ struct Simplexandhold : Module {
 		else if (range_param == 2.0) {
 			range = 5.0;
 		}
-		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
-			last_sample = noise.noise(x, 0.0) * range;
+		for (int c = 0; c < chans; c++) {
+			if (trigger[c].process(inputs[TRIGGER_INPUT].getVoltage(c))) {
+				last_sample[c] = noise.noise(x[c], 0.0) * range;
+			}
+			x[c] += args.sampleTime;
+			outputs[SAMPLE_OUTPUT].setVoltage(last_sample[c], c);
 		}
-		x += args.sampleTime;
-		outputs[SAMPLE_OUTPUT].setVoltage(last_sample);
 	}
 };
 
