@@ -27,8 +27,7 @@ struct Simplexandhold : Module {
 
 	Simplexandhold() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configParam(RANGE_PARAM, 0.0, 2.0, 0.0, "noise range", "" );
-		getParamQuantity(RANGE_PARAM)->snapEnabled = true;
+		configSwitch(RANGE_PARAM, 0, 2, 0, "noise range", {"1", "3", "5"});
 		configInput(TRIGGER_INPUT, "trigger");
 		configOutput(SAMPLE_OUTPUT, "sample");
 		noise.init();
