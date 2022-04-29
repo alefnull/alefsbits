@@ -36,11 +36,9 @@ struct Polyrand : Module {
 			if (channels > MAX_POLY) {
 				channels = MAX_POLY;
 			}
-			if (inputs[TRIGGER_INPUT].isConnected()) {
-				if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
-					int chan = random::u32() % channels;
-					current_channel = chan;
-				}
+			if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
+				int chan = random::u32() % channels;
+				current_channel = chan;
 			}
 		}
 		last_value = inputs[POLY_INPUT].getVoltage(current_channel);
