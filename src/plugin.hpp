@@ -12,3 +12,4 @@ extern Model* modelSimplexandhold;
 extern Model* modelBlank6hp;
 extern Model* modelSimplexvco;
 extern Model* modelPolyrand;
+extern Model* modelNoize;

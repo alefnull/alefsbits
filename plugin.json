@@ -47,6 +47,14 @@
         "Utility",
         "Polyphonic"
       ]
+    },
+    {
+      "slug": "noize",
+      "name": "noize",
+      "description": "noise generator",
+      "tags": [
+        "Noise"
+      ]
     }
   ]
 }
