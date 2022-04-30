@@ -20,7 +20,7 @@ struct Noize : Module {
 
 	Noize() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configParam(DURATION_PARAM, 0.0f, 0.002f, 0.0f, "duration");
+		configParam(DURATION_PARAM, 0.0f, 0.001f, 0.0f, "duration");
 		configInput(DURATION_INPUT, "duration cv");
 		configOutput(NOISE_OUTPUT, "noize");
 	}
