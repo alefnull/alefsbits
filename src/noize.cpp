@@ -33,7 +33,7 @@ struct Noize : Module {
 		duration += inputs[DURATION_INPUT].getVoltage();
 		if (time > duration) {
 			last_value = random::uniform() * 2.0f - 1.0f;
-			time = 0.0f;
+			time = 0;
 		}
 		time++;
 		outputs[NOISE_OUTPUT].setVoltage(last_value * 5.0f);
