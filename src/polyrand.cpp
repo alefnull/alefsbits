@@ -40,8 +40,8 @@ struct Polyrand : Module {
 				int chan = random::u32() % channels;
 				current_channel = chan;
 			}
+			last_value = inputs[POLY_INPUT].getVoltage(current_channel);
 		}
-		last_value = inputs[POLY_INPUT].getVoltage(current_channel);
 		outputs[RANDOM_OUTPUT].setVoltage(last_value);
 	}
 };
