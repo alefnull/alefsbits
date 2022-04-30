@@ -25,9 +25,9 @@
      showgrid="false"
      borderlayer="true"
      inkscape:zoom="1.2810466"
-     inkscape:cx="-15.221929"
+     inkscape:cx="-37.859669"
      inkscape:cy="243.16055"
-     inkscape:current-layer="layer1" />
+     inkscape:current-layer="layer2" />
   <defs
      id="defs2" />
   <g
@@ -99,6 +99,15 @@
          d="m 14.987612,14.404828 q 0,0.350366 -0.347265,0.350366 h -0.992188 q -0.347265,0 -0.347265,-0.350366 V 12.08869 q 0,-0.350366 0.347265,-0.350366 h 0.992188 q 0.347265,0 0.347265,0.350366 v 1.085205 l -0.139526,0.145727 h -1.147217 v 1.091407 h 0.886768 v -0.551905 h 0.399975 z M 14.587637,12.99096 v -0.908471 h -0.886768 v 0.908471 z"
          id="path13946" />
     </g>
+    <rect
+       style="fill:#000000;stroke:#000000;stroke-width:0"
+       id="rect32999"
+       width="12.598748"
+       height="12.185674"
+       x="3.8606257"
+       y="103.06149"
+       ry="2.7441862"
+       rx="3.2972972" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -111,7 +120,7 @@
        cx="10.16"
        cy="27.056328"
        r="3.9242003"
-       inkscape:label="frequency" />
+       inkscape:label="duration" />
     <circle
        style="fill:#00ff00;fill-rule:evenodd;stroke-width:0.264583"
        id="circle13991"
