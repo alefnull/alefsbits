@@ -26,16 +26,19 @@ struct Noize : Module {
 	}
 
 	float last_value = 0.0f;
-	int time = 0;
+	float time = 0.0f;
 
 	void process(const ProcessArgs& args) override {
-		int duration = std::floor(params[DURATION_PARAM].getValue() * args.sampleRate);
-		duration += inputs[DURATION_INPUT].getVoltage();
+		float duration = params[DURATION_PARAM].getValue();
+		if (inputs[DURATION_INPUT].isConnected()) {
+			float cv = rescale(inputs[DURATION_INPUT].getVoltage(), 0.0f, 10.0f, 0.0f, 0.001f);
+			duration = clamp(duration + cv, 0.0f, 0.001f);
+		}
 		if (time > duration) {
 			last_value = random::uniform() * 2.0f - 1.0f;
 			time = 0;
 		}
-		time++;
+		time += args.sampleTime;
 		outputs[NOISE_OUTPUT].setVoltage(last_value * 5.0f);
 	}
 };
@@ -51,7 +54,7 @@ struct NoizeWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(10.16, 27.056)), module, Noize::DURATION_PARAM));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(10.16, 26.056)), module, Noize::DURATION_PARAM));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(10.16, 42.056)), module, Noize::DURATION_INPUT));
 
