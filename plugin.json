@@ -51,7 +51,7 @@
     {
       "slug": "noize",
       "name": "noize",
-      "description": "noise generator",
+      "description": "random noise generator with duration parameter and 0-10V cv input",
       "tags": [
         "Noise"
       ]
