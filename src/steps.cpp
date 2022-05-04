@@ -39,7 +39,7 @@ struct Steps : Module {
 	dsp::PulseGenerator eoc_pulse;
 	dsp::SchmittTrigger clock_trigger;
 	dsp::SchmittTrigger rand_trigger;
-	int step = 1;
+	int step = 0;
 	int steps = 8;
 	float range = 1.0;
 
