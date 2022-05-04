@@ -36,9 +36,9 @@ struct Steps : Module {
 		LIGHTS_LEN
 	};
 
-	dsp::PulseGenerator eocPulse;
-	dsp::SchmittTrigger clockTrigger;
-	dsp::SchmittTrigger randTrigger;
+	dsp::PulseGenerator eoc_pulse;
+	dsp::SchmittTrigger clock_trigger;
+	dsp::SchmittTrigger rand_trigger;
 	int step = 1;
 	int steps = 8;
 	float range = 1.0;
@@ -66,17 +66,17 @@ struct Steps : Module {
 		int steps = params[STEPS_PARAM].getValue();
 		advance_lights(step);
 		
-		if (clockTrigger.process(inputs[CLOCK_INPUT].getVoltage())) {
+		if (clock_trigger.process(inputs[CLOCK_INPUT].getVoltage())) {
 			step++;
 			if (step > steps) {
 				step = 1;
-				eocPulse.trigger(1e-3);
+				eoc_pulse.trigger(1e-3);
 			}
 		}
-		if (randTrigger.process(inputs[RAND_INPUT].getVoltage())) {
+		if (rand_trigger.process(inputs[RAND_INPUT].getVoltage())) {
 			randomize_steps();	
 		}
-		outputs[EOC_OUTPUT].setVoltage(eocPulse.process(args.sampleTime) ? 10.f : 0.f);
+		outputs[EOC_OUTPUT].setVoltage(eoc_pulse.process(args.sampleTime) ? 10.f : 0.f);
 		outputs[CV_OUTPUT].setVoltage(params[step].getValue() * range);
 	}
 
