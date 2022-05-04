@@ -12,6 +12,7 @@ struct Steps : Module {
 		STEP6_PARAM,
 		STEP7_PARAM,
 		STEP8_PARAM,
+		RAND_PARAM,
 		PARAMS_LEN
 	};
 	enum InputId {
@@ -37,8 +38,10 @@ struct Steps : Module {
 	};
 
 	dsp::PulseGenerator eoc_pulse;
+	dsp::PulseGenerator rand_pulse;
 	dsp::SchmittTrigger clock_trigger;
 	dsp::SchmittTrigger rand_trigger;
+	dsp::SchmittTrigger prand_trigger;
 	int step = 0;
 	int steps = 8;
 	float range = 1.0;
@@ -55,6 +58,7 @@ struct Steps : Module {
 		configParam(STEP6_PARAM, -1.f, 1.f, 0.f, "step 6 cv");
 		configParam(STEP7_PARAM, -1.f, 1.f, 0.f, "step 7 cv");
 		configParam(STEP8_PARAM, -1.f, 1.f, 0.f, "step 8 cv");
+		configParam(RAND_PARAM, 0.f, 10.f, 0.f, "randomize steps");
 		configInput(CLOCK_INPUT, "clock");
 		configInput(RAND_INPUT, "random trigger");
 		configOutput(EOC_OUTPUT, "end of cycle");
@@ -80,7 +84,10 @@ struct Steps : Module {
 				eoc_pulse.trigger(1e-3);
 			}
 		}
-		if (rand_trigger.process(inputs[RAND_INPUT].getVoltage())) {
+		if (prand_trigger.process(params[RAND_PARAM].getValue())) {
+			rand_pulse.trigger(1e-3);
+		}
+		if (rand_trigger.process(inputs[RAND_INPUT].getVoltage()) || rand_pulse.process(args.sampleTime)) {
 			randomize_steps();	
 		}
 		outputs[EOC_OUTPUT].setVoltage(eoc_pulse.process(args.sampleTime) ? 10.f : 0.f);
@@ -132,6 +139,8 @@ struct StepsWidget : ModuleWidget {
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.336, 23.545)), module, Steps::CLOCK_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.438, 53.906)), module, Steps::RAND_INPUT));
+
+		addParam(createParamCentered<TL1105>(mm2px(Vec(8.083, 65.500)), module, Steps::RAND_PARAM));
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.235, 86.08)), module, Steps::EOC_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.286, 99.875)), module, Steps::CV_OUTPUT));
