@@ -55,6 +55,14 @@
       "tags": [
         "Noise"
       ]
+    },
+    {
+      "slug": "steps",
+      "name": "steps",
+      "description": "a simple 8 step sequencer with randomize trigger and eoc output",
+      "tags": [
+        "Sequencer"
+      ]
     }
   ]
 }
