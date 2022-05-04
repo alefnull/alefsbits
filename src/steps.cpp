@@ -60,6 +60,13 @@ struct Steps : Module {
 		configOutput(EOC_OUTPUT, "end of cycle");
 		configOutput(CV_OUTPUT, "cv");
 		configLight(STEP1_LIGHT, "step 1");
+		configLight(STEP2_LIGHT, "step 2");
+		configLight(STEP3_LIGHT, "step 3");
+		configLight(STEP4_LIGHT, "step 4");
+		configLight(STEP5_LIGHT, "step 5");
+		configLight(STEP6_LIGHT, "step 6");
+		configLight(STEP7_LIGHT, "step 7");
+		configLight(STEP8_LIGHT, "step 8");
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -91,7 +98,6 @@ struct Steps : Module {
 			lights[STEP1_LIGHT + i - 1].setBrightness(i == step ? 1.f : 0.f);
 		}
 	}
-
 };
 
 
@@ -105,7 +111,7 @@ struct StepsWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(8.261, 34.698)), module, Steps::STEPS_PARAM));
+		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(8.083, 38.726)), module, Steps::STEPS_PARAM));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 23.545)), module, Steps::STEP1_PARAM));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 35.069)), module, Steps::STEP2_PARAM));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 46.593)), module, Steps::STEP3_PARAM));
@@ -115,20 +121,20 @@ struct StepsWidget : ModuleWidget {
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 92.689)), module, Steps::STEP7_PARAM));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 104.213)), module, Steps::STEP8_PARAM));
 
-		addChild(createLightCentered<SmallLight<GreenLight>>(mm2px(Vec(28.099, 23.545)), module, Steps::STEP1_LIGHT));
-		addChild(createLightCentered<SmallLight<GreenLight>>(mm2px(Vec(28.099, 35.069)), module, Steps::STEP2_LIGHT));
-		addChild(createLightCentered<SmallLight<GreenLight>>(mm2px(Vec(28.099, 46.593)), module, Steps::STEP3_LIGHT));
-		addChild(createLightCentered<SmallLight<GreenLight>>(mm2px(Vec(28.099, 58.117)), module, Steps::STEP4_LIGHT));
-		addChild(createLightCentered<SmallLight<GreenLight>>(mm2px(Vec(28.099, 69.641)), module, Steps::STEP5_LIGHT));
-		addChild(createLightCentered<SmallLight<GreenLight>>(mm2px(Vec(28.099, 81.165)), module, Steps::STEP6_LIGHT));
-		addChild(createLightCentered<SmallLight<GreenLight>>(mm2px(Vec(28.099, 92.689)), module, Steps::STEP7_LIGHT));
-		addChild(createLightCentered<SmallLight<GreenLight>>(mm2px(Vec(28.099, 104.213)), module, Steps::STEP8_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 23.545)), module, Steps::STEP1_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 35.069)), module, Steps::STEP2_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 46.593)), module, Steps::STEP3_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 58.117)), module, Steps::STEP4_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 69.641)), module, Steps::STEP5_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 81.165)), module, Steps::STEP6_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 92.689)), module, Steps::STEP7_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 104.213)), module, Steps::STEP8_LIGHT));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.261, 23.545)), module, Steps::CLOCK_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.261, 45.851)), module, Steps::RAND_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.336, 23.545)), module, Steps::CLOCK_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.438, 53.906)), module, Steps::RAND_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.261, 92.689)), module, Steps::EOC_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.261, 104.212)), module, Steps::CV_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.235, 86.08)), module, Steps::EOC_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.286, 99.875)), module, Steps::CV_OUTPUT));
 	}
 
 	void appendContextMenu(Menu* menu) override {
