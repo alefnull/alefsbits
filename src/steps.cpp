@@ -79,10 +79,14 @@ struct Steps : Module {
 
 	void process(const ProcessArgs& args) override {
 		if (reset_trigger.process(inputs[RESET_INPUT].getVoltage())) {
-			reset_queued = true;
+			if (inputs[CLOCK_INPUT].isConnected()) {
+				reset_queued = true;
+			} else {
+				step = 0;
+				advance_lights(1);
+			}	
 		}
 		int steps = params[STEPS_PARAM].getValue();
-		advance_lights(step);
 		
 		if (clock_trigger.process(inputs[CLOCK_INPUT].getVoltage())) {
 			if (reset_queued) {
@@ -90,6 +94,7 @@ struct Steps : Module {
 				reset_queued = false;
 			}
 			step++;
+			advance_lights(step);
 			if (step > steps) {
 				step = 1;
 				eoc_pulse.trigger(1e-3);
