@@ -44,6 +44,7 @@ struct Steps : Module {
 	dsp::SchmittTrigger rand_trigger;
 	dsp::SchmittTrigger prand_trigger;
 	dsp::SchmittTrigger reset_trigger;
+	bool reset_queued = false;
 	int step = 0;
 	int steps = 8;
 	float range = 1.0;
@@ -77,13 +78,17 @@ struct Steps : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		if (reset_trigger.process(inputs[RESET_INPUT].getVoltage())) {
-			step = 0;
+		if (reset_trigger.process(inputs[RESET_INPUT].value)) {
+			reset_queued = true;
 		}
 		int steps = params[STEPS_PARAM].getValue();
 		advance_lights(step);
 		
 		if (clock_trigger.process(inputs[CLOCK_INPUT].getVoltage())) {
+			if (reset_queued) {
+				step = 0;
+				reset_queued = false;
+			}
 			step++;
 			if (step > steps) {
 				step = 1;
