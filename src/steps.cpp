@@ -17,6 +17,7 @@ struct Steps : Module {
 	};
 	enum InputId {
 		CLOCK_INPUT,
+		RESET_INPUT,
 		RAND_INPUT,
 		INPUTS_LEN
 	};
@@ -42,6 +43,7 @@ struct Steps : Module {
 	dsp::SchmittTrigger clock_trigger;
 	dsp::SchmittTrigger rand_trigger;
 	dsp::SchmittTrigger prand_trigger;
+	dsp::SchmittTrigger reset_trigger;
 	int step = 0;
 	int steps = 8;
 	float range = 1.0;
@@ -60,6 +62,7 @@ struct Steps : Module {
 		configParam(STEP8_PARAM, -1.f, 1.f, 0.f, "step 8 cv");
 		configParam(RAND_PARAM, 0.f, 10.f, 0.f, "randomize steps");
 		configInput(CLOCK_INPUT, "clock");
+		configInput(RESET_INPUT, "reset");
 		configInput(RAND_INPUT, "random trigger");
 		configOutput(EOC_OUTPUT, "end of cycle");
 		configOutput(CV_OUTPUT, "cv");
@@ -74,6 +77,9 @@ struct Steps : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
+		if (reset_trigger.process(inputs[RESET_INPUT].getVoltage())) {
+			step = 0;
+		}
 		int steps = params[STEPS_PARAM].getValue();
 		advance_lights(step);
 		
@@ -138,12 +144,13 @@ struct StepsWidget : ModuleWidget {
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 104.213)), module, Steps::STEP8_LIGHT));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.336, 23.545)), module, Steps::CLOCK_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.438, 53.906)), module, Steps::RAND_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.336, 73.069)), module, Steps::RESET_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.336, 53.906)), module, Steps::RAND_INPUT));
 
-		addParam(createParamCentered<TL1105>(mm2px(Vec(8.083, 65.500)), module, Steps::RAND_PARAM));
+		addParam(createParamCentered<TL1105>(mm2px(Vec(8.336, 65.500)), module, Steps::RAND_PARAM));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.235, 86.08)), module, Steps::EOC_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.286, 99.875)), module, Steps::CV_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.336, 89.08)), module, Steps::EOC_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.336, 102.875)), module, Steps::CV_OUTPUT));
 	}
 
 	void appendContextMenu(Menu* menu) override {
