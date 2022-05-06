@@ -63,6 +63,14 @@
       "tags": [
         "Sequencer"
       ]
+    },
+    {
+      "slug": "fibb",
+      "name": "fibb",
+      "description": "a clock divider based on the fibbonacci sequence",
+      "tags": [
+        "Clock modulator"
+      ]
     }
   ]
 }
