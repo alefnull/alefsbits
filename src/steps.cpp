@@ -78,7 +78,7 @@ struct Steps : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		if (reset_trigger.process(inputs[RESET_INPUT].value)) {
+		if (reset_trigger.process(inputs[RESET_INPUT].getVoltage())) {
 			reset_queued = true;
 		}
 		int steps = params[STEPS_PARAM].getValue();
