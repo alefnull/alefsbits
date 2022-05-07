@@ -107,7 +107,7 @@ struct Steps : Module {
 			randomize_steps();	
 		}
 		outputs[EOC_OUTPUT].setVoltage(eoc_pulse.process(args.sampleTime) ? 10.f : 0.f);
-		outputs[CV_OUTPUT].setVoltage(params[step].getValue() * range);
+		outputs[CV_OUTPUT].setVoltage(step == 0 ? 0.f : params[step].getValue());
 	}
 
 	void randomize_steps() {
