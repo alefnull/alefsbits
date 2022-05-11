@@ -94,11 +94,11 @@ struct Steps : Module {
 				reset_queued = false;
 			}
 			step++;
-			advance_lights(step);
 			if (step > steps) {
 				step = 1;
 				eoc_pulse.trigger(1e-3);
 			}
+			advance_lights(step);
 		}
 		if (prand_trigger.process(params[RAND_PARAM].getValue())) {
 			rand_pulse.trigger(1e-3);
