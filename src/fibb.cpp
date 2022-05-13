@@ -7,6 +7,7 @@ struct Fibb : Module {
 	};
 	enum InputId {
 		CLOCK_INPUT,
+		RESET_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
@@ -27,6 +28,7 @@ struct Fibb : Module {
 	};
 
 	dsp::SchmittTrigger clock_trigger;
+	dsp::SchmittTrigger reset_trigger;
 	dsp::ClockDivider div_2;
 	dsp::ClockDivider div_3;
 	dsp::ClockDivider div_5;
@@ -42,6 +44,7 @@ struct Fibb : Module {
 	Fibb() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configInput(CLOCK_INPUT, "clock");
+		configInput(RESET_INPUT, "reset");
 		configOutput(FIBB2_OUTPUT, "clock / 2");
 		configOutput(FIBB3_OUTPUT, "clock / 3");
 		configOutput(FIBB5_OUTPUT, "clock / 5");
@@ -60,6 +63,9 @@ struct Fibb : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
+		if (reset_trigger.process(inputs[RESET_INPUT].getVoltage())) {
+			reset();
+		}
 		clock_high = inputs[CLOCK_INPUT].getVoltage() > 0.0;
 		if (!clock_high) {
 			out_2 = false;
@@ -96,6 +102,21 @@ struct Fibb : Module {
 		outputs[FIBB8_OUTPUT].setVoltage(out_8 && clock_high ? 10.0 : 0.0);
 		outputs[FIBB13_OUTPUT].setVoltage(out_13 && clock_high ? 10.0 : 0.0);
 	}
+
+	void reset() {
+		clock_trigger.reset();
+		div_2.reset();
+		div_3.reset();
+		div_5.reset();
+		div_8.reset();
+		div_13.reset();
+		clock_high = false;
+		out_2 = false;
+		out_3 = false;
+		out_5 = false;
+		out_8 = false;
+		out_13 = false;
+	}
 };
 
 
@@ -109,7 +130,8 @@ struct FibbWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(10.16, 22.719)), module, Fibb::CLOCK_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(5.16, 22.719)), module, Fibb::CLOCK_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(15.16, 22.719)), module, Fibb::RESET_INPUT));
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(9.16, 37.177)), module, Fibb::FIBB2_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(9.16, 53.028)), module, Fibb::FIBB3_OUTPUT));
