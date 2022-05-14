@@ -4,6 +4,14 @@
 
 a small collection of my VCV Rack modules in a single plugin. [click here](https://github.com/alefnull/alefsbits/releases) for the latest release.
 
+## steps
+
+a simple 8-step sequencer with a randomize trigger input and end-of-cycle trigger output. select output range in right-click menu.
+
+## fibb
+
+a simple clock divider based on the Fibbonacci sequence of numbers.
+
 ## noize
 
 a simple random noise generator with a duration parameter and optional 0-10V cv input.
