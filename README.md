@@ -10,7 +10,7 @@ a simple 8-step sequencer with a randomize trigger input and end-of-cycle trigge
 
 ## fibb
 
-a simple clock divider based on the Fibbonacci sequence of numbers.
+a simple clock divider based on the Fibonacci sequence of numbers.
 
 ## noize
 
