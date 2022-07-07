@@ -1,7 +1,7 @@
 #pragma once
 
 #include "plugin.hpp"
-#include "stepspander.hpp"
+// #include "stepspander.hpp"
 
 struct Steps : Module {
 	enum ParamId {
