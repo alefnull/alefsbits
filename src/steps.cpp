@@ -1,140 +1,120 @@
-#include "plugin.hpp"
+#include "steps.hpp"
 
 
-struct Steps : Module {
-	enum ParamId {
-		STEPS_PARAM,
-		STEP1_PARAM,
-		STEP2_PARAM,
-		STEP3_PARAM,
-		STEP4_PARAM,
-		STEP5_PARAM,
-		STEP6_PARAM,
-		STEP7_PARAM,
-		STEP8_PARAM,
-		RAND_PARAM,
-		PARAMS_LEN
-	};
-	enum InputId {
-		CLOCK_INPUT,
-		RESET_INPUT,
-		RAND_INPUT,
-		INPUTS_LEN
-	};
-	enum OutputId {
-		EOC_OUTPUT,
-		CV_OUTPUT,
-		OUTPUTS_LEN
-	};
-	enum LightId {
-		STEP1_LIGHT,
-		STEP2_LIGHT,
-		STEP3_LIGHT,
-		STEP4_LIGHT,
-		STEP5_LIGHT,
-		STEP6_LIGHT,
-		STEP7_LIGHT,
-		STEP8_LIGHT,
-		LIGHTS_LEN
-	};
+void Steps::process(const ProcessArgs& args) {
+	// Stepspander* right_module = static_cast<Stepspander*>(rightExpander.module);
+	// if (right_module) {
+	// 	if (!expanded) {
+	// 		expanded = true;
+	// 		getParamQuantity(STEPS_PARAM)->maxValue = 16.f;
+	// 	}
+	// }
+	// else {
+	// 	if (params[STEPS_PARAM].getValue() > 8.f) {
+	// 		params[STEPS_PARAM].setValue(8.f);
+	// 	}
+	// 	if (expanded) {
+	// 		expanded = false;
+	// 		getParamQuantity(STEPS_PARAM)->maxValue = 8.f;
+	// 	}
+	// }
 
-	dsp::PulseGenerator eoc_pulse;
-	dsp::PulseGenerator rand_pulse;
-	dsp::SchmittTrigger clock_trigger;
-	dsp::SchmittTrigger rand_trigger;
-	dsp::SchmittTrigger prand_trigger;
-	dsp::SchmittTrigger reset_trigger;
-	bool reset_queued = false;
-	int step = 0;
-	int steps = 8;
-	float range = 1.0;
+	steps = params[STEPS_PARAM].getValue();
 
-	Steps() {
-		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configParam(STEPS_PARAM, 1.f, 8.f, 8.f, "steps");
-		getParamQuantity(STEPS_PARAM)->snapEnabled = true;
-		configParam(STEP1_PARAM, -1.f, 1.f, 0.f, "step 1 cv");
-		configParam(STEP2_PARAM, -1.f, 1.f, 0.f, "step 2 cv");
-		configParam(STEP3_PARAM, -1.f, 1.f, 0.f, "step 3 cv");
-		configParam(STEP4_PARAM, -1.f, 1.f, 0.f, "step 4 cv");
-		configParam(STEP5_PARAM, -1.f, 1.f, 0.f, "step 5 cv");
-		configParam(STEP6_PARAM, -1.f, 1.f, 0.f, "step 6 cv");
-		configParam(STEP7_PARAM, -1.f, 1.f, 0.f, "step 7 cv");
-		configParam(STEP8_PARAM, -1.f, 1.f, 0.f, "step 8 cv");
-		configParam(RAND_PARAM, 0.f, 10.f, 0.f, "randomize steps");
-		configInput(CLOCK_INPUT, "clock");
-		configInput(RESET_INPUT, "reset");
-		configInput(RAND_INPUT, "random trigger");
-		configOutput(EOC_OUTPUT, "end of cycle");
-		configOutput(CV_OUTPUT, "cv");
-		configLight(STEP1_LIGHT, "step 1");
-		configLight(STEP2_LIGHT, "step 2");
-		configLight(STEP3_LIGHT, "step 3");
-		configLight(STEP4_LIGHT, "step 4");
-		configLight(STEP5_LIGHT, "step 5");
-		configLight(STEP6_LIGHT, "step 6");
-		configLight(STEP7_LIGHT, "step 7");
-		configLight(STEP8_LIGHT, "step 8");
+	if (reset_trigger.process(inputs[RESET_INPUT].getVoltage())) {
+		if (inputs[CLOCK_INPUT].isConnected()) {
+			reset_queued = true;
+		} else {
+			step = 0;
+			advance_lights(1);
+		}	
 	}
-
-	void process(const ProcessArgs& args) override {
-		if (reset_trigger.process(inputs[RESET_INPUT].getVoltage())) {
-			if (inputs[CLOCK_INPUT].isConnected()) {
-				reset_queued = true;
-			} else {
-				step = 0;
-				advance_lights(1);
-			}	
+	
+	if (clock_trigger.process(inputs[CLOCK_INPUT].getVoltage())) {
+		if (reset_queued) {
+			step = 0;
+			reset_queued = false;
 		}
-		int steps = params[STEPS_PARAM].getValue();
-		
-		if (clock_trigger.process(inputs[CLOCK_INPUT].getVoltage())) {
-			if (reset_queued) {
-				step = 0;
-				reset_queued = false;
-			}
-			step++;
-			if (step > steps) {
-				step = 1;
-				eoc_pulse.trigger(1e-3);
-			}
-			advance_lights(step);
+		step++;
+		if (step > steps) {
+			step = 1;
+			eoc_pulse.trigger(1e-3);
 		}
-		if (prand_trigger.process(params[RAND_PARAM].getValue())) {
-			rand_pulse.trigger(1e-3);
-		}
-		if (rand_trigger.process(inputs[RAND_INPUT].getVoltage()) || rand_pulse.process(args.sampleTime)) {
-			randomize_steps();	
-		}
-		outputs[EOC_OUTPUT].setVoltage(eoc_pulse.process(args.sampleTime) ? 10.f : 0.f);
-		outputs[CV_OUTPUT].setVoltage(step == 0 ? 0.f : params[step].getValue());
+		advance_lights(step);
 	}
+	if (prand_trigger.process(params[RAND_PARAM].getValue())) {
+		rand_pulse.trigger(1e-3);
+	}
+	if (rand_trigger.process(inputs[RAND_INPUT].getVoltage()) || rand_pulse.process(args.sampleTime)) {
+		randomize_steps();
+	}
+	advance_gate_outputs(step);
+	// if (step <= 8) {
+		outputs[CV_OUTPUT].setVoltage(params[STEP1_PARAM + step - 1].getValue());
+	// }
+	// else {
+	// 	outputs[CV_OUTPUT].setVoltage(right_module->params[STEP1_PARAM + step - 8].getValue());
+	// }
+	outputs[EOC_OUTPUT].setVoltage(eoc_pulse.process(args.sampleTime) ? 10.f : 0.f);
+}
 
-	void randomize_steps() {
+void Steps::randomize_steps() {
+	for (int i = 1; i <= steps; i++) {
+		params[STEP1_PARAM + i - 1].setValue(random::uniform() * 2.f - 1.f);
+		// if (right_module) {
+		// 	right_module->params[STEP1_PARAM + i - 1].setValue(random::uniform() * 2.f - 1.f);
+		// }
+	}
+}
+
+void Steps::advance_lights(int step) {
+	for (int i = 1; i <= steps; i++) {
+		lights[STEP1_LIGHT + i - 1].setBrightness(i == step ? 1.f : 0.f);
+		// if (right_module) {
+		// 	right_module->lights[STEP1_LIGHT + i - 1].setBrightness(i + 8 == step ? 1.f : 0.f);
+		// }
+	}
+}
+
+void Steps::advance_gate_outputs(int step) {
+	if (latch) {
 		for (int i = 1; i <= steps; i++) {
-			params[STEP1_PARAM + i - 1].setValue(random::uniform() * 2.f - 1.f);
+			outputs[STEP1_OUTPUT + i - 1].setVoltage(i == step ? 10.f : 0.f);
+			// if (right_module) {
+			// 	right_module->outputs[STEP1_OUTPUT + i - 8 - 1].setVoltage(i + 8 == step ? 10.f : 0.f);
+			// }
 		}
 	}
-
-	void advance_lights(int step) {
+	else {
 		for (int i = 1; i <= steps; i++) {
-			lights[STEP1_LIGHT + i - 1].setBrightness(i == step ? 1.f : 0.f);
+			if (i == step) {
+				// if (right_module) {
+				// 	right_module->step_pulse[i - 1].trigger(1e-3);
+				// }
+				// else {
+					step_pulse[i - 1].trigger(1e-3);
+				// }
+			}
 		}
+		outputs[STEP1_OUTPUT + step - 1].setVoltage(step_pulse[step].process(1e-3) ? 10.f : 0.f);
+		// if (right_module) {
+		// 	right_module->outputs[STEP1_OUTPUT + step - 1].setVoltage(step_pulse[step].process(1e-3) ? 10.f : 0.f);
+		// }
 	}
-};
+}
 
 
 struct StepsWidget : ModuleWidget {
 	StepsWidget(Steps* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/steps.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/steps2.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(8.083, 38.726)), module, Steps::STEPS_PARAM));
+		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(8.083, 35.226)), module, Steps::STEPS_PARAM));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 23.545)), module, Steps::STEP1_PARAM));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 35.069)), module, Steps::STEP2_PARAM));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 46.593)), module, Steps::STEP3_PARAM));
@@ -144,20 +124,29 @@ struct StepsWidget : ModuleWidget {
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 92.689)), module, Steps::STEP7_PARAM));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 104.213)), module, Steps::STEP8_PARAM));
 
-		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 23.545)), module, Steps::STEP1_LIGHT));
-		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 35.069)), module, Steps::STEP2_LIGHT));
-		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 46.593)), module, Steps::STEP3_LIGHT));
-		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 58.117)), module, Steps::STEP4_LIGHT));
-		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 69.641)), module, Steps::STEP5_LIGHT));
-		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 81.165)), module, Steps::STEP6_LIGHT));
-		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 92.689)), module, Steps::STEP7_LIGHT));
-		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(27.5, 104.213)), module, Steps::STEP8_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(28, 23.545)), module, Steps::STEP1_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(28, 35.069)), module, Steps::STEP2_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(28, 46.593)), module, Steps::STEP3_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(28, 58.117)), module, Steps::STEP4_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(28, 69.641)), module, Steps::STEP5_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(28, 81.165)), module, Steps::STEP6_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(28, 92.689)), module, Steps::STEP7_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(28, 104.213)), module, Steps::STEP8_LIGHT));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.336, 23.545)), module, Steps::CLOCK_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.336, 19.545)), module, Steps::CLOCK_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.336, 73.069)), module, Steps::RESET_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.336, 53.906)), module, Steps::RAND_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.336, 50.406)), module, Steps::RAND_INPUT));
 
-		addParam(createParamCentered<TL1105>(mm2px(Vec(8.336, 65.500)), module, Steps::RAND_PARAM));
+		addParam(createParamCentered<TL1105>(mm2px(Vec(8.336, 64.000)), module, Steps::RAND_PARAM));
+
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(37, 23.545)), module, Steps::STEP1_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(37, 35.069)), module, Steps::STEP2_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(37, 46.593)), module, Steps::STEP3_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(37, 58.117)), module, Steps::STEP4_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(37, 69.641)), module, Steps::STEP5_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(37, 81.165)), module, Steps::STEP6_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(37, 92.689)), module, Steps::STEP7_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(37, 104.213)), module, Steps::STEP8_OUTPUT));
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.336, 89.08)), module, Steps::EOC_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.336, 102.875)), module, Steps::CV_OUTPUT));
@@ -178,6 +167,7 @@ struct StepsWidget : ModuleWidget {
 			rangeMenu->addChild(createMenuItem("-/+ 10v", CHECKMARK(module->range == 10), [module]() { module->range = 10; }));
 			menu->addChild(rangeMenu);
 		}));
+		menu->addChild(createMenuItem("Latch", CHECKMARK(module->latch), [module]() { module->latch = !module->latch; }));
 	}
 };
 
