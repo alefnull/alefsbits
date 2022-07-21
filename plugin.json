@@ -32,6 +32,15 @@
       ]
     },
     {
+      "slug": "simplexvco",
+      "name": "simplex vco",
+      "description": "a voltage-controlled oscillator based on simplex noise",
+      "tags": [
+        "Oscillator",
+        "Polyphonic"
+      ]
+    },
+    {
       "slug": "polyrand",
       "name": "polyrand",
       "description": "output a random channel of a poly input with a trigger",
