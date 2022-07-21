@@ -9,7 +9,6 @@ void init(Plugin* p) {
 
 	// Add modules here
 	p->addModel(modelSimplexandhold);
-	p->addModel(modelSimplexvco);
 	p->addModel(modelBlank6hp);
 	p->addModel(modelPolyrand);
 	p->addModel(modelNoize);
