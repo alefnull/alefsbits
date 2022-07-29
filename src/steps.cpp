@@ -34,23 +34,28 @@ void Steps::process(const ProcessArgs& args) {
 	}
 	advance_gate_outputs(step);
 
-	switch(range) {
-		case 10:
-			outputs[CV_OUTPUT].setVoltage(params[STEP1_PARAM + step - 1].getValue() * 10.0);
-			break;
-		case 5:
-			outputs[CV_OUTPUT].setVoltage(params[STEP1_PARAM + step - 1].getValue() * 5.0);
-			break;
-		case 3:
-			outputs[CV_OUTPUT].setVoltage(params[STEP1_PARAM + step - 1].getValue() * 3.0);
-			break;
-		case 1:
-		default:
-			outputs[CV_OUTPUT].setVoltage(params[STEP1_PARAM + step - 1].getValue());
-			break;
+	if (inputs[CLOCK_INPUT].isConnected()) {
+		float cv_out = params[STEP1_PARAM + step - 1].getValue();
+		switch(range) {
+			case 10:
+				outputs[CV_OUTPUT].setVoltage(cv_out * 10);;
+				break;
+			case 5:
+				outputs[CV_OUTPUT].setVoltage(cv_out * 5);;
+				break;
+			case 3:
+				outputs[CV_OUTPUT].setVoltage(cv_out * 3);;
+				break;
+			case 1:
+			default:
+				outputs[CV_OUTPUT].setVoltage(cv_out);
+				break;
+		}
+		outputs[EOC_OUTPUT].setVoltage(eoc_pulse.process(args.sampleTime) ? 10.f : 0.f);
+	} else {
+		outputs[CV_OUTPUT].setVoltage(0.f);
+		outputs[EOC_OUTPUT].setVoltage(0.f);
 	}
-
-	outputs[EOC_OUTPUT].setVoltage(eoc_pulse.process(args.sampleTime) ? 10.f : 0.f);
 }
 
 void Steps::randomize_steps() {
