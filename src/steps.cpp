@@ -33,7 +33,23 @@ void Steps::process(const ProcessArgs& args) {
 		randomize_steps();
 	}
 	advance_gate_outputs(step);
-	outputs[CV_OUTPUT].setVoltage(params[STEP1_PARAM + step - 1].getValue());
+
+	switch(range) {
+		case 10:
+			outputs[CV_OUTPUT].setVoltage(params[STEP1_PARAM + step - 1].getValue() * 10.0);
+			break;
+		case 5:
+			outputs[CV_OUTPUT].setVoltage(params[STEP1_PARAM + step - 1].getValue() * 5.0);
+			break;
+		case 3:
+			outputs[CV_OUTPUT].setVoltage(params[STEP1_PARAM + step - 1].getValue() * 3.0);
+			break;
+		case 1:
+		default:
+			outputs[CV_OUTPUT].setVoltage(params[STEP1_PARAM + step - 1].getValue());
+			break;
+	}
+
 	outputs[EOC_OUTPUT].setVoltage(eoc_pulse.process(args.sampleTime) ? 10.f : 0.f);
 }
 

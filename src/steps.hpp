@@ -60,7 +60,7 @@ struct Steps : Module {
 	bool expanded = false;
 	int step = 0;
 	int steps = 8;
-	float range = 1.0;
+	int range = 1;
 
 	Steps() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
