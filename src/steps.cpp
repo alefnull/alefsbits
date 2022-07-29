@@ -2,22 +2,6 @@
 
 
 void Steps::process(const ProcessArgs& args) {
-	// Stepspander* right_module = static_cast<Stepspander*>(rightExpander.module);
-	// if (right_module) {
-	// 	if (!expanded) {
-	// 		expanded = true;
-	// 		getParamQuantity(STEPS_PARAM)->maxValue = 16.f;
-	// 	}
-	// }
-	// else {
-	// 	if (params[STEPS_PARAM].getValue() > 8.f) {
-	// 		params[STEPS_PARAM].setValue(8.f);
-	// 	}
-	// 	if (expanded) {
-	// 		expanded = false;
-	// 		getParamQuantity(STEPS_PARAM)->maxValue = 8.f;
-	// 	}
-	// }
 
 	steps = params[STEPS_PARAM].getValue();
 
@@ -49,30 +33,19 @@ void Steps::process(const ProcessArgs& args) {
 		randomize_steps();
 	}
 	advance_gate_outputs(step);
-	// if (step <= 8) {
-		outputs[CV_OUTPUT].setVoltage(params[STEP1_PARAM + step - 1].getValue());
-	// }
-	// else {
-	// 	outputs[CV_OUTPUT].setVoltage(right_module->params[STEP1_PARAM + step - 8].getValue());
-	// }
+	outputs[CV_OUTPUT].setVoltage(params[STEP1_PARAM + step - 1].getValue());
 	outputs[EOC_OUTPUT].setVoltage(eoc_pulse.process(args.sampleTime) ? 10.f : 0.f);
 }
 
 void Steps::randomize_steps() {
 	for (int i = 1; i <= steps; i++) {
 		params[STEP1_PARAM + i - 1].setValue(random::uniform() * 2.f - 1.f);
-		// if (right_module) {
-		// 	right_module->params[STEP1_PARAM + i - 1].setValue(random::uniform() * 2.f - 1.f);
-		// }
 	}
 }
 
 void Steps::advance_lights(int step) {
 	for (int i = 1; i <= steps; i++) {
 		lights[STEP1_LIGHT + i - 1].setBrightness(i == step ? 1.f : 0.f);
-		// if (right_module) {
-		// 	right_module->lights[STEP1_LIGHT + i - 1].setBrightness(i + 8 == step ? 1.f : 0.f);
-		// }
 	}
 }
 
@@ -80,26 +53,15 @@ void Steps::advance_gate_outputs(int step) {
 	if (latch) {
 		for (int i = 1; i <= steps; i++) {
 			outputs[STEP1_OUTPUT + i - 1].setVoltage(i == step ? 10.f : 0.f);
-			// if (right_module) {
-			// 	right_module->outputs[STEP1_OUTPUT + i - 8 - 1].setVoltage(i + 8 == step ? 10.f : 0.f);
-			// }
 		}
 	}
 	else {
 		for (int i = 1; i <= steps; i++) {
 			if (i == step) {
-				// if (right_module) {
-				// 	right_module->step_pulse[i - 1].trigger(1e-3);
-				// }
-				// else {
-					step_pulse[i - 1].trigger(1e-3);
-				// }
+				step_pulse[i - 1].trigger(1e-3);
 			}
 		}
 		outputs[STEP1_OUTPUT + step - 1].setVoltage(step_pulse[step].process(1e-3) ? 10.f : 0.f);
-		// if (right_module) {
-		// 	right_module->outputs[STEP1_OUTPUT + step - 1].setVoltage(step_pulse[step].process(1e-3) ? 10.f : 0.f);
-		// }
 	}
 }
 
