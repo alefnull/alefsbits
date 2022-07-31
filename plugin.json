@@ -65,6 +65,14 @@
       "tags": [
         "Clock modulator"
       ]
+    },
+    {
+      "slug": "octsclr",
+      "name": "oct sclr",
+      "description": "scales voltage to specified octave range",
+      "tags": [
+        "Utility"
+      ]
     }
   ]
 }

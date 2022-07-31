@@ -14,3 +14,4 @@ extern Model* modelPolyrand;
 extern Model* modelNoize;
 extern Model* modelSteps;
 extern Model* modelFibb;
+extern Model* modelOctsclr;
