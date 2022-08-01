@@ -59,7 +59,7 @@ void Steps::process(const ProcessArgs& args) {
 }
 
 void Steps::randomize_steps() {
-	for (int i = 1; i <= steps; i++) {
+	for (int i = 1; i <= PARAMS_LEN - 2; i++) {
 		params[STEP1_PARAM + i - 1].setValue(random::uniform() * 2.f - 1.f);
 	}
 }
@@ -90,7 +90,7 @@ void Steps::advance_gate_outputs(int step) {
 struct StepsWidget : ModuleWidget {
 	StepsWidget(Steps* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/steps2.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/steps.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));

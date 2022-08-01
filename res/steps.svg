@@ -2,13 +2,13 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="30.48mm"
+   width="45.720001mm"
    height="128.5mm"
-   viewBox="0 0 30.48 128.5"
+   viewBox="0 0 45.720002 128.5"
    version="1.1"
    id="svg5"
    inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
-   sodipodi:docname="steps.svg"
+   sodipodi:docname="steps2.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -25,9 +25,9 @@
      showgrid="false"
      borderlayer="true"
      inkscape:zoom="1.2810466"
-     inkscape:cx="-26.150493"
+     inkscape:cx="-48.397927"
      inkscape:cy="249.40545"
-     inkscape:current-layer="layer1" />
+     inkscape:current-layer="layer2" />
   <defs
      id="defs2" />
   <g
@@ -35,16 +35,17 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:#ffffff;stroke-width:0.964999"
+       style="fill:#ffffff;stroke-width:1.17199"
        id="rect846"
-       width="33.045898"
+       width="48.742699"
        height="131.35744"
        x="-1.2829494"
        y="-1.4287186" />
     <g
        aria-label="steps"
        id="text2814"
-       style="font-size:5.64444px;line-height:1.25;font-family:'Agency FB';-inkscape-font-specification:'Agency FB';stroke-width:0.264583">
+       style="font-size:5.64444px;line-height:1.25;font-family:'Agency FB';-inkscape-font-specification:'Agency FB';stroke-width:0.264583"
+       transform="translate(7.6200051)">
       <path
          d="m 12.125632,13.349314 q 0,0.311436 -0.311437,0.311436 h -0.840602 q -0.311437,0 -0.311437,-0.311436 v -0.609092 h 0.361046 v 0.60358 h 0.741384 v -0.534679 l -0.959114,-0.785481 q -0.137804,-0.110243 -0.137804,-0.286631 v -0.446485 q 0,-0.311436 0.311437,-0.311436 h 0.829578 q 0.311437,0 0.311437,0.311436 v 0.534679 h -0.355534 v -0.529166 h -0.741384 v 0.468532 l 0.967382,0.785481 q 0.135048,0.107487 0.135048,0.292144 z"
          id="path928" />
@@ -74,7 +75,7 @@
        aria-label="א"
        id="text3498"
        style="font-size:11.2889px;line-height:1.25;font-family:serif;-inkscape-font-specification:serif;stroke-width:0.264583"
-       transform="translate(5.0799975,-2.11596)">
+       transform="translate(12.699998,-2.11596)">
       <path
          d="m 12.036893,124.89348 h -0.148829 q -0.03307,-0.42444 -0.286632,-0.71107 l -2.3922767,-2.74506 q -0.6118496,0.30868 -0.6118496,0.79375 0,0.37483 0.3913632,0.96463 0.451997,0.67249 0.451997,1.06936 0,0.52917 -0.4023875,0.52917 h -1.041798 v -0.14883 q 0.3307295,-0.0882 0.3307295,-0.38034 0,-0.1819 -0.209462,-0.72209 -0.209462,-0.53468 -0.209462,-0.82683 0,-0.88745 1.0914074,-1.51033 l -0.6779955,-0.76619 q -0.4244362,-0.48507 -0.4244362,-1.00872 0,-0.47405 0.3858511,-0.89297 h 0.1433161 q 0.027561,0.47956 0.2866322,0.7717 l 2.072572,2.35369 q 0.159852,-0.79375 0.611849,-1.48277 -0.876433,-0.14331 -0.876433,-0.88194 0,-0.43546 0.225998,-0.76068 h 0.143317 q 0.08819,0.34175 0.424436,0.42443 l 0.474045,0.11025 q 0.622874,0.14883 0.622874,0.70004 0,0.24254 -0.04961,0.39137 -0.181901,0.0551 -0.600825,0.0551 -0.573265,0.90399 -0.573265,1.47726 0,0.42443 0.292145,0.76067 l 0.51263,0.5898 q 0.429949,0.49059 0.429949,1.01424 0,0.47405 -0.385851,0.83234 z"
          id="path15128" />
@@ -109,7 +110,8 @@
     <g
        aria-label="rand"
        id="text11228"
-       style="font-size:4.23333px;line-height:1.25;font-family:'Agency FB';-inkscape-font-specification:'Agency FB';stroke-width:0.264583">
+       style="font-size:4.23333px;line-height:1.25;font-family:'Agency FB';-inkscape-font-specification:'Agency FB';stroke-width:0.264583"
+       transform="translate(0,-3.4494661)">
       <path
          d="M 6.2183469,60.611268 H 5.9475626 V 60.19579 L 5.441134,60.21233 v 1.748729 H 5.1662156 V 59.949811 H 5.441134 v 0.05581 q 0.1364256,-0.02067 0.2749184,-0.04341 0.1653644,-0.02481 0.2749183,-0.02481 0.2273762,0 0.2273762,0.225309 z"
          id="path20578" />
@@ -126,7 +128,8 @@
     <g
        aria-label="steps"
        id="text7750"
-       style="font-size:4.23333px;line-height:1.25;font-family:'Agency FB';-inkscape-font-specification:'Agency FB';stroke-width:0.264583">
+       style="font-size:4.23333px;line-height:1.25;font-family:'Agency FB';-inkscape-font-specification:'Agency FB';stroke-width:0.264583"
+       transform="translate(0,-3.656003)">
       <path
          d="m 5.6457198,46.856823 q 0,0.233578 -0.2335773,0.233578 h -0.630452 q -0.2335772,0 -0.2335772,-0.233578 v -0.456819 h 0.2707842 v 0.452685 h 0.556038 V 46.451681 L 4.6556002,45.86257 Q 4.5522474,45.779887 4.5522474,45.647596 v -0.334863 q 0,-0.233577 0.2335773,-0.233577 h 0.6221837 q 0.2335773,0 0.2335773,0.233577 v 0.401009 H 5.3749355 v -0.396875 h -0.556038 v 0.351399 l 0.7255365,0.589111 q 0.1012858,0.08062 0.1012858,0.219108 z"
          id="path20549" />
@@ -146,7 +149,8 @@
     <g
        aria-label="clock"
        id="text2936"
-       style="font-size:4.23333px;line-height:1.25;font-family:'Agency FB';-inkscape-font-specification:'Agency FB';stroke-width:0.264583">
+       style="font-size:4.23333px;line-height:1.25;font-family:'Agency FB';-inkscape-font-specification:'Agency FB';stroke-width:0.264583"
+       transform="translate(0,-3.656003)">
       <path
          d="m 6.2984034,31.573096 q 0,0.233577 -0.2315102,0.233577 H 5.4137037 q -0.2315103,0 -0.2315103,-0.233577 v -1.544091 q 0,-0.233577 0.2315103,-0.233577 h 0.6531895 q 0.2315102,0 0.2315102,0.233577 v 0.401009 H 6.0276192 V 30.037273 H 5.4571118 v 1.527555 h 0.5705074 v -0.448552 h 0.2707842 z"
          id="path20520" />
@@ -183,6 +187,15 @@
          d="m 11.5718,80.962456 h -0.390674 q -0.23151,0 -0.23151,-0.233578 V 79.193056 H 10.70777 v -0.241845 h 0.241846 V 78.324893 H 11.2204 v 0.626318 h 0.3514 v 0.241845 h -0.3514 v 1.527554 h 0.3514 z"
          id="path7394" />
     </g>
+    <rect
+       style="fill:#000000;stroke:#000000;stroke-width:0"
+       id="rect979"
+       width="10.740169"
+       height="94.800415"
+       x="31.828991"
+       y="16.522955"
+       ry="3.7969999"
+       rx="3.236798" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -193,21 +206,21 @@
        style="fill:#ff0000;fill-rule:evenodd;stroke-width:0.264583"
        id="circle11265"
        cx="8.0828838"
-       cy="38.725666"
+       cy="35.069664"
        r="3.9242003"
        inkscape:label="steps" />
     <circle
        style="fill:#00ff00;fill-rule:evenodd;stroke-width:0.264583"
        id="path11165"
        cx="8.3363619"
-       cy="23.545202"
+       cy="19.8892"
        r="3.9242003"
        inkscape:label="clock" />
     <circle
        style="fill:#00ff00;fill-rule:evenodd;stroke-width:0.264583"
        id="circle11287"
        cx="8.4377527"
-       cy="53.906124"
+       cy="50.250122"
        r="3.9242003"
        inkscape:label="rand" />
     <circle
@@ -267,7 +280,7 @@
        r="3.9242003"
        inkscape:label="step8" />
     <circle
-       style="fill:#0000ff;fill-rule:evenodd;stroke-width:0.264583"
+       style="display:inline;fill:#0000ff;fill-rule:evenodd;stroke-width:0.264583"
        id="circle11341"
        cx="8.2349701"
        cy="88.971687"
@@ -280,5 +293,61 @@
        cy="102.76659"
        r="3.9242003"
        inkscape:label="cv" />
+    <circle
+       style="fill:#0000ff;fill-rule:evenodd;stroke-width:0.264583"
+       id="circle1020"
+       cx="37.176636"
+       cy="23.545347"
+       r="3.9242003"
+       inkscape:label="step1" />
+    <circle
+       style="fill:#0000ff;fill-rule:evenodd;stroke-width:0.264583"
+       id="circle1040"
+       cx="37.176907"
+       cy="35.069267"
+       r="3.9242003"
+       inkscape:label="step2" />
+    <circle
+       style="fill:#0000ff;fill-rule:evenodd;stroke-width:0.264583"
+       id="circle1060"
+       cx="37.176907"
+       cy="46.593189"
+       r="3.9242003"
+       inkscape:label="step3" />
+    <circle
+       style="fill:#0000ff;fill-rule:evenodd;stroke-width:0.264583"
+       id="circle1080"
+       cx="37.176907"
+       cy="58.117107"
+       r="3.9242003"
+       inkscape:label="step4" />
+    <circle
+       style="fill:#0000ff;fill-rule:evenodd;stroke-width:0.264583"
+       id="circle1100"
+       cx="37.176907"
+       cy="69.641029"
+       r="3.9242003"
+       inkscape:label="step5" />
+    <circle
+       style="fill:#0000ff;fill-rule:evenodd;stroke-width:0.264583"
+       id="circle1120"
+       cx="37.176907"
+       cy="81.16494"
+       r="3.9242003"
+       inkscape:label="step6" />
+    <circle
+       style="fill:#0000ff;fill-rule:evenodd;stroke-width:0.264583"
+       id="circle1140"
+       cx="37.176907"
+       cy="92.688866"
+       r="3.9242003"
+       inkscape:label="step7" />
+    <circle
+       style="fill:#0000ff;fill-rule:evenodd;stroke-width:0.264583"
+       id="circle1160"
+       cx="37.176907"
+       cy="104.2128"
+       r="3.9242003"
+       inkscape:label="step8" />
   </g>
 </svg>
