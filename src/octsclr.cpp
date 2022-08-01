@@ -1,5 +1,7 @@
 #include "plugin.hpp"
 
+#define MAX_POLY 16
+
 
 struct Octsclr : Module {
 	enum ParamId {
@@ -30,10 +32,17 @@ struct Octsclr : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		float source = inputs[SOURCE_INPUT].getVoltage();
+		int channels = inputs[SOURCE_INPUT].getChannels();
+		outputs[SCALED_OUTPUT].setChannels(channels);
+		if (channels > MAX_POLY) {
+			channels = MAX_POLY;
+		}
 		float scaler = (float)params[SCALER_PARAM].getValue() / 10.0f;
 		float offset = (float)params[OFFSET_PARAM].getValue();
-		outputs[SCALED_OUTPUT].setVoltage(clamp(source * scaler + offset, -10.0f, 10.0f));
+		for (int i = 0; i < channels; i++) {
+			float source = inputs[SOURCE_INPUT].getPolyVoltage(i);
+			outputs[SCALED_OUTPUT].setVoltage(clamp(source * scaler + offset, -10.0f, 10.0f), i);
+		}
 	}
 };
 
