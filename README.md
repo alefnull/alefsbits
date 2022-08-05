@@ -4,6 +4,10 @@
 
 a small collection of my VCV Rack modules in a single plugin. [click here](https://github.com/alefnull/alefsbits/releases) for the latest release.
 
+## oct sclr
+
+scales voltage to specified octave range
+
 ## steps
 
 a simple 8-step sequencer with a randomize trigger input and end-of-cycle trigger output. select output range in right-click menu.
