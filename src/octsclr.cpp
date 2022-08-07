@@ -23,7 +23,7 @@ struct Octsclr : Module {
 
 	Octsclr() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configParam(SCALER_PARAM, 1, 10, 10, "scaler");
+		configParam(SCALER_PARAM, 0, 20, 10, "scaler");
 		getParamQuantity(SCALER_PARAM)->snapEnabled = true;
 		configParam(OFFSET_PARAM, -3, 3, 0, "offset");
 		getParamQuantity(OFFSET_PARAM)->snapEnabled = true;
