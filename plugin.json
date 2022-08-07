@@ -82,6 +82,14 @@
         "Utility",
         "Sample and hold"
       ]
+    },
+    {
+      "slug": "mlt",
+      "name": "mlt",
+      "description": "simple 2-channel mult",
+      "tags": [
+        "Utility"
+      ]
     }
   ]
 }

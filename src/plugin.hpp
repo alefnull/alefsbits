@@ -19,3 +19,4 @@ extern Model* modelBpmgate;
 extern Model* modelStepsxl;
 extern Model* modelQuant;
 extern Model* modelShift;
+extern Model* modelMlt;
