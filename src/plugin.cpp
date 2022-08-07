@@ -16,8 +16,6 @@ void init(Plugin* p) {
 	p->addModel(modelFibb);
 	p->addModel(modelOctsclr);
 	p->addModel(modelBpmgate);
-	p->addModel(modelStepsxl);
-	p->addModel(modelQuant);
 	p->addModel(modelShift);
 	p->addModel(modelMlt);
 
