@@ -73,6 +73,15 @@
       "tags": [
         "Utility"
       ]
+    },
+    {
+      "slug": "shift",
+      "name": "shift",
+      "description": "simple 8-stage shift register",
+      "tags": [
+        "Utility",
+        "Sample and hold"
+      ]
     }
   ]
 }

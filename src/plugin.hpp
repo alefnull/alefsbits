@@ -15,3 +15,7 @@ extern Model* modelNoize;
 extern Model* modelSteps;
 extern Model* modelFibb;
 extern Model* modelOctsclr;
+extern Model* modelBpmgate;
+extern Model* modelStepsxl;
+extern Model* modelQuant;
+extern Model* modelShift;
