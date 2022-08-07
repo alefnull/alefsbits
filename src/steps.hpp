@@ -57,7 +57,7 @@ struct Steps : Module {
 	dsp::PulseGenerator step_pulse[8];
 	bool reset_queued = false;
 	bool latch = true;
-	bool expanded = false;
+	bool unipolar = false;
 	int step = 0;
 	int steps = 8;
 	int range = 1;

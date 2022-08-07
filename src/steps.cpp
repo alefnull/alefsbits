@@ -36,21 +36,11 @@ void Steps::process(const ProcessArgs& args) {
 
 	if (inputs[CLOCK_INPUT].isConnected()) {
 		float cv_out = params[STEP1_PARAM + step - 1].getValue();
-		switch(range) {
-			case 10:
-				outputs[CV_OUTPUT].setVoltage(cv_out * 10);;
-				break;
-			case 5:
-				outputs[CV_OUTPUT].setVoltage(cv_out * 5);;
-				break;
-			case 3:
-				outputs[CV_OUTPUT].setVoltage(cv_out * 3);;
-				break;
-			case 1:
-			default:
-				outputs[CV_OUTPUT].setVoltage(cv_out);
-				break;
+		cv_out *= range;
+		if (unipolar) {
+			cv_out = (cv_out + range) / 2.0;
 		}
+		outputs[CV_OUTPUT].setVoltage(cv_out);
 		outputs[EOC_OUTPUT].setVoltage(eoc_pulse.process(args.sampleTime) ? 10.f : 0.f);
 	} else {
 		outputs[CV_OUTPUT].setVoltage(0.f);
@@ -145,11 +135,13 @@ struct StepsWidget : ModuleWidget {
 		menu->addChild(createSubmenuItem("Range", "", [=](Menu* menu) {
 			Menu* rangeMenu = new Menu();
 			rangeMenu->addChild(createMenuItem("-/+ 1v", CHECKMARK(module->range == 1), [module]() { module->range = 1; }));
+			rangeMenu->addChild(createMenuItem("-/+ 2v", CHECKMARK(module->range == 2), [module]() { module->range = 2; }));
 			rangeMenu->addChild(createMenuItem("-/+ 3v", CHECKMARK(module->range == 3), [module]() { module->range = 3; }));
 			rangeMenu->addChild(createMenuItem("-/+ 5v", CHECKMARK(module->range == 5), [module]() { module->range = 5; }));
 			rangeMenu->addChild(createMenuItem("-/+ 10v", CHECKMARK(module->range == 10), [module]() { module->range = 10; }));
 			menu->addChild(rangeMenu);
 		}));
+		menu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar), [module]() { module->unipolar = !module->unipolar; }));
 		menu->addChild(createMenuItem("Latch", CHECKMARK(module->latch), [module]() { module->latch = !module->latch; }));
 	}
 };
