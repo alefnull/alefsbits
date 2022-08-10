@@ -23,7 +23,7 @@ struct Simplexandhold : Module {
 	dsp::SchmittTrigger trigger[MAX_POLY];
 	bool unipolar = false;
 	float last_sample[MAX_POLY] = {0.0};
-	float x[MAX_POLY] = {0.0};
+	double x[MAX_POLY] = {0.0};
 	float range = 1.0;
 
 	Simplexandhold() {
@@ -40,7 +40,7 @@ struct Simplexandhold : Module {
 			if (trigger[c].process(inputs[TRIGGER_INPUT].getVoltage(c))) {
 				last_sample[c] = noise.noise(x[c], 0.0) * range;
 			}
-			x[c] += 0.001;
+			x[c] += 0.1;
 			if (unipolar) {
 				outputs[SAMPLE_OUTPUT].setVoltage((last_sample[c] + range) / 2.0, c);
 			}
