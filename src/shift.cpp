@@ -43,37 +43,38 @@ struct Shift : Module {
 
 	Shift() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configParam(REGISTER_1_PARAM, 0.f, 1.f, 0.f, "");
-		configParam(REGISTER_2_PARAM, 0.f, 1.f, 0.f, "");
-		configParam(REGISTER_3_PARAM, 0.f, 1.f, 0.f, "");
-		configParam(REGISTER_4_PARAM, 0.f, 1.f, 0.f, "");
-		configParam(REGISTER_5_PARAM, 0.f, 1.f, 0.f, "");
-		configParam(REGISTER_6_PARAM, 0.f, 1.f, 0.f, "");
-		configParam(REGISTER_7_PARAM, 0.f, 1.f, 0.f, "");
-		configParam(REGISTER_8_PARAM, 0.f, 1.f, 0.f, "");
-		configInput(SIGNAL_INPUT, "");
-		configInput(TRIGGER_INPUT, "");
-		configInput(REGISTER_1_INPUT, "");
-		configInput(REGISTER_2_INPUT, "");
-		configInput(REGISTER_3_INPUT, "");
-		configInput(REGISTER_4_INPUT, "");
-		configInput(REGISTER_5_INPUT, "");
-		configInput(REGISTER_6_INPUT, "");
-		configInput(REGISTER_7_INPUT, "");
-		configInput(REGISTER_8_INPUT, "");
-		configOutput(REGISTER_1_OUTPUT, "");
-		configOutput(REGISTER_2_OUTPUT, "");
-		configOutput(REGISTER_3_OUTPUT, "");
-		configOutput(REGISTER_4_OUTPUT, "");
-		configOutput(REGISTER_5_OUTPUT, "");
-		configOutput(REGISTER_6_OUTPUT, "");
-		configOutput(REGISTER_7_OUTPUT, "");
-		configOutput(REGISTER_8_OUTPUT, "");
+		configParam(REGISTER_1_PARAM, 0.f, 1.f, 1.f, "register 1");
+		configParam(REGISTER_2_PARAM, 0.f, 1.f, 1.f, "register 2");
+		configParam(REGISTER_3_PARAM, 0.f, 1.f, 1.f, "register 3");
+		configParam(REGISTER_4_PARAM, 0.f, 1.f, 1.f, "register 4");
+		configParam(REGISTER_5_PARAM, 0.f, 1.f, 1.f, "register 5");
+		configParam(REGISTER_6_PARAM, 0.f, 1.f, 1.f, "register 6");
+		configParam(REGISTER_7_PARAM, 0.f, 1.f, 1.f, "register 7");
+		configParam(REGISTER_8_PARAM, 0.f, 1.f, 1.f, "register 8");
+		configInput(SIGNAL_INPUT, "signal");
+		configInput(TRIGGER_INPUT, "trigger");
+		configInput(REGISTER_1_INPUT, "register 1");
+		configInput(REGISTER_2_INPUT, "register 2");
+		configInput(REGISTER_3_INPUT, "register 3");
+		configInput(REGISTER_4_INPUT, "register 4");
+		configInput(REGISTER_5_INPUT, "register 5");
+		configInput(REGISTER_6_INPUT, "register 6");
+		configInput(REGISTER_7_INPUT, "register 7");
+		configInput(REGISTER_8_INPUT, "register 8");
+		configOutput(REGISTER_1_OUTPUT, "register 1");
+		configOutput(REGISTER_2_OUTPUT, "register 2");
+		configOutput(REGISTER_3_OUTPUT, "register 3");
+		configOutput(REGISTER_4_OUTPUT, "register 4");
+		configOutput(REGISTER_5_OUTPUT, "register 5");
+		configOutput(REGISTER_6_OUTPUT, "register 6");
+		configOutput(REGISTER_7_OUTPUT, "register 7");
+		configOutput(REGISTER_8_OUTPUT, "register 8");
 	}
 
     dsp::SchmittTrigger trigger;
 	float last_sample[8] = {0.f};
 	bool unipolar = false;
+	bool scrambled = false;
 	float range = 1.f;
 
 	void process(const ProcessArgs& args) override {
@@ -91,6 +92,7 @@ struct Shift : Module {
 		}
 		float out = 0.f;
 		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
+			bool used[8] = {false};
 			for (int i = OUTPUTS_LEN - 1; i >= 0; i--) {
 				float chance = params[REGISTER_1_PARAM + i].getValue();
 				if (inputs[REGISTER_1_INPUT + i].isConnected()) {
@@ -99,7 +101,16 @@ struct Shift : Module {
 				if (i == 0) {
 					out = signal;
 				} else {
-					out = last_sample[i - 1];
+					if (!scrambled) {
+						out = last_sample[i - 1];
+					} else {
+						int r = random::uniform() * OUTPUTS_LEN;
+						while (used[r]) {
+							r = random::uniform() * OUTPUTS_LEN;
+						}
+						used[r] = true;
+						out = last_sample[r];
+					}
 				}
 				if (random::uniform() < chance) {
 					last_sample[i] = out;
@@ -168,6 +179,8 @@ struct ShiftWidget : ModuleWidget {
 			menu->addChild(rangeMenu);
 		}));
 		menu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar), [module]() { module->unipolar = !module->unipolar; }));
+		menu->addChild(new MenuSeparator());
+		menu->addChild(createMenuItem("Scrambled Eggs!", CHECKMARK(module->scrambled), [module]() { module->scrambled = !module->scrambled; }));
 	}
 };
 
