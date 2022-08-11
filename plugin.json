@@ -94,7 +94,7 @@
     {
       "slug": "math",
       "name": "math",
-      "description": "applies various math operations on two inputs",
+      "description": "applies various math operations on two inputs, clamped to +/-10V",
       "tags": [
         "Logic",
         "Utility"
