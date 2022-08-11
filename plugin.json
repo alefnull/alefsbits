@@ -73,6 +73,14 @@
       "tags": [
         "Utility"
       ]
+    },
+    {
+      "slug": "shift",
+      "name": "shift",
+      "description": "an 8-step shift register with probability params for each step",
+      "tags": [
+        "Utility"
+      ]
     }
   ]
 }
