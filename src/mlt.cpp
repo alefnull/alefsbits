@@ -1,5 +1,6 @@
 #include "plugin.hpp"
 
+#define MAX_POLY 16
 
 struct Mlt : Module {
 	enum ParamId {
@@ -44,13 +45,26 @@ struct Mlt : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
+		int a_channels = inputs[A_INPUT].getChannels();
+		int b_channels = inputs[B_INPUT].getChannels();
+		for (int i = 0; i < OUTPUTS_LEN; i++) {
+			if (i < a_channels) {
+				outputs[i].setChannels(a_channels);
+			} else {
+				outputs[i].setChannels(b_channels);
+			}
+		}
 		float a = inputs[A_INPUT].getVoltage();
 		float b = inputs[B_INPUT].getVoltage();
 		for (int i = 0; i < OUTPUTS_LEN / 2; i++) {
-			outputs[i].setVoltage(a);
+			for (int chan = 0; chan < a_channels; chan++) {
+				outputs[i].setVoltage(a, chan);
+			}
 		}
 		for (int i = OUTPUTS_LEN / 2; i < OUTPUTS_LEN; i++) {
-			outputs[i].setVoltage(b);
+			for (int chan = 0; chan < b_channels; chan++) {
+				outputs[i].setVoltage(b, chan);
+			}
 		}
 	}
 };
