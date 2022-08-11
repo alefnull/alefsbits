@@ -16,3 +16,5 @@ extern Model* modelSteps;
 extern Model* modelFibb;
 extern Model* modelOctsclr;
 extern Model* modelShift;
+extern Model* modelMlt;
+extern Model* modelMath;
