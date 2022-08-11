@@ -73,23 +73,6 @@
       "tags": [
         "Utility"
       ]
-    },
-    {
-      "slug": "shift",
-      "name": "shift",
-      "description": "simple 8-stage shift register",
-      "tags": [
-        "Utility",
-        "Sample and hold"
-      ]
-    },
-    {
-      "slug": "mlt",
-      "name": "mlt",
-      "description": "simple 2-channel mult",
-      "tags": [
-        "Utility"
-      ]
     }
   ]
 }
