@@ -99,6 +99,15 @@
         "Logic",
         "Utility"
       ]
+    },
+    {
+      "slug": "logic",
+      "name": "logic",
+      "description": "perform logical operations on two inputs",
+      "tags": [
+        "Logic",
+        "Utility"
+      ]
     }
   ]
 }

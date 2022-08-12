@@ -18,3 +18,4 @@ extern Model* modelOctsclr;
 extern Model* modelShift;
 extern Model* modelMlt;
 extern Model* modelMath;
+extern Model* modelLogic;
