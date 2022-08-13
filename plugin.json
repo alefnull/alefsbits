@@ -108,6 +108,14 @@
         "Logic",
         "Utility"
       ]
+    },
+    {
+      "slug": "sswitch",
+      "name": "switch",
+      "description": "a simple 8-input sequential switch",
+      "tags": [
+        "Utility"
+      ]
     }
   ]
 }
