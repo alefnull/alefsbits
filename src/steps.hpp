@@ -102,4 +102,8 @@ struct Steps : Module {
     void advance_lights(int step);
     void advance_gate_outputs(int step);
     void randomize_steps();
+	void onReset() override;
+	void onRandomize() override;
+	json_t* dataToJson() override;
+	void dataFromJson(json_t* rootJ) override;
 };

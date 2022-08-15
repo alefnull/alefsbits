@@ -48,6 +48,40 @@ void Steps::process(const ProcessArgs& args) {
 	}
 }
 
+void Steps::onReset() {
+	step = 0;
+	reset_queued = false;
+	advance_lights(1);
+}
+
+void Steps::onRandomize() {
+	params[STEPS_PARAM].setValue(random::u32() % 8 + 1);
+	randomize_steps();
+}
+
+json_t* Steps::dataToJson() {
+	json_t* rootJ = json_object();
+	json_object_set_new(rootJ, "steps", json_integer(steps));
+	json_object_set_new(rootJ, "unipolar", json_boolean(unipolar));
+	json_object_set_new(rootJ, "range", json_real(range));
+	return rootJ;
+}
+
+void Steps::dataFromJson(json_t* rootJ) {
+	json_t* stepsJ = json_object_get(rootJ, "steps");
+	if (stepsJ) {
+		steps = json_integer_value(stepsJ);
+	}
+	json_t* unipolarJ = json_object_get(rootJ, "unipolar");
+	if (unipolarJ) {
+		unipolar = json_boolean_value(unipolarJ);
+	}
+	json_t* rangeJ = json_object_get(rootJ, "range");
+	if (rangeJ) {
+		range = json_real_value(rangeJ);
+	}
+}
+
 void Steps::randomize_steps() {
 	for (int i = 1; i <= PARAMS_LEN - 2; i++) {
 		params[STEP1_PARAM + i - 1].setValue(random::uniform() * 2.f - 1.f);

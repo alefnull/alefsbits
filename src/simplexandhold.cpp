@@ -49,6 +49,22 @@ struct Simplexandhold : Module {
 			}
 		}
 	}
+
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
+		json_object_set_new(rootJ, "unipolar", json_boolean(unipolar));
+		json_object_set_new(rootJ, "range", json_real(range));
+		return rootJ;
+	}
+
+	void dataFromJson(json_t* rootJ) override {
+		json_t* unipolarJ = json_object_get(rootJ, "unipolar");
+		if (unipolarJ)
+			unipolar = json_boolean_value(unipolarJ);
+		json_t* rangeJ = json_object_get(rootJ, "range");
+		if (rangeJ)
+			range = json_real_value(rangeJ);
+	}
 };
 
 
