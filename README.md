@@ -4,6 +4,22 @@
 
 a small collection of my VCV Rack modules in a single plugin. [click here](https://github.com/alefnull/alefsbits/releases) for the latest release.
 
+## logic
+
+perform logical operations on two inputs
+
+## math
+
+applies various math operations on two inputs, clamped to +/-10V
+
+## mlt
+
+two 1:3 polyphonic multiples
+
+## shift
+
+analog shift register with cv-controllable probability per step
+
 ## oct sclr
 
 scales voltage to specified octave range
