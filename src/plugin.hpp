@@ -19,4 +19,3 @@ extern Model* modelShift;
 extern Model* modelMlt;
 extern Model* modelMath;
 extern Model* modelLogic;
-extern Model* modelSswitch;
