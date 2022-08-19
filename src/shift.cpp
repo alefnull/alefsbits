@@ -119,6 +119,41 @@ struct Shift : Module {
 			}
 		}
 	}
+
+	void onReset() override {
+		for (int i = 0; i < 8; i++) {
+			last_sample[i] = 0.f;
+		}
+	}
+
+	void onRandomize() override {
+		for (int i = 0; i < 8; i++) {
+			params[REGISTER_1_PARAM + i].setValue(random::uniform());
+		}
+	}
+
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
+		json_object_set_new(rootJ, "unipolar", json_boolean(unipolar));
+		json_object_set_new(rootJ, "scrambled", json_boolean(scrambled));
+		json_object_set_new(rootJ, "range", json_real(range));
+		return rootJ;
+	}
+
+	void dataFromJson(json_t* rootJ) override {
+		json_t* unipolarJ = json_object_get(rootJ, "unipolar");
+		if (unipolarJ) {
+			unipolar = json_boolean_value(unipolarJ);
+		}
+		json_t* scrambledJ = json_object_get(rootJ, "scrambled");
+		if (scrambledJ) {
+			scrambled = json_boolean_value(scrambledJ);
+		}
+		json_t* rangeJ = json_object_get(rootJ, "range");
+		if (rangeJ) {
+			range = json_real_value(rangeJ);
+		}
+	}
 };
 
 
