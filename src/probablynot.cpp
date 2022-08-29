@@ -22,6 +22,8 @@ struct Probablynot : Module {
 
 	dsp::SchmittTrigger trigger;
 	bool muted = false;
+	float amplitude = 0.0f;
+	float fade_dur = 0.03f;
 
 	Probablynot() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -51,11 +53,12 @@ struct Probablynot : Module {
 		}
 
 		if (muted) {
-			outputs[SIGNAL_OUTPUT].setVoltage(0.f);
+			amplitude = clamp(amplitude - args.sampleTime * (1.f / fade_dur), 0.f, 1.f);
 		}
 		else {
-			outputs[SIGNAL_OUTPUT].setVoltage(signal);
+			amplitude = clamp(amplitude + args.sampleTime * (1.f / fade_dur), 0.f, 1.f);
 		}
+		outputs[SIGNAL_OUTPUT].setVoltage(amplitude * signal);
 	}
 };
 
