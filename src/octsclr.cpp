@@ -33,10 +33,10 @@ struct Octsclr : Module {
 
 	void process(const ProcessArgs& args) override {
 		int channels = inputs[SOURCE_INPUT].getChannels();
-		outputs[SCALED_OUTPUT].setChannels(channels);
 		if (channels > MAX_POLY) {
 			channels = MAX_POLY;
 		}
+		outputs[SCALED_OUTPUT].setChannels(channels);
 		float scaler = (float)params[SCALER_PARAM].getValue() / 10.0f;
 		float offset = (float)params[OFFSET_PARAM].getValue();
 		for (int i = 0; i < channels; i++) {
