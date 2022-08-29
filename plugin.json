@@ -108,6 +108,14 @@
         "Logic",
         "Utility"
       ]
+    },
+    {
+      "slug": "probablynot",
+      "name": "probably not",
+      "description": "mute a signal on trigger, based on probability",
+      "tags": [
+        "Utility"
+      ]
     }
   ]
 }
