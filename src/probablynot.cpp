@@ -23,7 +23,8 @@ struct Probablynot : Module {
 	dsp::SchmittTrigger trigger;
 	bool muted = false;
 	float amplitude = 0.0f;
-	float fade_dur = 0.03f;
+	bool fade = false;
+	float fade_dur = 0.005f;
 
 	Probablynot() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -53,10 +54,20 @@ struct Probablynot : Module {
 		}
 
 		if (muted) {
+			if (fade) {
 			amplitude = clamp(amplitude - args.sampleTime * (1.f / fade_dur), 0.f, 1.f);
 		}
 		else {
+				amplitude = 0.f;
+			}
+		}
+		else {
+			if (fade) {
 			amplitude = clamp(amplitude + args.sampleTime * (1.f / fade_dur), 0.f, 1.f);
+		}
+			else {
+				amplitude = 1.f;
+			}
 		}
 		outputs[SIGNAL_OUTPUT].setVoltage(amplitude * signal);
 	}
@@ -80,6 +91,51 @@ struct ProbablynotWidget : ModuleWidget {
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 73.576)), module, Probablynot::PROBABILITY_CV_INPUT));
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 94.026)), module, Probablynot::SIGNAL_OUTPUT));
+	}
+
+	struct FadeDurationQuantity : Quantity {
+		float* fade_duration;
+
+		FadeDurationQuantity(float* fs) {
+			fade_duration = fs;
+		}
+
+		void setValue(float value) override {
+			*fade_duration = clamp(value, 0.005f, 10.f);
+		}
+
+		float getValue() override {
+			return *fade_duration;
+		}
+		
+		float getMinValue() override {return 0.005f;}
+		float getMaxValue() override {return 10.f;}
+		float getDefaultValue() override {return 0.005f;}
+		float getDisplayValue() override {return *fade_duration;}
+
+		std::string getUnit() override {
+			return "s";
+		}
+	};
+
+	struct FadeDurationSlider : ui::Slider {
+		FadeDurationSlider(float* fade_duration) {
+			quantity = new FadeDurationQuantity(fade_duration);
+		}
+		~FadeDurationSlider() {
+			delete quantity;
+		}
+	};
+
+	void appendContextMenu(Menu* menu) override {
+		Probablynot* module = dynamic_cast<Probablynot*>(this->module);
+		assert(module);
+
+		menu->addChild(new MenuSeparator());
+		menu->addChild(createMenuItem("Fade in/out", CHECKMARK(module->fade), [module]() { module->fade = !module->fade; }));
+		FadeDurationSlider *fade_slider = new FadeDurationSlider(&(module->fade_dur));
+		fade_slider->box.size.x = 200.f;
+		menu->addChild(fade_slider);
 	}
 };
 
