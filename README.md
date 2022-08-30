@@ -4,6 +4,10 @@
 
 a small collection of my VCV Rack modules in a single plugin. [click here](https://github.com/alefnull/alefsbits/releases) for the latest release.
 
+## probably not
+
+mutes a mono or poly input signal on trigger, based on probability
+
 ## logic
 
 perform logical operations on two inputs
