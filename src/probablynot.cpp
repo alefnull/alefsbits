@@ -55,21 +55,39 @@ struct Probablynot : Module {
 
 		if (muted) {
 			if (fade) {
-			amplitude = clamp(amplitude - args.sampleTime * (1.f / fade_dur), 0.f, 1.f);
-		}
-		else {
+				amplitude = clamp(amplitude - args.sampleTime * (1.f / fade_dur), 0.f, 1.f);
+			}
+			else {
 				amplitude = 0.f;
 			}
 		}
 		else {
 			if (fade) {
-			amplitude = clamp(amplitude + args.sampleTime * (1.f / fade_dur), 0.f, 1.f);
-		}
+				amplitude = clamp(amplitude + args.sampleTime * (1.f / fade_dur), 0.f, 1.f);
+			}
 			else {
 				amplitude = 1.f;
 			}
 		}
 		outputs[SIGNAL_OUTPUT].setVoltage(amplitude * signal);
+	}
+
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
+		json_object_set_new(rootJ, "fade", json_boolean(fade));
+		json_object_set_new(rootJ, "fade_dur", json_real(fade_dur));
+		return rootJ;
+	}
+
+	void dataFromJson(json_t* rootJ) override {
+		json_t* fadeJ = json_object_get(rootJ, "fade");
+		if (fadeJ) {
+			fade = json_boolean_value(fadeJ);
+		}
+		json_t* fade_durJ = json_object_get(rootJ, "fade_dur");
+		if (fade_durJ) {
+			fade_dur = json_real_value(fade_durJ);
+		}
 	}
 };
 
