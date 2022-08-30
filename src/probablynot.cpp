@@ -1,6 +1,8 @@
 #include "plugin.hpp"
 
 
+#define MAX_POLY 16
+
 struct Probablynot : Module {
 	enum ParamId {
 		PROBABILITY_PARAM,
@@ -36,7 +38,9 @@ struct Probablynot : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		float signal = inputs[SIGNAL_INPUT].getVoltage();
+		int channels = inputs[SIGNAL_INPUT].getChannels();
+		outputs[SIGNAL_OUTPUT].setChannels(channels);
+
 		float probability = params[PROBABILITY_PARAM].getValue();
 		float cv = inputs[PROBABILITY_CV_INPUT].getVoltage();
 
@@ -69,7 +73,10 @@ struct Probablynot : Module {
 				amplitude = 1.f;
 			}
 		}
-		outputs[SIGNAL_OUTPUT].setVoltage(amplitude * signal);
+		for (int c = 0; c < channels; c++) {
+			float signal = inputs[SIGNAL_INPUT].getVoltage(c);
+			outputs[SIGNAL_OUTPUT].setVoltage(amplitude * signal, c);
+		}
 	}
 
 	json_t* dataToJson() override {
