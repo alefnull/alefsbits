@@ -96,7 +96,7 @@ struct Shift : Module {
 			for (int i = OUTPUTS_LEN - 1; i >= 0; i--) {
 				float chance = params[REGISTER_1_PARAM + i].getValue();
 				if (inputs[REGISTER_1_INPUT + i].isConnected()) {
-					chance = clamp(chance * inputs[REGISTER_1_INPUT + i].getVoltage(), 0.f, 1.f);
+					chance = clamp(chance * inputs[REGISTER_1_INPUT + i].getVoltage() / 10.f, 0.f, 1.f);
 				}
 				if (i == 0) {
 					out = signal;
