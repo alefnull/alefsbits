@@ -225,10 +225,19 @@ struct PolyplayWidget : ModuleWidget {
 		LoadWavItem* loadWavItem = createMenuItem<LoadWavItem>("Load Wav", CHECKMARK(module->load_success));
 		loadWavItem->module = module;
 		menu->addChild(loadWavItem);
+
 		if (module->file_loaded) {
-			MenuItem* loaded_file_name = createMenuItem<MenuItem>(module->loaded_file_name);
-			loaded_file_name->disabled = true;
-			menu->addChild(loaded_file_name);
+			struct UnloadWavItem : MenuItem {
+				Polyplay* module;
+				void onAction(const event::Action& e) override {
+					module->file_loaded = false;
+					module->load_success = false;
+					module->loaded_file_name = "";
+				}
+			};
+			UnloadWavItem* unloadWavItem = createMenuItem<UnloadWavItem>(module->loaded_file_name);
+			unloadWavItem->module = module;
+			menu->addChild(unloadWavItem);
 		}
 	}
 };
