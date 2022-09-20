@@ -57,11 +57,11 @@ struct Polyplay : Module {
 	}
 
 	~Polyplay() {
-		src_delete(src);
 		std::lock_guard<std::mutex> mg(lock_thread_mutex);
 		if (load_thread) {
 			load_thread->join();
 		}
+		src_delete(src);
 	}
 
 	void load_from_file() {
