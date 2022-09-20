@@ -44,6 +44,7 @@ struct Polyplay : Module {
 	std::string file_path;
 	SRC_STATE *src;
 	std::unique_ptr<std::thread> load_thread;
+	std::mutex lock_thread_mutex;
 	std::atomic<bool> process_audio{true};
 
 	Polyplay() {
@@ -57,11 +58,14 @@ struct Polyplay : Module {
 
 	~Polyplay() {
 		src_delete(src);
+		std::lock_guard<std::mutex> mg(lock_thread_mutex);
+		if (load_thread) {
+			load_thread->join();
+		}
 	}
 
 	void load_from_file() {
 		load_success = my_file.load(file_path);
-		loaded_file_name = file_path;
 		process_audio = true;
 		if (load_success) {
 			file_loaded = true;
@@ -85,6 +89,10 @@ struct Polyplay : Module {
 		outputs[SAMPLE_OUTPUT].setChannels(poly);
 
 		if (!file_path.empty()) {
+			std::lock_guard<std::mutex> mg(lock_thread_mutex);
+			if (load_thread) {
+				load_thread->join();
+			}
 			process_audio = false;
 			load_thread = std::make_unique<std::thread>([this](){this->load_from_file();});
 		}
