@@ -63,6 +63,18 @@ struct Polyplay : Module {
 		load_success = my_file.load(file_path);
 		loaded_file_name = file_path;
 		process_audio = true;
+		if (load_success) {
+			file_loaded = true;
+			loaded_file_name = file_path;
+			file_sample_rate = my_file.getSampleRate();
+			num_samples = my_file.getNumSamplesPerChannel();
+			num_channels = my_file.getNumChannels();
+			src = src_new(SRC_SINC_BEST_QUALITY, num_channels, NULL);
+		}
+		else {
+			file_loaded = false;
+		}
+		file_path = "";
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -73,26 +85,8 @@ struct Polyplay : Module {
 		outputs[SAMPLE_OUTPUT].setChannels(poly);
 
 		if (!file_path.empty()) {
-
-#if LOAD_OUT_OF_THREAD
 			process_audio = false;
 			load_thread = std::make_unique<std::thread>([this](){this->load_from_file();});
-#else
-			load_from_file();
-#endif
-
-			if (load_success) {
-				file_loaded = true;
-				loaded_file_name = file_path;
-				file_sample_rate = my_file.getSampleRate();
-				num_samples = my_file.getNumSamplesPerChannel();
-				num_channels = my_file.getNumChannels();
-				src = src_new(SRC_SINC_BEST_QUALITY, num_channels, NULL);
-			}
-			else {
-				file_loaded = false;
-			}
-			file_path = "";
 		}
 
 		rack_sample_rate = args.sampleRate;
