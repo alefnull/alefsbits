@@ -66,7 +66,6 @@ struct Polyplay : Module {
 
 	void load_from_file() {
 		load_success = my_file.load(file_path);
-		process_audio = true;
 		if (load_success) {
 			file_loaded = true;
 			loaded_file_name = file_path;
@@ -79,6 +78,7 @@ struct Polyplay : Module {
 			file_loaded = false;
 		}
 		file_path = "";
+		process_audio = true;
 	}
 
 	void process(const ProcessArgs& args) override {
