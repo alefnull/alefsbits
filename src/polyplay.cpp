@@ -36,7 +36,7 @@ struct Polyplay : Module {
 	int num_channels;
 	int current_wav_sample[MAX_POLY];
 	int current_wav_channel[MAX_POLY];
-	int current_poly_channel;
+	int current_poly_channel = 0;
 	bool playing[MAX_POLY] = { false };
 	bool load_success = false;
 	bool file_loaded = false;
