@@ -164,7 +164,6 @@ struct Polyplay : Module {
 			file_loaded = json_boolean_value(file_loadedJ);
 		}
 		if (file_loaded) {
-			DEBUG("loading file %s", loaded_file_name.c_str());
 			load_success = my_file.load(loaded_file_name);
 			file_sample_rate = my_file.getSampleRate();
 			num_samples = my_file.getNumSamplesPerChannel();
