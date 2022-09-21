@@ -72,7 +72,7 @@ struct Polyplay : Module {
 			file_sample_rate = my_file.getSampleRate();
 			num_samples = my_file.getNumSamplesPerChannel();
 			num_channels = my_file.getNumChannels();
-			src = src_new(SRC_SINC_BEST_QUALITY, num_channels, NULL);
+			src = src_new(SRC_SINC_FASTEST, num_channels, NULL);
 		}
 		else {
 			file_loaded = false;
@@ -168,7 +168,7 @@ struct Polyplay : Module {
 			file_sample_rate = my_file.getSampleRate();
 			num_samples = my_file.getNumSamplesPerChannel();
 			num_channels = my_file.getNumChannels();
-			src = src_new(SRC_SINC_BEST_QUALITY, num_channels, NULL);
+			src = src_new(SRC_SINC_FASTEST, num_channels, NULL);
 			for (int i = 0; i < MAX_POLY; i++) {
 				current_wav_sample[i] = 0;
 				current_wav_channel[i] = 0;
