@@ -190,7 +190,7 @@ struct PolyplayWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 		float x_start = RACK_GRID_WIDTH * 2;
-		float y_start = RACK_GRID_WIDTH * 3;
+		float y_start = RACK_GRID_WIDTH * 8;
 		float dx = RACK_GRID_WIDTH * 2;
 		float dy = RACK_GRID_WIDTH * 2;
 
@@ -198,13 +198,13 @@ struct PolyplayWidget : ModuleWidget {
 		float y = y_start;
 
 		addParam(createParamCentered<RoundBlackKnob>(Vec(x, y), module, Polyplay::POLY_PARAM));
-		y += dy;
-		addParam(createParamCentered<CKD6>(Vec(x, y), module, Polyplay::TRIGGER_PARAM));
+		y += dy * 2;
+		addParam(createParamCentered<TL1105>(Vec(x, y), module, Polyplay::TRIGGER_PARAM));
 		y += dy;
 		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::TRIGGER_INPUT));
-		y += dy;
+		y += dy + RACK_GRID_WIDTH;
 		addChild(createLightCentered<MediumLight<RedLight>>(Vec(x, y), module, Polyplay::SAMPLE_LIGHT));
-		y += dy * 2;
+		y += dy * 2 + RACK_GRID_WIDTH * 0.5 - RACK_GRID_WIDTH;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::SAMPLE_OUTPUT));
 	}
 
