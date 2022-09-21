@@ -49,11 +49,11 @@ struct Polyplay : Module {
 
 	Polyplay() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configParam(POLY_PARAM, 1, MAX_POLY, 1, "Polyphony");
+		configParam(POLY_PARAM, 1, MAX_POLY, 1, "channels");
 		getParamQuantity(POLY_PARAM)->snapEnabled = true;
-		configParam(TRIGGER_PARAM, 0.0, 1.0, 0.0, "Trigger");
-		configInput(TRIGGER_INPUT, "Trigger");
-		configOutput(SAMPLE_OUTPUT, "Sample");
+		configParam(TRIGGER_PARAM, 0.0, 1.0, 0.0, "trigger");
+		configInput(TRIGGER_INPUT, "trigger");
+		configOutput(SAMPLE_OUTPUT, "sample");
 	}
 
 	~Polyplay() {
