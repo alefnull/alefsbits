@@ -31,7 +31,7 @@ struct Polyplay : Module {
 	dsp::SchmittTrigger input_trigger;
 	AudioFile<float> my_file;
 	int file_sample_rate;
-	int rack_sample_rate;
+	int rack_sample_rate = APP->engine->getSampleRate();
 	int num_samples;
 	int num_channels;
 	int current_wav_sample[MAX_POLY];
@@ -61,7 +61,38 @@ struct Polyplay : Module {
 		if (load_thread) {
 			load_thread->join();
 		}
+	}
+
+	void resample_file(AudioFile<float> &file, int new_sample_rate) {
+		int file_sample_rate = file.getSampleRate();
+		int num_samples = file.getNumSamplesPerChannel();
+		int num_channels = file.getNumChannels();
+		int new_num_samples = (int)((float)num_samples * (float)new_sample_rate / (float)file.getSampleRate());
+		AudioFile<float> new_file;
+		new_file.setAudioBufferSize(new_num_samples, num_channels);
+		new_file.setBitDepth(file.getBitDepth());
+		new_file.setSampleRate(new_sample_rate);
+		new_file.setNumChannels(num_channels);
+		new_file.setNumSamplesPerChannel(new_num_samples);
+		float *data = new float[new_num_samples * 2];
+		src = src_new(SRC_SINC_FASTEST, num_channels, NULL);
+		for (int i = 0; i < num_channels; i++) {
+			SRC_DATA src_data;
+			src_data.end_of_input = 0;
+			src_data.data_in = file.samples[i].data();
+			src_data.data_out = data;
+			src_data.input_frames = num_samples;
+			src_data.output_frames = new_num_samples;
+			src_data.src_ratio = (double)new_sample_rate / (double)file_sample_rate;
+			src_process(src, &src_data);
+			int processed_samples = src_data.output_frames_gen;
+			for (int j = 0; j < processed_samples; j++) {
+				new_file.samples[i][j] = data[j];
+			}
+		}
 		src_delete(src);
+		delete[] data;
+		file = new_file;
 	}
 
 	void load_from_file() {
@@ -72,7 +103,9 @@ struct Polyplay : Module {
 			file_sample_rate = my_file.getSampleRate();
 			num_samples = my_file.getNumSamplesPerChannel();
 			num_channels = my_file.getNumChannels();
-			src = src_new(SRC_SINC_FASTEST, num_channels, NULL);
+			if (file_sample_rate != rack_sample_rate) {
+				resample_file(my_file, rack_sample_rate);
+			}
 		}
 		else {
 			file_loaded = false;
@@ -82,6 +115,7 @@ struct Polyplay : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
+		rack_sample_rate = args.sampleRate;
 		if (!process_audio) {
 			return;
 		}
@@ -97,8 +131,6 @@ struct Polyplay : Module {
 			load_thread = std::make_unique<std::thread>([this](){this->load_from_file();});
 		}
 
-		rack_sample_rate = args.sampleRate;
-
 		lights[SAMPLE_LIGHT].setBrightness(load_success ? 1.0 : 0.0);
 		
 		if (button_trigger.process(params[TRIGGER_PARAM].getValue() || input_trigger.process(inputs[TRIGGER_INPUT].getVoltage()))) {
@@ -111,29 +143,9 @@ struct Polyplay : Module {
 		}
 
 		for (int i = 0; i < poly; i++) {
-			if (playing[i]) {
+			if (file_loaded && playing[i]) {
 				outputs[SAMPLE_OUTPUT].setVoltage(my_file.samples[current_wav_channel[i]][current_wav_sample[i]], i);
-				// if sample rates are the same, just increment sample
-				if (file_sample_rate == rack_sample_rate) {
-					current_wav_sample[i]++;
-				}
-				// if sample rates are different, use libsamplerate to convert
-				else {
-					float data_in[num_channels];
-					float data_out[num_channels];
-					for (int j = 0; j < num_channels; j++) {
-						data_in[j] = my_file.samples[j][current_wav_sample[i]];
-					}
-					SRC_DATA src_data;
-					src_data.data_in = data_in;
-					src_data.data_out = data_out;
-					src_data.input_frames = 1;
-					src_data.output_frames = 1;
-					src_data.src_ratio = (double)rack_sample_rate / (double)file_sample_rate;
-					src_data.end_of_input = 0;
-					src_process(src, &src_data);
-					current_wav_sample[i] += src_data.input_frames_used;
-				}
+				current_wav_sample[i]++;
 				if (current_wav_sample[i] >= num_samples) {
 					playing[i] = false;
 				}
@@ -143,6 +155,14 @@ struct Polyplay : Module {
 			}
 			else {
 				outputs[SAMPLE_OUTPUT].setVoltage(0.0, i);
+			}
+		}
+	}
+
+	void onSampleRateChange() override {
+		if (file_loaded) {
+			if (file_sample_rate != rack_sample_rate) {
+				resample_file(my_file, rack_sample_rate);
 			}
 		}
 	}
@@ -168,7 +188,6 @@ struct Polyplay : Module {
 			file_sample_rate = my_file.getSampleRate();
 			num_samples = my_file.getNumSamplesPerChannel();
 			num_channels = my_file.getNumChannels();
-			src = src_new(SRC_SINC_FASTEST, num_channels, NULL);
 			for (int i = 0; i < MAX_POLY; i++) {
 				current_wav_sample[i] = 0;
 				current_wav_channel[i] = 0;
