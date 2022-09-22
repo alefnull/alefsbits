@@ -216,7 +216,10 @@ struct PolyplayWidget : ModuleWidget {
 			Polyplay* module;
 			void onAction(const event::Action& e) override {
 				char* path = osdialog_file(OSDIALOG_OPEN, "", NULL, NULL);
-				module->file_path = path;
+				if (path) {
+					module->file_path = path;
+					free(path);
+				}
 			}
 		};
 
