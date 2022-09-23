@@ -68,8 +68,8 @@ struct Polyplay : Module {
 		int num_samples = file.getNumSamplesPerChannel();
 		int num_channels = file.getNumChannels();
 		int new_num_samples = (int)((float)num_samples * (float)new_sample_rate / (float)file_sample_rate);
+		int processed_samples = 0;
 		AudioFile<float> new_file;
-		new_file.setAudioBufferSize(num_channels, new_num_samples);
 		new_file.setBitDepth(file.getBitDepth());
 		new_file.setSampleRate(new_sample_rate);
 		new_file.setNumChannels(num_channels);
@@ -85,12 +85,13 @@ struct Polyplay : Module {
 			src_data.output_frames = new_num_samples * 2;
 			src_data.src_ratio = (double)new_sample_rate / (double)file_sample_rate;
 			src_process(src, &src_data);
-			int processed_samples = src_data.output_frames_gen;
+			processed_samples = src_data.output_frames_gen;
 			for (int j = 0; j < processed_samples; j++) {
 				new_file.samples[i][j] = data[j];
 			}
 			src_delete(src);
 		}
+		new_file.setAudioBufferSize(num_channels, processed_samples);
 		delete[] data;
 		file = new_file;
 	}
