@@ -4,6 +4,10 @@
 
 a small collection of my VCV Rack modules in a single plugin. [click here](https://github.com/alefnull/alefsbits/releases) for the latest release.
 
+## poly play
+
+polyphonic sample player. load sample through right click menu, then choose a number of channels to use. trigger input or button will play the sample, cycling through the available channels.
+
 ## probably not
 
 mutes a mono or poly input signal on trigger, based on probability
