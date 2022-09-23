@@ -122,7 +122,8 @@
       "name": "polyplay",
       "description": "load and play a sample polyphonically",
       "tags": [
-        "Sampler"
+        "Sampler",
+        "Polyphonic"
       ]
     }
   ]
