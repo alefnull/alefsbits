@@ -75,22 +75,26 @@ struct Polyplay : Module {
 		new_file.setNumChannels(num_channels);
 		new_file.setNumSamplesPerChannel(new_num_samples);
 		float *data = new float[new_num_samples * 2];
-		src = src_new(SRC_SINC_FASTEST, num_channels, NULL);
 		for (int i = 0; i < num_channels; i++) {
+			src = src_new(SRC_SINC_FASTEST, 1, NULL);
 			SRC_DATA src_data;
-			src_data.end_of_input = 0;
+			src_data.end_of_input = 1;
 			src_data.data_in = file.samples[i].data();
 			src_data.data_out = data;
 			src_data.input_frames = num_samples;
-			src_data.output_frames = new_num_samples;
+			src_data.output_frames = new_num_samples * 2;
 			src_data.src_ratio = (double)new_sample_rate / (double)file_sample_rate;
+			DEBUG("resampling channel %d", i);
 			src_process(src, &src_data);
+			DEBUG("resampling channel %d done", i);
+			DEBUG("setting new file samples");
 			int processed_samples = src_data.output_frames_gen;
 			for (int j = 0; j < processed_samples; j++) {
 				new_file.samples[i][j] = data[j];
 			}
+			DEBUG("setting new file samples done");
+			src_delete(src);
 		}
-		src_delete(src);
 		delete[] data;
 		file = new_file;
 	}
