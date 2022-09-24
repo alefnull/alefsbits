@@ -74,7 +74,7 @@ struct Polyplay : Module {
 		new_file.setSampleRate(new_sample_rate);
 		new_file.setNumChannels(num_channels);
 		new_file.setNumSamplesPerChannel(new_num_samples);
-		float *data = new float[new_num_samples * 2];
+		float *data = new float[new_num_samples];
 		for (int i = 0; i < num_channels; i++) {
 			src = src_new(SRC_SINC_FASTEST, 1, NULL);
 			SRC_DATA src_data;
@@ -82,7 +82,7 @@ struct Polyplay : Module {
 			src_data.data_in = file.samples[i].data();
 			src_data.data_out = data;
 			src_data.input_frames = num_samples;
-			src_data.output_frames = new_num_samples * 2;
+			src_data.output_frames = new_num_samples;
 			src_data.src_ratio = (double)new_sample_rate / (double)file_sample_rate;
 			src_process(src, &src_data);
 			processed_samples = src_data.output_frames_gen;
@@ -147,10 +147,10 @@ struct Polyplay : Module {
 			if (file_loaded && playing[i]) {
 				outputs[SAMPLE_OUTPUT].setVoltage(my_file.samples[current_wav_channel[i]][current_wav_sample[i]], i);
 				current_wav_sample[i]++;
-				if (current_wav_sample[i] >= num_samples) {
+				if (current_wav_sample[i] >= my_file.getNumSamplesPerChannel()) {
 					playing[i] = false;
 				}
-				if (current_wav_channel[i] >= num_channels) {
+				if (current_wav_channel[i] >= my_file.getNumChannels()) {
 					current_wav_channel[i] = 0;
 				}
 			}
