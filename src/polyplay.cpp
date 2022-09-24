@@ -248,6 +248,11 @@ struct PolyplayWidget : ModuleWidget {
 				char* path = osdialog_file(OSDIALOG_OPEN, "", NULL, NULL);
 				if (path) {
 					module->file_path = path;
+					for (int i = 0; i < MAX_POLY; i++) {
+						module->playing[i] = false;
+						module->current_wav_sample[i] = 0;
+					}
+					module->current_poly_channel = 0;
 					std::lock_guard<std::mutex> mg(module->lock_thread_mutex);
 					if (module->load_thread) {
 						module->load_thread->join();
