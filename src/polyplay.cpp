@@ -126,15 +126,6 @@ struct Polyplay : Module {
 		outputs[LEFT_OUTPUT].setChannels(poly);
 		outputs[RIGHT_OUTPUT].setChannels(poly);
 
-		if (!file_path.empty()) {
-			std::lock_guard<std::mutex> mg(lock_thread_mutex);
-			if (load_thread) {
-				load_thread->join();
-			}
-			process_audio = false;
-			load_thread = std::make_unique<std::thread>([this](){this->load_from_file();});
-		}
-
 		lights[SAMPLE_LIGHT].setBrightness(load_success ? 1.0 : 0.0);
 		
 		if (button_trigger.process(params[TRIGGER_PARAM].getValue() || input_trigger.process(inputs[TRIGGER_INPUT].getVoltage()))) {
@@ -251,6 +242,12 @@ struct PolyplayWidget : ModuleWidget {
 				char* path = osdialog_file(OSDIALOG_OPEN, "", NULL, NULL);
 				if (path) {
 					module->file_path = path;
+					std::lock_guard<std::mutex> mg(module->lock_thread_mutex);
+					if (module->load_thread) {
+						module->load_thread->join();
+					}
+					module->process_audio = false;
+					module->load_thread = std::make_unique<std::thread>([this](){this->module->load_from_file();});
 					free(path);
 				}
 			}
