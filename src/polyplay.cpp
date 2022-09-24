@@ -36,7 +36,6 @@ struct Polyplay : Module {
 	int num_samples;
 	int num_channels;
 	int current_wav_sample[MAX_POLY];
-	int current_wav_channel[MAX_POLY];
 	int current_poly_channel = 0;
 	bool playing[MAX_POLY] = { false };
 	bool load_success = false;
@@ -132,7 +131,6 @@ struct Polyplay : Module {
 			if (load_success) {
 				playing[current_poly_channel] = true;
 				current_wav_sample[current_poly_channel] = 0;
-				current_wav_channel[current_poly_channel] = 0;
 				current_poly_channel = (current_poly_channel + 1) % poly;
 			}
 		}
@@ -199,7 +197,6 @@ struct Polyplay : Module {
 			num_channels = my_file.getNumChannels();
 			for (int i = 0; i < MAX_POLY; i++) {
 				current_wav_sample[i] = 0;
-				current_wav_channel[i] = 0;
 			}
 			current_poly_channel = 0;
 		}
