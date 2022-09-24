@@ -140,19 +140,25 @@ struct Polyplay : Module {
 		for (int i = 0; i < poly; i++) {
 			if (file_loaded && playing[i]) {
 				if (outputs[LEFT_OUTPUT].isConnected() && outputs[RIGHT_OUTPUT].isConnected()) {
-					outputs[LEFT_OUTPUT].setVoltage(my_file.samples[0][current_wav_sample[i]], i);
-					outputs[RIGHT_OUTPUT].setVoltage(my_file.samples[1][current_wav_sample[i]], i);
+					if (num_channels > 1) {
+						outputs[LEFT_OUTPUT].setVoltage(my_file.samples[0][current_wav_sample[i]], i);
+						outputs[RIGHT_OUTPUT].setVoltage(my_file.samples[1][current_wav_sample[i]], i);
+					}
+					else {
+						outputs[LEFT_OUTPUT].setVoltage(my_file.samples[0][current_wav_sample[i]], i);
+						outputs[RIGHT_OUTPUT].setVoltage(my_file.samples[0][current_wav_sample[i]], i);
+					}
 				}
 				else if (outputs[LEFT_OUTPUT].isConnected() && !outputs[RIGHT_OUTPUT].isConnected()) {
 					float output_sample = 0;
-					for (int j = 0; j < my_file.getNumChannels(); j++) {
+					for (int j = 0; j < num_channels; j++) {
 						output_sample += my_file.samples[j][current_wav_sample[i]];
 					}
-					output_sample /= my_file.getNumChannels();
+					output_sample /= num_channels;
 					outputs[LEFT_OUTPUT].setVoltage(output_sample, i);
 				}
 				current_wav_sample[i]++;
-				if (current_wav_sample[i] >= my_file.getNumSamplesPerChannel()) {
+				if (current_wav_sample[i] >= num_samples) {
 					playing[i] = false;
 				}
 			}
