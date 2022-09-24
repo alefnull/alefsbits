@@ -19,7 +19,8 @@ struct Polyplay : Module {
 		INPUTS_LEN
 	};
 	enum OutputId {
-		SAMPLE_OUTPUT,
+		LEFT_OUTPUT,
+		RIGHT_OUTPUT,
 		OUTPUTS_LEN
 	};
 	enum LightId {
@@ -53,7 +54,8 @@ struct Polyplay : Module {
 		getParamQuantity(POLY_PARAM)->snapEnabled = true;
 		configParam(TRIGGER_PARAM, 0.0, 1.0, 0.0, "trigger");
 		configInput(TRIGGER_INPUT, "trigger");
-		configOutput(SAMPLE_OUTPUT, "sample");
+		configOutput(LEFT_OUTPUT, "left/mono");
+		configOutput(RIGHT_OUTPUT, "right");
 	}
 
 	~Polyplay() {
@@ -121,7 +123,8 @@ struct Polyplay : Module {
 			return;
 		}
 		int poly = params[POLY_PARAM].getValue();
-		outputs[SAMPLE_OUTPUT].setChannels(poly);
+		outputs[LEFT_OUTPUT].setChannels(poly);
+		outputs[RIGHT_OUTPUT].setChannels(poly);
 
 		if (!file_path.empty()) {
 			std::lock_guard<std::mutex> mg(lock_thread_mutex);
@@ -145,17 +148,26 @@ struct Polyplay : Module {
 
 		for (int i = 0; i < poly; i++) {
 			if (file_loaded && playing[i]) {
-				outputs[SAMPLE_OUTPUT].setVoltage(my_file.samples[current_wav_channel[i]][current_wav_sample[i]], i);
+				if (outputs[LEFT_OUTPUT].isConnected() && outputs[RIGHT_OUTPUT].isConnected()) {
+					outputs[LEFT_OUTPUT].setVoltage(my_file.samples[0][current_wav_sample[i]], i);
+					outputs[RIGHT_OUTPUT].setVoltage(my_file.samples[1][current_wav_sample[i]], i);
+				}
+				else if (outputs[LEFT_OUTPUT].isConnected() && !outputs[RIGHT_OUTPUT].isConnected()) {
+					float output_sample = 0;
+					for (int j = 0; j < my_file.getNumChannels(); j++) {
+						output_sample += my_file.samples[j][current_wav_sample[i]];
+					}
+					output_sample /= my_file.getNumChannels();
+					outputs[LEFT_OUTPUT].setVoltage(output_sample, i);
+				}
 				current_wav_sample[i]++;
 				if (current_wav_sample[i] >= my_file.getNumSamplesPerChannel()) {
 					playing[i] = false;
 				}
-				if (current_wav_channel[i] >= my_file.getNumChannels()) {
-					current_wav_channel[i] = 0;
-				}
 			}
 			else {
-				outputs[SAMPLE_OUTPUT].setVoltage(0.0, i);
+				outputs[LEFT_OUTPUT].setVoltage(0, i);
+				outputs[RIGHT_OUTPUT].setVoltage(0, i);
 			}
 		}
 	}
@@ -209,7 +221,7 @@ struct PolyplayWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 		float x_start = RACK_GRID_WIDTH * 2;
-		float y_start = RACK_GRID_WIDTH * 8;
+		float y_start = RACK_GRID_WIDTH * 7 - RACK_GRID_WIDTH / 2;
 		float dx = RACK_GRID_WIDTH * 2;
 		float dy = RACK_GRID_WIDTH * 2;
 
@@ -221,10 +233,12 @@ struct PolyplayWidget : ModuleWidget {
 		addParam(createParamCentered<TL1105>(Vec(x, y), module, Polyplay::TRIGGER_PARAM));
 		y += dy;
 		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::TRIGGER_INPUT));
-		y += dy + RACK_GRID_WIDTH;
+		y += dy + RACK_GRID_WIDTH / 2;
 		addChild(createLightCentered<MediumLight<RedLight>>(Vec(x, y), module, Polyplay::SAMPLE_LIGHT));
-		y += dy * 2 + RACK_GRID_WIDTH * 0.5 - RACK_GRID_WIDTH;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::SAMPLE_OUTPUT));
+		y += dy * 2 + RACK_GRID_WIDTH * 0.5 - RACK_GRID_WIDTH / 2;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::LEFT_OUTPUT));
+		y += dy;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::RIGHT_OUTPUT));
 	}
 
 	void appendContextMenu(Menu* menu) override {
