@@ -272,7 +272,7 @@ struct PolyplayWidget : ModuleWidget {
 		};
 
 		menu->addChild(new MenuSeparator());
-		LoadWavItem* loadWavItem = createMenuItem<LoadWavItem>("Load Wav", CHECKMARK(module->load_success));
+		LoadWavItem* loadWavItem = createMenuItem<LoadWavItem>("Load Sample");
 		loadWavItem->module = module;
 		menu->addChild(loadWavItem);
 
