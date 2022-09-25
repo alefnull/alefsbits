@@ -24,7 +24,6 @@ struct Polyplay : Module {
 		OUTPUTS_LEN
 	};
 	enum LightId {
-		SAMPLE_LIGHT,
 		LIGHTS_LEN
 	};
 
@@ -125,8 +124,6 @@ struct Polyplay : Module {
 		outputs[LEFT_OUTPUT].setChannels(poly);
 		outputs[RIGHT_OUTPUT].setChannels(poly);
 
-		lights[SAMPLE_LIGHT].setBrightness(load_success ? 1.0 : 0.0);
-		
 		if (button_trigger.process(params[TRIGGER_PARAM].getValue() || input_trigger.process(inputs[TRIGGER_INPUT].getVoltage()))) {
 			if (load_success) {
 				playing[current_poly_channel] = true;
@@ -227,9 +224,7 @@ struct PolyplayWidget : ModuleWidget {
 		addParam(createParamCentered<TL1105>(Vec(x, y), module, Polyplay::TRIGGER_PARAM));
 		y += dy;
 		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::TRIGGER_INPUT));
-		y += dy + RACK_GRID_WIDTH / 2;
-		addChild(createLightCentered<MediumLight<RedLight>>(Vec(x, y), module, Polyplay::SAMPLE_LIGHT));
-		y += dy * 2 + RACK_GRID_WIDTH * 0.5 - RACK_GRID_WIDTH / 2;
+		y += dy * 3 + RACK_GRID_WIDTH / 2;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::LEFT_OUTPUT));
 		y += dy;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::RIGHT_OUTPUT));
