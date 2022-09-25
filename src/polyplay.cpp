@@ -164,6 +164,21 @@ struct Polyplay : Module {
 		}
 	}
 
+	void onReset() override {
+		file_loaded = false;
+		load_success = false;
+		loaded_file_name = "";
+		file_path = "";
+		file_sample_rate = 0;
+		num_samples = 0;
+		num_channels = 0;
+		current_poly_channel = 0;
+		for (int i = 0; i < 16; i++) {
+			playing[i] = false;
+			current_wav_sample[i] = 0;
+		}
+	}
+
 	void onSampleRateChange() override {
 		rack_sample_rate = APP->engine->getSampleRate();
 		if (file_loaded) {
