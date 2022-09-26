@@ -6,7 +6,7 @@ a small collection of my VCV Rack modules in a single plugin. [click here](https
 
 ## poly play
 
-polyphonic sample player. load sample through right click menu, then choose a number of channels to use. trigger input or button will play the sample, cycling through the available channels.
+polyphonic sample player. load sample through right click menu, then choose a number of channels to use. trigger input or button will play the sample, cycling through the available channels with each subsequent trigger.
 
 ## probably not
 
