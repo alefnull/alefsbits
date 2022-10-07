@@ -21,6 +21,7 @@ struct Polyplay : Module {
 	enum OutputId {
 		LEFT_OUTPUT,
 		RIGHT_OUTPUT,
+		PHASE_OUTPUT,
 		OUTPUTS_LEN
 	};
 	enum LightId {
@@ -45,6 +46,9 @@ struct Polyplay : Module {
 	std::unique_ptr<std::thread> load_thread;
 	std::mutex lock_thread_mutex;
 	std::atomic<bool> process_audio{true};
+	float phase[MAX_POLY] = { 0.0f };
+	float phase_range = 10.0f;
+	bool phase_unipolar = true;
 
 	Polyplay() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -54,6 +58,7 @@ struct Polyplay : Module {
 		configInput(TRIGGER_INPUT, "trigger");
 		configOutput(LEFT_OUTPUT, "left/mono");
 		configOutput(RIGHT_OUTPUT, "right");
+		configOutput(PHASE_OUTPUT, "phase");
 	}
 
 	~Polyplay() {
@@ -121,6 +126,7 @@ struct Polyplay : Module {
 			return;
 		}
 		int poly = params[POLY_PARAM].getValue();
+		outputs[PHASE_OUTPUT].setChannels(poly);
 		outputs[LEFT_OUTPUT].setChannels(poly);
 		outputs[RIGHT_OUTPUT].setChannels(poly);
 
@@ -134,6 +140,21 @@ struct Polyplay : Module {
 
 		for (int i = 0; i < poly; i++) {
 			if (file_loaded && playing[i]) {
+				phase[i] = (float)current_wav_sample[i] / (float)num_samples;
+				if (outputs[PHASE_OUTPUT].isConnected()) {
+					if (phase_unipolar) {
+						float phase_out = phase[i] * phase_range;
+						outputs[PHASE_OUTPUT].setVoltage(phase_out, i);
+					}
+					else {
+						float phase_out = (phase[i] * 2 - 1) * phase_range;
+						outputs[PHASE_OUTPUT].setVoltage(phase_out, i);
+					}
+				}
+				if (current_wav_sample[i] >= num_samples) {
+					playing[i] = false;
+					phase[i] = 0.0f;
+				}
 				if (outputs[LEFT_OUTPUT].isConnected() && outputs[RIGHT_OUTPUT].isConnected()) {
 					if (num_channels > 1) {
 						outputs[LEFT_OUTPUT].setVoltage(my_file.samples[0][current_wav_sample[i]], i);
@@ -153,11 +174,9 @@ struct Polyplay : Module {
 					outputs[LEFT_OUTPUT].setVoltage(output_sample, i);
 				}
 				current_wav_sample[i]++;
-				if (current_wav_sample[i] >= num_samples) {
-					playing[i] = false;
-				}
 			}
 			else {
+				outputs[PHASE_OUTPUT].setVoltage(0.0f, i);
 				outputs[LEFT_OUTPUT].setVoltage(0, i);
 				outputs[RIGHT_OUTPUT].setVoltage(0, i);
 			}
@@ -190,6 +209,8 @@ struct Polyplay : Module {
 		json_t* rootJ = json_object();
 		json_object_set_new(rootJ, "loaded_file_name", json_string(loaded_file_name.c_str()));
 		json_object_set_new(rootJ, "file_loaded", json_boolean(file_loaded));
+		json_object_set_new(rootJ, "phase_range", json_real(phase_range));
+		json_object_set_new(rootJ, "phase_unipolar", json_boolean(phase_unipolar));
 		return rootJ;
 	}
 
@@ -211,6 +232,14 @@ struct Polyplay : Module {
 				current_wav_sample[i] = 0;
 			}
 			current_poly_channel = 0;
+		}
+		json_t* phase_rangeJ = json_object_get(rootJ, "phase_range");
+		if (phase_rangeJ) {
+			phase_range = json_real_value(phase_rangeJ);
+		}
+		json_t* phase_unipolarJ = json_object_get(rootJ, "phase_unipolar");
+		if (phase_unipolarJ) {
+			phase_unipolar = json_boolean_value(phase_unipolarJ);
 		}
 	}
 };
@@ -235,11 +264,13 @@ struct PolyplayWidget : ModuleWidget {
 		float y = y_start;
 
 		addParam(createParamCentered<RoundBlackKnob>(Vec(x, y), module, Polyplay::POLY_PARAM));
-		y += dy * 2;
+		y += dy * 2 - RACK_GRID_WIDTH;
 		addParam(createParamCentered<TL1105>(Vec(x, y), module, Polyplay::TRIGGER_PARAM));
-		y += dy;
+		y += dy - RACK_GRID_WIDTH / 2;
 		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::TRIGGER_INPUT));
-		y += dy * 3 + RACK_GRID_WIDTH / 2;
+		y += dy * 2 - RACK_GRID_WIDTH / 4;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::PHASE_OUTPUT));
+		y += dy * 2 + RACK_GRID_WIDTH / 4;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::LEFT_OUTPUT));
 		y += dy;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::RIGHT_OUTPUT));
@@ -248,6 +279,19 @@ struct PolyplayWidget : ModuleWidget {
 	void appendContextMenu(Menu* menu) override {
 		Polyplay* module = dynamic_cast<Polyplay*>(this->module);
 		assert(module);
+
+		menu->addChild(new MenuSeparator());
+		menu->addChild(createSubmenuItem("Phase Range", "", [=](Menu* menu) {
+			Menu* rangeMenu = new Menu();
+			rangeMenu->addChild(createMenuItem("-/+ 1v", CHECKMARK(module->phase_range == 1), [module]() { module->phase_range = 1; }));
+			rangeMenu->addChild(createMenuItem("-/+ 2v", CHECKMARK(module->phase_range == 2), [module]() { module->phase_range = 2; }));
+			rangeMenu->addChild(createMenuItem("-/+ 3v", CHECKMARK(module->phase_range == 3), [module]() { module->phase_range = 3; }));
+			rangeMenu->addChild(createMenuItem("-/+ 5v", CHECKMARK(module->phase_range == 5), [module]() { module->phase_range = 5; }));
+			rangeMenu->addChild(createMenuItem("-/+ 10v", CHECKMARK(module->phase_range == 10), [module]() { module->phase_range = 10; }));
+			rangeMenu->addChild(new MenuSeparator());
+			rangeMenu->addChild(createMenuItem("Unipolar", CHECKMARK(module->phase_unipolar), [module]() { module->phase_unipolar = !module->phase_unipolar; }));
+			menu->addChild(rangeMenu);
+		}));
 
 		struct LoadWavItem : MenuItem {
 			Polyplay* module;
