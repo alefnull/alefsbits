@@ -21,6 +21,7 @@ void init(Plugin* p) {
 	p->addModel(modelLogic);
 	p->addModel(modelProbablynot);
 	p->addModel(modelPolyplay);
+	p->addModel(modelLights);
 
 	// Any other plugin initialization may go here.
 	// As an alternative, consider lazy-loading assets and lookup tables when your module is created to reduce startup times of Rack.

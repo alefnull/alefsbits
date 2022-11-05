@@ -125,6 +125,15 @@
         "Sampler",
         "Polyphonic"
       ]
+    },
+    {
+      "slug": "lights",
+      "name": "lights",
+      "description": "lights turn on when gate is high. 'latch' mode toggles lights on trigger",
+      "tags": [
+        "Utility",
+        "Visual"
+      ]
     }
   ]
 }
