@@ -4,6 +4,10 @@
 
 a small collection of my VCV Rack modules in a single plugin. [click here](https://github.com/alefnull/alefsbits/releases) for the latest release.
 
+## lights
+
+a simple set of 8 inputs with corresponding lights. if latch mode is enabled, a gate/trigger will toggle the corresponding light on/off. if latch mode is disabled, the light will remain on while the input is high (>5V).
+
 ## poly play
 
 polyphonic sample player. load sample through right click menu, then choose a number of channels to use. trigger input or button will play the sample, cycling through the available channels with each subsequent trigger.
