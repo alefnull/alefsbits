@@ -115,7 +115,7 @@ struct Shift : Module {
 				if (random::uniform() < chance) {
 					last_sample[i] = out;
 				}
-				outputs[REGISTER_1_OUTPUT + i].setVoltage(last_sample[i]);
+				outputs[REGISTER_1_OUTPUT + i].setVoltage(out);
 			}
 		}
 	}
