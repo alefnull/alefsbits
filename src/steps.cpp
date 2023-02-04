@@ -35,7 +35,7 @@ void Steps::process(const ProcessArgs& args) {
 	advance_gate_outputs(step);
 
 	if (inputs[CLOCK_INPUT].isConnected()) {
-		float cv_out = params[STEP1_PARAM + step - 1].getValue();
+		float cv_out = step == 0 ? params[STEP1_PARAM].getValue() : params[STEP1_PARAM + step - 1].getValue();
 		cv_out *= range;
 		if (unipolar) {
 			cv_out = (cv_out + range) / 2.0;
