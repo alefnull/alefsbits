@@ -55,7 +55,7 @@ struct LightsWidget : ModuleWidget {
 
 		float x = RACK_GRID_WIDTH;
 		float y = RACK_GRID_WIDTH;
-		float x_start = x;
+		// float x_start = x;
 		float y_start = y * 6;
 		float dx = RACK_GRID_WIDTH * 2;
 		float dy = RACK_GRID_WIDTH * 2;

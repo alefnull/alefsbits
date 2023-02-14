@@ -257,7 +257,7 @@ struct PolyplayWidget : ModuleWidget {
 
 		float x_start = RACK_GRID_WIDTH * 2;
 		float y_start = RACK_GRID_WIDTH * 7 - RACK_GRID_WIDTH / 2;
-		float dx = RACK_GRID_WIDTH * 2;
+		// float dx = RACK_GRID_WIDTH * 2;
 		float dy = RACK_GRID_WIDTH * 2;
 
 		float x = x_start;
