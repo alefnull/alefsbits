@@ -85,7 +85,7 @@
     {
       "slug": "mlt",
       "name": "mlt",
-      "description": "two 1:3 polyphonic multiples",
+      "description": "two 1:5 polyphonic multiples",
       "tags": [
         "Polyphonic",
         "Utility"
