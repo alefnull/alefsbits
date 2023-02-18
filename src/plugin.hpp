@@ -22,3 +22,4 @@ extern Model* modelLogic;
 extern Model* modelProbablynot;
 extern Model* modelPolyplay;
 extern Model* modelLights;
+extern Model* modelSlips;

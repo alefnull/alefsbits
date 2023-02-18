@@ -134,6 +134,16 @@
         "Utility",
         "Visual"
       ]
+    },
+    {
+      "slug": "slips",
+      "name": "slips",
+      "description": "generate random melodies, with optional random offsets, quantized to a scale",
+      "tags": [
+        "Sequencer",
+        "Random",
+        "Quantizer"
+      ]
     }
   ]
 }
