@@ -35,22 +35,22 @@ struct Slips : Module, Quantizer {
 	enum LightId {
 		GATE_LIGHT,
 		SLIP_GATE_LIGHT,
-		STEP_1_LIGHT,
-		STEP_2_LIGHT,
-		STEP_3_LIGHT,
-		STEP_4_LIGHT,
-		STEP_5_LIGHT,
-		STEP_6_LIGHT,
-		STEP_7_LIGHT,
-		STEP_8_LIGHT,
-		STEP_9_LIGHT,
-		STEP_10_LIGHT,
-		STEP_11_LIGHT,
-		STEP_12_LIGHT,
-		STEP_13_LIGHT,
-		STEP_14_LIGHT,
-		STEP_15_LIGHT,
-		STEP_16_LIGHT,
+		ENUMS(STEP_1_LIGHT, 2),
+		ENUMS(STEP_2_LIGHT, 2),
+		ENUMS(STEP_3_LIGHT, 2),
+		ENUMS(STEP_4_LIGHT, 2),
+		ENUMS(STEP_5_LIGHT, 2),
+		ENUMS(STEP_6_LIGHT, 2),
+		ENUMS(STEP_7_LIGHT, 2),
+		ENUMS(STEP_8_LIGHT, 2),
+		ENUMS(STEP_9_LIGHT, 2),
+		ENUMS(STEP_10_LIGHT, 2),
+		ENUMS(STEP_11_LIGHT, 2),
+		ENUMS(STEP_12_LIGHT, 2),
+		ENUMS(STEP_13_LIGHT, 2),
+		ENUMS(STEP_14_LIGHT, 2),
+		ENUMS(STEP_15_LIGHT, 2),
+		ENUMS(STEP_16_LIGHT, 2),
 		LIGHTS_LEN
 	};
 
@@ -262,7 +262,7 @@ struct Slips : Module, Quantizer {
 				num_steps_input = clamp(num_steps_input, 0.0f, 10.0f);
 			}
 			// set the number of steps
-			num_steps = (int) (num_steps_input / 10 * 16);
+			num_steps = (int) (num_steps_input / 10 * 32);
 		}
 
 		// check if the root input is connected
@@ -393,9 +393,25 @@ struct Slips : Module, Quantizer {
 		lights[SLIP_GATE_LIGHT].setBrightness(the_slips[current_step] != 0 ? inputs[CLOCK_INPUT].getVoltage() / 10 : 0);
 
 		// set the sequence lights
+		// STEP_1_LIGHT is step 1, STEP_1_LIGHT + 1 is step 17, STEP_1_LIGHT + 2 is step 2, STEP_1_LIGHT + 3 is step 18, etc.
 		for (int i = 0; i < 16; i++) {
-			lights[STEP_1_LIGHT + i].setBrightness(i == current_step ? 1 : 0);
+			lights[STEP_1_LIGHT + (i * 2)].setBrightness(i == current_step ? 1 : 0);
+			lights[STEP_1_LIGHT + (i * 2) + 1].setBrightness(i + 16 == current_step ? 1 : 0);
 		}
+	}
+};
+
+static const NVGcolor COLOR_RED = nvgRGB(0xff, 0x00, 0x00);
+static const NVGcolor COLOR_GREEN = nvgRGB(0x00, 0xff, 0x00);
+static const NVGcolor COLOR_BLUE = nvgRGB(0x00, 0x00, 0xff);
+static const NVGcolor COLOR_YELLOW = nvgRGB(0xff, 0xff, 0x00);
+static const NVGcolor COLOR_CYAN = nvgRGB(0x00, 0xff, 0xff);
+static const NVGcolor COLOR_MAGENTA = nvgRGB(0xff, 0x00, 0xff);
+
+struct LightColors : GrayModuleLightWidget {
+	LightColors() {
+		addBaseColor(COLOR_RED);
+		addBaseColor(COLOR_GREEN);
 	}
 };
 
@@ -432,22 +448,22 @@ struct SlipsWidget : ModuleWidget {
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.854, 67.462)), module, Slips::QUANTIZE_INPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.552, 67.673)), module, Slips::QUANTIZE_OUTPUT));
 
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(11.717, 105.94)), module, Slips::STEP_1_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(17.078, 105.94)), module, Slips::STEP_2_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(22.439, 105.94)), module, Slips::STEP_3_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(27.8, 105.94)), module, Slips::STEP_4_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(33.16, 105.94)), module, Slips::STEP_5_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(38.521, 105.94)), module, Slips::STEP_6_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(43.882, 105.94)), module, Slips::STEP_7_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(49.243, 105.94)), module, Slips::STEP_8_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(11.717, 110.999)), module, Slips::STEP_9_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(17.078, 110.999)), module, Slips::STEP_10_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(22.439, 110.999)), module, Slips::STEP_11_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(27.8, 110.999)), module, Slips::STEP_12_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(33.16, 110.999)), module, Slips::STEP_13_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(38.521, 110.999)), module, Slips::STEP_14_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(43.882, 110.999)), module, Slips::STEP_15_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(49.243, 110.999)), module, Slips::STEP_16_LIGHT));
+		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(11.717, 105.94)), module, Slips::STEP_1_LIGHT));
+		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(17.078, 105.94)), module, Slips::STEP_2_LIGHT));
+		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(22.439, 105.94)), module, Slips::STEP_3_LIGHT));
+		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(27.8, 105.94)), module, Slips::STEP_4_LIGHT));
+		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(33.16, 105.94)), module, Slips::STEP_5_LIGHT));
+		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(38.521, 105.94)), module, Slips::STEP_6_LIGHT));
+		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(43.882, 105.94)), module, Slips::STEP_7_LIGHT));
+		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(49.243, 105.94)), module, Slips::STEP_8_LIGHT));
+		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(11.717, 110.999)), module, Slips::STEP_9_LIGHT));
+		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(17.078, 110.999)), module, Slips::STEP_10_LIGHT));
+		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(22.439, 110.999)), module, Slips::STEP_11_LIGHT));
+		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(27.8, 110.999)), module, Slips::STEP_12_LIGHT));
+		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(33.16, 110.999)), module, Slips::STEP_13_LIGHT));
+		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(38.521, 110.999)), module, Slips::STEP_14_LIGHT));
+		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(43.882, 110.999)), module, Slips::STEP_15_LIGHT));
+		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(49.243, 110.999)), module, Slips::STEP_16_LIGHT));
 	}
 
 	void appendContextMenu(Menu* menu) override {
