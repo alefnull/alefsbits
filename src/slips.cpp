@@ -56,7 +56,7 @@ struct Slips : Module, Quantizer {
 
 	Slips() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configParam(STEPS_PARAM, 1, 16, 8, "steps");
+		configParam(STEPS_PARAM, 1, 32, 16, "steps");
 		getParamQuantity(STEPS_PARAM)->snapEnabled = true;
 		configSwitch(ROOT_PARAM, 0, 11, 0, "root note", {
 			"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
