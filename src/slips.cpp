@@ -1,5 +1,6 @@
 #include "plugin.hpp"
 #include "quantizer.hpp"
+#include "cvRange.hpp"
 
 
 struct Slips : Module, Quantizer {
@@ -108,6 +109,9 @@ struct Slips : Module, Quantizer {
 	// a bool to check if slips have already been generated for this cycle
 	bool slips_generated = false;
 
+	// a cv range object to convert voltages with a range of 0V to 1V into a given range
+	CVRange cv_range;
+
 	// function to generate a new sequence,
 	// given the number of steps, root note, and scale
 	void generate_sequence(int num_steps, int root_note, int current_scale) {
@@ -115,8 +119,10 @@ struct Slips : Module, Quantizer {
 		the_sequence.clear();
 		// generate the sequence
 		for (int i = 0; i < num_steps; i++) {
-			// generate a random value between -1 and 1
-			float random_value = random::uniform() * 2.0 - 1.0;
+			// generate a random value between 0 and 1
+			float random_value = random::uniform();
+			// scale the random value to the desired cv range
+			random_value = cv_range.map(random_value);
 			// add the quantized value to the sequence
 			the_sequence.push_back(random_value);
 		}
@@ -389,6 +395,12 @@ struct SlipsWidget : ModuleWidget {
 		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(38.521, 110.999)), module, Slips::STEP_14_LIGHT));
 		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(43.882, 110.999)), module, Slips::STEP_15_LIGHT));
 		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(49.243, 110.999)), module, Slips::STEP_16_LIGHT));
+	}
+
+	void appendContextMenu(Menu* menu) override {
+		Slips* module = dynamic_cast<Slips*>(this->module);
+		assert(module);
+		module->cv_range.addMenu(module, menu);
 	}
 };
 
