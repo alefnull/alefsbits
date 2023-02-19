@@ -7,7 +7,7 @@ struct Slips : Module, Quantizer {
 		STEPS_PARAM,
 		ROOT_PARAM,
 		SCALE_PARAM,
-		RANDOMIZE_PARAM,
+		GENERATE_PARAM,
 		SLIPS_PARAM,
 		SLIP_RANGE_PARAM,
 		PARAMS_LEN
@@ -18,7 +18,7 @@ struct Slips : Module, Quantizer {
 		STEPS_INPUT,
 		ROOT_INPUT,
 		SCALE_INPUT,
-		RANDOMIZE_INPUT,
+		GENERATE_INPUT,
 		QUANTIZE_INPUT,
 		SLIPS_INPUT,
 		SLIP_RANGE_INPUT,
@@ -66,7 +66,7 @@ struct Slips : Module, Quantizer {
 			"dorian", "lydian", "mixolydian", "phrygian", "locrian", "blues"
 		});
 		getParamQuantity(SCALE_PARAM)->snapEnabled = true;
-		configParam(RANDOMIZE_PARAM, 0, 1, 0, "randomize");
+		configParam(GENERATE_PARAM, 0, 1, 0, "generate");
 		configParam(SLIPS_PARAM, 0, 1, 0, "slips", " %", 0, 100);
 		configParam(SLIP_RANGE_PARAM, 0, 1, 0, "slip range", " +/- volts");
 		configInput(CLOCK_INPUT, "clock");
@@ -77,7 +77,7 @@ struct Slips : Module, Quantizer {
 		getInputInfo(ROOT_INPUT)->description = "0V to 10V";
 		configInput(SCALE_INPUT, "scale cv");
 		getInputInfo(SCALE_INPUT)->description = "0V to 10V";
-		configInput(RANDOMIZE_INPUT, "randomize");
+		configInput(GENERATE_INPUT, "generate");
 		configInput(QUANTIZE_INPUT, "unquantized");
 		configInput(SLIPS_INPUT, "slips cv");
 		getInputInfo(SLIPS_INPUT)->description = "0V to 10V";
@@ -99,10 +99,10 @@ struct Slips : Module, Quantizer {
 	dsp::SchmittTrigger clock_trigger;
 	// schmitt trigger for reset input
 	dsp::SchmittTrigger reset_trigger;
-	// schmitt trigger for randomize input
-	dsp::SchmittTrigger randomize_trigger;
-	// schmitt trigger for randomize manual button
-	dsp::SchmittTrigger randomize_button_trigger;
+	// schmitt trigger for generatee input
+	dsp::SchmittTrigger generate_trigger;
+	// schmitt trigger for generatee manual button
+	dsp::SchmittTrigger generate_button_trigger;
 	// a bool to check if a reset has been requested
 	bool reset_requested = false;
 	// a bool to check if slips have already been generated for this cycle
@@ -284,16 +284,16 @@ struct Slips : Module, Quantizer {
 			slips_generated = false;
 		}
 
-		// check if the randomize input is high
-		if (randomize_trigger.process(inputs[RANDOMIZE_INPUT].getVoltage())) {
+		// check if the generatee input is high
+		if (generate_trigger.process(inputs[GENERATE_INPUT].getVoltage())) {
 			// request a reset
 			reset_requested = true;
 			// generate a new sequence
 			generate_sequence(num_steps, root_note, current_scale);
 		}
 
-		// check if the randomize button is pressed
-		if (randomize_button_trigger.process(params[RANDOMIZE_PARAM].getValue())) {
+		// check if the generatee button is pressed
+		if (generate_button_trigger.process(params[GENERATE_PARAM].getValue())) {
 			// request a reset
 			reset_requested = true;
 			// generate a new sequence
@@ -361,8 +361,8 @@ struct SlipsWidget : ModuleWidget {
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.164, 68.727)), module, Slips::SLIPS_INPUT));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(51.651, 82.852)), module, Slips::SLIP_RANGE_PARAM));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.164, 82.641)), module, Slips::SLIP_RANGE_INPUT));
-		addParam(createParamCentered<LEDButton>(mm2px(Vec(18.552, 54.391)), module, Slips::RANDOMIZE_PARAM));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.854, 54.181)), module, Slips::RANDOMIZE_INPUT));
+		addParam(createParamCentered<LEDButton>(mm2px(Vec(18.552, 54.391)), module, Slips::GENERATE_PARAM));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.854, 54.181)), module, Slips::GENERATE_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.854, 25.72)), module, Slips::CLOCK_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.854, 40.056)), module, Slips::RESET_INPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.854, 87.912)), module, Slips::SEQUENCE_OUTPUT));
