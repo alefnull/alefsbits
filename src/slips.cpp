@@ -112,6 +112,59 @@ struct Slips : Module, Quantizer {
 	// a cv range object to convert voltages with a range of 0V to 1V into a given range
 	CVRange cv_range;
 
+	// dataToJson override
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
+		// the sequence
+		json_t* sequenceJ = json_array();
+		for (int i = 0; i < (int) the_sequence.size(); i++) {
+			json_t* valueJ = json_real(the_sequence[i]);
+			json_array_append_new(sequenceJ, valueJ);
+		}
+		json_object_set_new(rootJ, "sequence", sequenceJ);
+		// the slips
+		json_t* slipsJ = json_array();
+		for (int i = 0; i < (int) the_slips.size(); i++) {
+			json_t* valueJ = json_real(the_slips[i]);
+			json_array_append_new(slipsJ, valueJ);
+		}
+		json_object_set_new(rootJ, "slips", slipsJ);
+		// the cv range
+		json_object_set_new(rootJ, "cv_range", cv_range.dataToJson());
+		return rootJ;
+	}
+
+	// dataFromJson override
+	void dataFromJson(json_t* rootJ) override {
+		// the sequence
+		json_t* sequenceJ = json_object_get(rootJ, "sequence");
+		if (sequenceJ) {
+			the_sequence.clear();
+			for (int i = 0; i < (int) json_array_size(sequenceJ); i++) {
+				json_t* valueJ = json_array_get(sequenceJ, i);
+				if (valueJ) {
+					the_sequence.push_back(json_number_value(valueJ));
+				}
+			}
+		}
+		// the slips
+		json_t* slipsJ = json_object_get(rootJ, "slips");
+		if (slipsJ) {
+			the_slips.clear();
+			for (int i = 0; i < (int) json_array_size(slipsJ); i++) {
+				json_t* valueJ = json_array_get(slipsJ, i);
+				if (valueJ) {
+					the_slips.push_back(json_number_value(valueJ));
+				}
+			}
+		}
+		// the cv range
+		json_t* cv_rangeJ = json_object_get(rootJ, "cv_range");
+		if (cv_rangeJ) {
+			cv_range.dataFromJson(cv_rangeJ);
+		}
+	}
+
 	// function to generate a new sequence,
 	// given the number of steps, root note, and scale
 	void generate_sequence(int num_steps, int root_note, int current_scale) {
