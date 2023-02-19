@@ -167,7 +167,7 @@ struct CVRange {
 	 *     }
 	 *
 	 */
-	void addMenu(Module* module, Menu* menu, std::string menuName = "Range"){
+	void addMenu(Module* module, Menu* menu, std::string menuName = "range"){
 
 		//Wrapper for cv_a and cv_b to interface with CVTextFiled and CVSlider
 		struct CVQuantity : Quantity {
@@ -243,10 +243,10 @@ struct CVRange {
 
 		menu->addChild(createSubmenuItem(menuName, curLabel,
 			[=](Menu* menu) {
-				menu->addChild(createSubmenuItem("Custom", "",
+				menu->addChild(createSubmenuItem("custom", "",
 					[=](Menu* menu) {
 						{
-							menu->addChild(createMenuLabel("Min Value"));
+							menu->addChild(createMenuLabel("min value"));
 							auto slider = new CVSlider(this,&cv_a);
 							auto textField = new CVTextFiled(slider->quantity);
 							slider->textField = textField;
@@ -254,7 +254,7 @@ struct CVRange {
 							menu->addChild(slider);
 						}
 						{
-							menu->addChild(createMenuLabel("Max Value"));
+							menu->addChild(createMenuLabel("max value"));
 							auto slider = new CVSlider(this,&cv_b);
 							auto textField = new CVTextFiled(slider->quantity);
 							slider->textField = textField;
