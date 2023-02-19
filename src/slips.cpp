@@ -35,28 +35,28 @@ struct Slips : Module, Quantizer {
 	enum LightId {
 		GATE_LIGHT,
 		SLIP_GATE_LIGHT,
-		ENUMS(STEP_1_LIGHT, 2),
-		ENUMS(STEP_2_LIGHT, 2),
-		ENUMS(STEP_3_LIGHT, 2),
-		ENUMS(STEP_4_LIGHT, 2),
-		ENUMS(STEP_5_LIGHT, 2),
-		ENUMS(STEP_6_LIGHT, 2),
-		ENUMS(STEP_7_LIGHT, 2),
-		ENUMS(STEP_8_LIGHT, 2),
-		ENUMS(STEP_9_LIGHT, 2),
-		ENUMS(STEP_10_LIGHT, 2),
-		ENUMS(STEP_11_LIGHT, 2),
-		ENUMS(STEP_12_LIGHT, 2),
-		ENUMS(STEP_13_LIGHT, 2),
-		ENUMS(STEP_14_LIGHT, 2),
-		ENUMS(STEP_15_LIGHT, 2),
-		ENUMS(STEP_16_LIGHT, 2),
+		ENUMS(STEP_1_LIGHT, 4),
+		ENUMS(STEP_2_LIGHT, 4),
+		ENUMS(STEP_3_LIGHT, 4),
+		ENUMS(STEP_4_LIGHT, 4),
+		ENUMS(STEP_5_LIGHT, 4),
+		ENUMS(STEP_6_LIGHT, 4),
+		ENUMS(STEP_7_LIGHT, 4),
+		ENUMS(STEP_8_LIGHT, 4),
+		ENUMS(STEP_9_LIGHT, 4),
+		ENUMS(STEP_10_LIGHT, 4),
+		ENUMS(STEP_11_LIGHT, 4),
+		ENUMS(STEP_12_LIGHT, 4),
+		ENUMS(STEP_13_LIGHT, 4),
+		ENUMS(STEP_14_LIGHT, 4),
+		ENUMS(STEP_15_LIGHT, 4),
+		ENUMS(STEP_16_LIGHT, 4),
 		LIGHTS_LEN
 	};
 
 	Slips() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configParam(STEPS_PARAM, 1, 32, 16, "steps");
+		configParam(STEPS_PARAM, 1, 64, 16, "steps");
 		getParamQuantity(STEPS_PARAM)->snapEnabled = true;
 		configSwitch(ROOT_PARAM, 0, 11, 0, "root note", {
 			"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
@@ -392,11 +392,12 @@ struct Slips : Module, Quantizer {
 		// set the slip gate light
 		lights[SLIP_GATE_LIGHT].setBrightness(the_slips[current_step] != 0 ? inputs[CLOCK_INPUT].getVoltage() / 10 : 0);
 
-		// set the sequence lights
-		// STEP_1_LIGHT is step 1, STEP_1_LIGHT + 1 is step 17, STEP_1_LIGHT + 2 is step 2, STEP_1_LIGHT + 3 is step 18, etc.
+		// set the step lights
 		for (int i = 0; i < 16; i++) {
-			lights[STEP_1_LIGHT + (i * 2)].setBrightness(i == current_step ? 1 : 0);
-			lights[STEP_1_LIGHT + (i * 2) + 1].setBrightness(i + 16 == current_step ? 1 : 0);
+			lights[STEP_1_LIGHT + (i * 4)].setBrightness(i == current_step ? 1.f : 0.f);
+			lights[STEP_1_LIGHT + (i * 4) + 1].setBrightness(i + 16 == current_step ? 1.f : 0.f);
+			lights[STEP_1_LIGHT + (i * 4) + 2].setBrightness(i + 32 == current_step ? 1.f : 0.f);
+			lights[STEP_1_LIGHT + (i * 4) + 3].setBrightness(i + 48 == current_step ? 1.f : 0.f);
 		}
 	}
 };
@@ -407,11 +408,38 @@ static const NVGcolor COLOR_BLUE = nvgRGB(0x00, 0x00, 0xff);
 static const NVGcolor COLOR_YELLOW = nvgRGB(0xff, 0xff, 0x00);
 static const NVGcolor COLOR_CYAN = nvgRGB(0x00, 0xff, 0xff);
 static const NVGcolor COLOR_MAGENTA = nvgRGB(0xff, 0x00, 0xff);
+static const NVGcolor COLOR_IBM_PURPLE = nvgRGB(0x78, 0x5e, 0xf0);
+static const NVGcolor COLOR_IBM_MAGENTA = nvgRGB(0xdc, 0x26, 0x7f);
+static const NVGcolor COLOR_IBM_ORANGE = nvgRGB(0xfe, 0x61, 0x00);
+static const NVGcolor COLOR_IBM_YELLOW = nvgRGB(0xff, 0xb0, 0x00);
+static const NVGcolor COLOR_CUD_ORANGE = nvgRGB(0xe6, 0x9f, 0x00);
+static const NVGcolor COLOR_CUD_BLUE = nvgRGB(0x00, 0x72, 0xb2);
+static const NVGcolor COLOR_CUD_SKYBLUE = nvgRGB(0x56, 0xb4, 0xe9);
+static const NVGcolor COLOR_CUD_GREEN = nvgRGB(0x00, 0x9e, 0x73);
+static const NVGcolor COLOR_CUD_PINK = nvgRGB(0xcc, 0x79, 0xa7);
 
 struct LightColors : GrayModuleLightWidget {
 	LightColors() {
 		addBaseColor(COLOR_RED);
 		addBaseColor(COLOR_GREEN);
+	}
+};
+
+struct IBMLightColors : GrayModuleLightWidget {
+	IBMLightColors() {
+		addBaseColor(COLOR_IBM_PURPLE);
+		addBaseColor(COLOR_IBM_MAGENTA);
+		addBaseColor(COLOR_IBM_ORANGE);
+		addBaseColor(COLOR_IBM_YELLOW);
+	}
+};
+
+struct CUDLightColors : GrayModuleLightWidget {
+	CUDLightColors() {
+		addBaseColor(COLOR_CUD_BLUE);
+		addBaseColor(COLOR_CUD_GREEN);
+		addBaseColor(COLOR_CUD_ORANGE);
+		addBaseColor(COLOR_CUD_PINK);
 	}
 };
 
@@ -448,27 +476,51 @@ struct SlipsWidget : ModuleWidget {
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.854, 67.462)), module, Slips::QUANTIZE_INPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.552, 67.673)), module, Slips::QUANTIZE_OUTPUT));
 
-		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(11.717, 105.94)), module, Slips::STEP_1_LIGHT));
-		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(17.078, 105.94)), module, Slips::STEP_2_LIGHT));
-		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(22.439, 105.94)), module, Slips::STEP_3_LIGHT));
-		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(27.8, 105.94)), module, Slips::STEP_4_LIGHT));
-		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(33.16, 105.94)), module, Slips::STEP_5_LIGHT));
-		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(38.521, 105.94)), module, Slips::STEP_6_LIGHT));
-		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(43.882, 105.94)), module, Slips::STEP_7_LIGHT));
-		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(49.243, 105.94)), module, Slips::STEP_8_LIGHT));
-		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(11.717, 110.999)), module, Slips::STEP_9_LIGHT));
-		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(17.078, 110.999)), module, Slips::STEP_10_LIGHT));
-		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(22.439, 110.999)), module, Slips::STEP_11_LIGHT));
-		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(27.8, 110.999)), module, Slips::STEP_12_LIGHT));
-		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(33.16, 110.999)), module, Slips::STEP_13_LIGHT));
-		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(38.521, 110.999)), module, Slips::STEP_14_LIGHT));
-		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(43.882, 110.999)), module, Slips::STEP_15_LIGHT));
-		addChild(createLightCentered<MediumSimpleLight<LightColors>>(mm2px(Vec(49.243, 110.999)), module, Slips::STEP_16_LIGHT));
+		float start_x = box.size.x / 2 - RACK_GRID_WIDTH * 4.5;
+		float start_y = box.size.y - RACK_GRID_WIDTH * 4.5;
+		float dx = RACK_GRID_WIDTH * 1.25;
+		float dy = RACK_GRID_WIDTH * 1.25;
+		float x = start_x;
+		float y = start_y;
+
+		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_1_LIGHT));
+		x += dx;
+		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_2_LIGHT));
+		x += dx;
+		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_3_LIGHT));
+		x += dx;
+		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_4_LIGHT));
+		x += dx;
+		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_5_LIGHT));
+		x += dx;
+		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_6_LIGHT));
+		x += dx;
+		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_7_LIGHT));
+		x += dx;
+		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_8_LIGHT));
+		x -= 7 * dx;
+		y += dy;
+		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_9_LIGHT));
+		x += dx;
+		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_10_LIGHT));
+		x += dx;
+		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_11_LIGHT));
+		x += dx;
+		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_12_LIGHT));
+		x += dx;
+		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_13_LIGHT));
+		x += dx;
+		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_14_LIGHT));
+		x += dx;
+		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_15_LIGHT));
+		x += dx;
+		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_16_LIGHT));
 	}
 
 	void appendContextMenu(Menu* menu) override {
 		Slips* module = dynamic_cast<Slips*>(this->module);
 		assert(module);
+		menu->addChild(new MenuSeparator());
 		module->cv_range.addMenu(module, menu);
 	}
 };
