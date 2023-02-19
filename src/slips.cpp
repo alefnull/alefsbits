@@ -307,7 +307,7 @@ struct Slips : Module, Quantizer {
 		}
 
 		// check if this step is a slip (the_slips[current_step] != 0)
-		float out = the_slips[current_step] != 0 ? the_sequence[current_step] + the_slips[current_step] : the_sequence[current_step];
+		float out = the_slips[current_step] != 0 ? clamp(the_sequence[current_step] + the_slips[current_step], -10.f, 10.f) : clamp(the_sequence[current_step], -10.f, 10.f);
 		// set the output voltage
 		outputs[SEQUENCE_OUTPUT].setVoltage(quantize(out, root_note, current_scale));
 		// set the gate output
