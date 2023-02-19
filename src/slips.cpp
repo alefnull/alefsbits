@@ -205,7 +205,7 @@ struct Slips : Module, Quantizer {
 			// pick a random step to slip (as long as it hasn't already been slipped this cycle)
 			int slip_step = -1;
 			while (slip_step < 0 || the_slips[slip_step] != 0.0) {
-				slip_step = random::u32() % the_sequence.size();
+				slip_step = random::u32() % (int)the_sequence.size();
 			}
 			// pick a random amount to slip by (-1 to 1)
 			float slip_offset = random::uniform() * slip_range * 2.0 - slip_range;
