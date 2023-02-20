@@ -108,6 +108,8 @@ struct Slips : Module, Quantizer {
 	bool reset_requested = false;
 	// a bool to check if slips have already been generated for this cycle
 	bool slips_generated = false;
+	// a bool to check if root note input expects 0-10V or a v/oct value
+	bool root_input_voct = false;
 
 	// a cv range object to convert voltages with a range of 0V to 1V into a given range
 	CVRange cv_range;
@@ -131,6 +133,8 @@ struct Slips : Module, Quantizer {
 		json_object_set_new(rootJ, "slips", slipsJ);
 		// the cv range
 		json_object_set_new(rootJ, "cv_range", cv_range.dataToJson());
+		// root input voct
+		json_object_set_new(rootJ, "root_input_voct", json_boolean(root_input_voct));
 		return rootJ;
 	}
 
@@ -162,6 +166,11 @@ struct Slips : Module, Quantizer {
 		json_t* cv_rangeJ = json_object_get(rootJ, "cv_range");
 		if (cv_rangeJ) {
 			cv_range.dataFromJson(cv_rangeJ);
+		}
+		// root input voct
+		json_t* root_input_voctJ = json_object_get(rootJ, "root_input_voct");
+		if (root_input_voctJ) {
+			root_input_voct = json_boolean_value(root_input_voctJ);
 		}
 	}
 
@@ -267,15 +276,25 @@ struct Slips : Module, Quantizer {
 
 		// check if the root input is connected
 		if (inputs[ROOT_INPUT].isConnected()) {
-			// get the root input voltage
-			float root_note_input = inputs[ROOT_INPUT].getVoltage();
-			// check if the root input voltage is out of bounds
-			if (root_note_input < 0 || root_note_input > 10) {
-				// clamp the root input voltage
-				root_note_input = clamp(root_note_input, 0.0f, 10.0f);
+			if (!root_input_voct) {
+				// get the root input voltage
+				float root_note_input = inputs[ROOT_INPUT].getVoltage();
+				// check if the root input voltage is out of bounds
+				if (root_note_input < 0 || root_note_input > 10) {
+					// clamp the root input voltage
+					root_note_input = clamp(root_note_input, 0.0f, 10.0f);
+				}
+				// set the root note
+				root_note = (int) (root_note_input / 10 * 12);
 			}
-			// set the root note
-			root_note = (int) (root_note_input / 10 * 12);
+			else {
+				// get the root input voltage
+				float root_note_input = inputs[ROOT_INPUT].getVoltage();
+				// the root note input expects a v/oct value,
+				// so strip out the octave and convert to a note
+				// number between 0 and 11
+				root_note = (int) (root_note_input * 12) % 12;
+			}
 		}
 
 		// check if the scale input is connected
@@ -521,6 +540,7 @@ struct SlipsWidget : ModuleWidget {
 		Slips* module = dynamic_cast<Slips*>(this->module);
 		assert(module);
 		menu->addChild(new MenuSeparator());
+		menu->addChild(createMenuItem("root input v/oct", CHECKMARK(module->root_input_voct), [module]() { module->root_input_voct = !module->root_input_voct; }));
 		module->cv_range.addMenu(module, menu);
 	}
 };
