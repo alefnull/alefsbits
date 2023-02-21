@@ -51,6 +51,7 @@ struct Slips : Module, Quantizer {
 		ENUMS(STEP_14_LIGHT, 4),
 		ENUMS(STEP_15_LIGHT, 4),
 		ENUMS(STEP_16_LIGHT, 4),
+		ENUMS(SEGMENT_LIGHTS, 64),
 		LIGHTS_LEN
 	};
 
@@ -444,21 +445,10 @@ struct LightColors : GrayModuleLightWidget {
 	}
 };
 
-struct IBMLightColors : GrayModuleLightWidget {
-	IBMLightColors() {
-		addBaseColor(COLOR_IBM_PURPLE);
-		addBaseColor(COLOR_IBM_MAGENTA);
-		addBaseColor(COLOR_IBM_ORANGE);
-		addBaseColor(COLOR_IBM_YELLOW);
-	}
-};
-
-struct CUDLightColors : GrayModuleLightWidget {
-	CUDLightColors() {
-		addBaseColor(COLOR_CUD_BLUE);
-		addBaseColor(COLOR_CUD_GREEN);
-		addBaseColor(COLOR_CUD_ORANGE);
-		addBaseColor(COLOR_CUD_PINK);
+		// set the segment lights
+		for (int i = 0; i < MAX_STEPS; i++) {
+			lights[SEGMENT_LIGHTS + i].setBrightness(i == current_step ? 1.f : 0.f);
+		}
 	}
 };
 
@@ -496,44 +486,29 @@ struct SlipsWidget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.552, 67.673)), module, Slips::QUANTIZE_OUTPUT));
 
 		float start_x = box.size.x / 2 - RACK_GRID_WIDTH * 4.5;
-		float start_y = box.size.y - RACK_GRID_WIDTH * 4.5;
-		float dx = RACK_GRID_WIDTH * 1.25;
-		float dy = RACK_GRID_WIDTH * 1.25;
+		float start_y = box.size.y - RACK_GRID_WIDTH * 5;
 		float x = start_x;
 		float y = start_y;
 
-		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_1_LIGHT));
-		x += dx;
-		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_2_LIGHT));
-		x += dx;
-		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_3_LIGHT));
-		x += dx;
-		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_4_LIGHT));
-		x += dx;
-		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_5_LIGHT));
-		x += dx;
-		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_6_LIGHT));
-		x += dx;
-		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_7_LIGHT));
-		x += dx;
-		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_8_LIGHT));
-		x -= 7 * dx;
-		y += dy;
-		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_9_LIGHT));
-		x += dx;
-		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_10_LIGHT));
-		x += dx;
-		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_11_LIGHT));
-		x += dx;
-		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_12_LIGHT));
-		x += dx;
-		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_13_LIGHT));
-		x += dx;
-		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_14_LIGHT));
-		x += dx;
-		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_15_LIGHT));
-		x += dx;
-		addChild(createLightCentered<LargeLight<CUDLightColors>>(Vec(x, y), module, Slips::STEP_16_LIGHT));
+		SegmentDisplay* first_segment_display = createWidget<SegmentDisplay>(Vec(x, y));
+		first_segment_display->box.size = Vec(RACK_GRID_WIDTH * 9, RACK_GRID_WIDTH / 2);
+		first_segment_display->setLights<RedLight>(module, Slips::SEGMENT_LIGHTS, 16);
+		addChild(first_segment_display);
+		y += RACK_GRID_WIDTH / 2;
+		SegmentDisplay* second_segment_display = createWidget<SegmentDisplay>(Vec(x, y));
+		second_segment_display->box.size = Vec(RACK_GRID_WIDTH * 9, RACK_GRID_WIDTH / 2);
+		second_segment_display->setLights<RedLight>(module, Slips::SEGMENT_LIGHTS + 16, 16);
+		addChild(second_segment_display);
+		y += RACK_GRID_WIDTH / 2;
+		SegmentDisplay* third_segment_display = createWidget<SegmentDisplay>(Vec(x, y));
+		third_segment_display->box.size = Vec(RACK_GRID_WIDTH * 9, RACK_GRID_WIDTH / 2);
+		third_segment_display->setLights<RedLight>(module, Slips::SEGMENT_LIGHTS + 32, 16);
+		addChild(third_segment_display);
+		y += RACK_GRID_WIDTH / 2;
+		SegmentDisplay* fourth_segment_display = createWidget<SegmentDisplay>(Vec(x, y));
+		fourth_segment_display->box.size = Vec(RACK_GRID_WIDTH * 9, RACK_GRID_WIDTH / 2);
+		fourth_segment_display->setLights<RedLight>(module, Slips::SEGMENT_LIGHTS + 48, 16);
+		addChild(fourth_segment_display);
 	}
 
 	void appendContextMenu(Menu* menu) override {
