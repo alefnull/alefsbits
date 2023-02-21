@@ -99,34 +99,35 @@ struct Quantizer {
                 break;
         }
 
-        // closest value
-        float closest_note = 0;
-        // closest distance
-        float closest_dist = 10;
-        // note in volts
-        float note_volts = 0;
-        // distance between input and note in volts
-        float dist = 0;
-        // octave number
-        int oct = int(floorf(input));
-        // volts modulo 1
-        float mod = input - oct;
+        // the closest value to the input
+        float closest_value = 0.0f;
+        // the closest distance to the input
+        float closest_distance = 100.0f;
+        // the scale note in volts
+        float note_in_volts = 0.0f;
+        // the distance between the input and the scale note
+        float distance = 0.0f;
+        // the octave of the input
+        int octave = int(floorf(input));
+        // the volts minus the octave
+        float volts_minus_octave = input - octave;
 
-        // iterate through all notes in the scale
+        // iterate through the scale
         for (int i = 0; i < curr_scale_size; i++) {
-            // calculate the note in volts
-            note_volts = (oct + (curr_scale[i] + root) / 12.0);
-            // calculate the distance between the input and the note
-            dist = fabsf(mod - (curr_scale[i] + root) / 12.0);
+            // calculate the scale note in volts
+            note_in_volts = (curr_scale[i] + root) % 12 / 12.0f;
+            // calculate the distance between the input and the scale note
+            distance = fabsf(volts_minus_octave - note_in_volts);
             // if the distance is less than the closest distance
-            if (dist < closest_dist) {
+            if (distance < closest_distance) {
                 // set the closest distance to the distance
-                closest_dist = dist;
-                // set the closest value to the note in volts
-                closest_note = note_volts;
+                closest_distance = distance;
+                // set the closest value to the scale note in volts
+                closest_value = note_in_volts;
             }
         }
-        // return the closest value
-        return closest_note;
+
+        // return the closest value plus the octave
+        return closest_value + octave;
     }
 };
