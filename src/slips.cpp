@@ -2,62 +2,52 @@
 #include "quantizer.hpp"
 #include "cvRange.hpp"
 
+#define MAX_STEPS 64
+
 
 struct Slips : Module, Quantizer {
 	enum ParamId {
-		STEPS_PARAM,
 		ROOT_PARAM,
+		STEPS_PARAM,
 		SCALE_PARAM,
+		START_PARAM,
 		GENERATE_PARAM,
+		PROB_PARAM,
 		SLIPS_PARAM,
 		SLIP_RANGE_PARAM,
 		PARAMS_LEN
 	};
 	enum InputId {
 		CLOCK_INPUT,
+		ROOT_CV_INPUT,
+		STEPS_CV_INPUT,
 		RESET_INPUT,
-		STEPS_INPUT,
-		ROOT_INPUT,
-		SCALE_INPUT,
-		GENERATE_INPUT,
+		SCALE_CV_INPUT,
+		START_CV_INPUT,
+		GENERATE_TRIGGER_INPUT,
+		PROB_CV_INPUT,
 		QUANTIZE_INPUT,
-		SLIPS_INPUT,
-		SLIP_RANGE_INPUT,
+		SLIPS_CV_INPUT,
+		SLIP_RANGE_CV_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
+		QUANTIZE_OUTPUT,
 		SEQUENCE_OUTPUT,
 		GATE_OUTPUT,
-		QUANTIZE_OUTPUT,
 		SLIP_GATE_OUTPUT,
 		OUTPUTS_LEN
 	};
 	enum LightId {
 		GATE_LIGHT,
 		SLIP_GATE_LIGHT,
-		ENUMS(STEP_1_LIGHT, 4),
-		ENUMS(STEP_2_LIGHT, 4),
-		ENUMS(STEP_3_LIGHT, 4),
-		ENUMS(STEP_4_LIGHT, 4),
-		ENUMS(STEP_5_LIGHT, 4),
-		ENUMS(STEP_6_LIGHT, 4),
-		ENUMS(STEP_7_LIGHT, 4),
-		ENUMS(STEP_8_LIGHT, 4),
-		ENUMS(STEP_9_LIGHT, 4),
-		ENUMS(STEP_10_LIGHT, 4),
-		ENUMS(STEP_11_LIGHT, 4),
-		ENUMS(STEP_12_LIGHT, 4),
-		ENUMS(STEP_13_LIGHT, 4),
-		ENUMS(STEP_14_LIGHT, 4),
-		ENUMS(STEP_15_LIGHT, 4),
-		ENUMS(STEP_16_LIGHT, 4),
 		ENUMS(SEGMENT_LIGHTS, 64),
 		LIGHTS_LEN
 	};
 
 	Slips() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configParam(STEPS_PARAM, 1, 64, 16, "steps");
+		configParam(STEPS_PARAM, 1, MAX_STEPS, 16, "steps");
 		getParamQuantity(STEPS_PARAM)->snapEnabled = true;
 		configSwitch(ROOT_PARAM, 0, 11, 0, "root note", {
 			"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
@@ -73,30 +63,41 @@ struct Slips : Module, Quantizer {
 		configParam(SLIP_RANGE_PARAM, 0, 1, 0, "slip range", " +/- volts");
 		configInput(CLOCK_INPUT, "clock");
 		configInput(RESET_INPUT, "reset");
-		configInput(STEPS_INPUT, "steps cv");
-		getInputInfo(STEPS_INPUT)->description = "0V to 10V";
-		configInput(ROOT_INPUT, "root cv");
-		getInputInfo(ROOT_INPUT)->description = "0V to 10V";
-		configInput(SCALE_INPUT, "scale cv");
-		getInputInfo(SCALE_INPUT)->description = "0V to 10V";
-		configInput(GENERATE_INPUT, "generate");
+		configInput(STEPS_CV_INPUT, "steps cv");
+		getInputInfo(STEPS_CV_INPUT)->description = "0V to 10V";
+		configInput(ROOT_CV_INPUT, "root cv");
+		getInputInfo(ROOT_CV_INPUT)->description = "0V to 10V";
+		configInput(SCALE_CV_INPUT, "scale cv");
+		getInputInfo(SCALE_CV_INPUT)->description = "0V to 10V";
+		configInput(GENERATE_TRIGGER_INPUT, "generate");
 		configInput(QUANTIZE_INPUT, "unquantized");
-		configInput(SLIPS_INPUT, "slips cv");
-		getInputInfo(SLIPS_INPUT)->description = "0V to 10V";
-		configInput(SLIP_RANGE_INPUT, "slip range cv");
-		getInputInfo(SLIP_RANGE_INPUT)->description = "0V to 10V";
+		configInput(SLIPS_CV_INPUT, "slips cv");
+		getInputInfo(SLIPS_CV_INPUT)->description = "0V to 10V";
+		configInput(SLIP_RANGE_CV_INPUT, "slip range cv");
+		getInputInfo(SLIP_RANGE_CV_INPUT)->description = "0V to 10V";
 		configOutput(SEQUENCE_OUTPUT, "sequence");
 		configOutput(GATE_OUTPUT, "gate");
 		configOutput(QUANTIZE_OUTPUT, "quantized");
 		configOutput(SLIP_GATE_OUTPUT, "slip gate");
+		configParam(START_PARAM, 1, 64, 1, "starting step");
+		getParamQuantity(START_PARAM)->snapEnabled = true;
+		configParam(PROB_PARAM, 0, 1, 1, "step probability", " %", 0, 100);
+		configInput(START_CV_INPUT, "starting step cv");
+		getInputInfo(START_CV_INPUT)->description = "0V to 10V";
+		configInput(PROB_CV_INPUT, "step probability cv");
+		getInputInfo(PROB_CV_INPUT)->description = "0V to 10V";
 	}
 
 	// the sequence
-	std::vector<float> the_sequence;
+	float the_sequence[64] = {0.0f};
 	// the slips
-	std::vector<float> the_slips;
+	float the_slips[64] = {0.0f};
+	// the number of steps gone through in this cycle
+	int steps_gone_through = 0;
 	// the current step
 	int current_step = 0;
+	// the last value
+	float last_value = 0.0f;
 	// schmitt trigger for clock input
 	dsp::SchmittTrigger clock_trigger;
 	// schmitt trigger for reset input
@@ -111,6 +112,8 @@ struct Slips : Module, Quantizer {
 	bool slips_generated = false;
 	// a bool to check if root note input expects 0-10V or a v/oct value
 	bool root_input_voct = false;
+	// track whether the current step should be skipped
+	bool skip_step = false;
 
 	// a cv range object to convert voltages with a range of 0V to 1V into a given range
 	CVRange cv_range;
@@ -120,14 +123,14 @@ struct Slips : Module, Quantizer {
 		json_t* rootJ = json_object();
 		// the sequence
 		json_t* sequenceJ = json_array();
-		for (int i = 0; i < (int) the_sequence.size(); i++) {
+		for (int i = 0; i < MAX_STEPS; i++) {
 			json_t* valueJ = json_real(the_sequence[i]);
 			json_array_append_new(sequenceJ, valueJ);
 		}
 		json_object_set_new(rootJ, "sequence", sequenceJ);
 		// the slips
 		json_t* slipsJ = json_array();
-		for (int i = 0; i < (int) the_slips.size(); i++) {
+		for (int i = 0; i < MAX_STEPS; i++) {
 			json_t* valueJ = json_real(the_slips[i]);
 			json_array_append_new(slipsJ, valueJ);
 		}
@@ -144,22 +147,20 @@ struct Slips : Module, Quantizer {
 		// the sequence
 		json_t* sequenceJ = json_object_get(rootJ, "sequence");
 		if (sequenceJ) {
-			the_sequence.clear();
 			for (int i = 0; i < (int) json_array_size(sequenceJ); i++) {
 				json_t* valueJ = json_array_get(sequenceJ, i);
 				if (valueJ) {
-					the_sequence.push_back(json_number_value(valueJ));
+					the_sequence[i] = json_number_value(valueJ);
 				}
 			}
 		}
 		// the slips
 		json_t* slipsJ = json_object_get(rootJ, "slips");
 		if (slipsJ) {
-			the_slips.clear();
 			for (int i = 0; i < (int) json_array_size(slipsJ); i++) {
 				json_t* valueJ = json_array_get(slipsJ, i);
 				if (valueJ) {
-					the_slips.push_back(json_number_value(valueJ));
+					the_slips[i] = json_number_value(valueJ);
 				}
 			}
 		}
@@ -177,25 +178,13 @@ struct Slips : Module, Quantizer {
 
 	// function to generate a new sequence,
 	// given the number of steps, root note, and scale
-	void generate_sequence(int num_steps, int root_note, int current_scale) {
-		// clear the sequence
-		the_sequence.clear();
+	void generate_sequence() {
 		// generate the sequence
-		for (int i = 0; i < num_steps; i++) {
+		for (int i = 0; i < MAX_STEPS; i++) {
 			// generate a random value between 0 and 1
 			float random_value = random::uniform();
-			// scale the random value to the desired cv range
-			random_value = cv_range.map(random_value);
-			// add the quantized value to the sequence
-			the_sequence.push_back(random_value);
-		}
-	}
-
-	// function to set the octave of the sequence,
-	// given the desired octave (0 == -4, 1 == -3, 2 == -2, 3 == -1, 4 == 0, etc.)
-	void set_octave(int octave) {
-		for (int i = 0; i < (int)the_sequence.size(); i++) {
-			the_sequence[i] += (octave - 4) * 12;
+			// add the value to the sequence
+			the_sequence[i] = random_value;
 		}
 	}
 
@@ -203,28 +192,28 @@ struct Slips : Module, Quantizer {
 	// given the slip amount (0 to 1) and slip range (0 to 1)
 	void generate_slips(float slip_amount, float slip_range) {
 		// clear the slips
-		the_slips.clear();
-		// make sure the slip vector is the same size as the sequence
-		for (int i = 0; i < (int)the_sequence.size(); i++) {
-			the_slips.push_back(0.0);
+		for (int i = 0; i < MAX_STEPS; i++) {
+			the_slips[i] = 0.0;
 		}
 		// convert the slip amount to a number of steps to slip
-		int num_slips = (int)(the_sequence.size() * slip_amount);
+		int num_slips =	(int) (MAX_STEPS * slip_amount);
 		// generate the slips
 		for (int i = 0; i < num_slips; i++) {
 			// pick a random step to slip (as long as it hasn't already been slipped this cycle)
 			int slip_step = -1;
 			while (slip_step < 0 || the_slips[slip_step] != 0.0) {
-				slip_step = random::u32() % (int)the_sequence.size();
+				slip_step = random::u32() % MAX_STEPS;
 			}
 			// pick a random amount to slip by (-1 to 1)
-			float slip_offset = random::uniform() * slip_range * 2.0 - slip_range;
+			float slip_value = random::uniform() * slip_range * 2.0 - slip_range;
 			// add the slip to the slip vector at the slip step
-			the_slips[slip_step] = slip_offset;
+			the_slips[slip_step] = slip_value;
 		}
 	}
 
 	void process(const ProcessArgs& args) override {
+		// get the starting step
+		int starting_step = params[START_PARAM].getValue() - 1;
 		// get the number of steps
 		int num_steps = params[STEPS_PARAM].getValue();
 		// get the root note
@@ -235,51 +224,40 @@ struct Slips : Module, Quantizer {
 		float slip_amount = params[SLIPS_PARAM].getValue();
 		// get the slip range
 		float slip_range = params[SLIP_RANGE_PARAM].getValue();
+		// get the step probability
+		float step_prob = params[PROB_PARAM].getValue();
 		
-		// check if the clock input is high
-		if (clock_trigger.process(inputs[CLOCK_INPUT].getVoltage())) {
-			// check if a reset has been requested
-			if (reset_requested) {
-				// reset the step
-				current_step = 0;
-				// reset the reset request
-				reset_requested = false;
-				// break out of the conditional
-				return;
+		// check if the starting step input is connected
+		if (inputs[START_CV_INPUT].isConnected()) {
+			// get the starting step input voltage
+			float starting_step_input = inputs[START_CV_INPUT].getVoltage();
+			// check if the starting step input voltage is out of bounds
+			if (starting_step_input < 0 || starting_step_input > 10) {
+				// clamp the starting step input voltage
+				starting_step_input = clamp(starting_step_input, 0.0f, 10.0f);
 			}
-			// increment the step
-			current_step++;
-			// check if the step is out of bounds
-			if (current_step >= (int)the_sequence.size()) {
-				// reset the step
-				current_step = 0;
-			}
-		}
-
-		// check if the reset input is high
-		if (reset_trigger.process(inputs[RESET_INPUT].getVoltage())) {
-			// request a reset
-			reset_requested = true;
+			// set the starting step
+			starting_step = (int) (starting_step_input / 10 * 64);
 		}
 
 		// check if the steps input is connected
-		if (inputs[STEPS_INPUT].isConnected()) {
+		if (inputs[STEPS_CV_INPUT].isConnected()) {
 			// get the steps input voltage
-			float num_steps_input = inputs[STEPS_INPUT].getVoltage();
+			float num_steps_input = inputs[STEPS_CV_INPUT].getVoltage();
 			// check if the steps input voltage is out of bounds
 			if (num_steps_input < 0 || num_steps_input > 10) {
 				// clamp the steps input voltage
 				num_steps_input = clamp(num_steps_input, 0.0f, 10.0f);
 			}
 			// set the number of steps
-			num_steps = (int) (num_steps_input / 10 * 32);
+			num_steps = (int) (num_steps_input / 10 * 64);
 		}
 
 		// check if the root input is connected
-		if (inputs[ROOT_INPUT].isConnected()) {
+		if (inputs[ROOT_CV_INPUT].isConnected()) {
 			if (!root_input_voct) {
 				// get the root input voltage
-				float root_note_input = inputs[ROOT_INPUT].getVoltage();
+				float root_note_input = inputs[ROOT_CV_INPUT].getVoltage();
 				// check if the root input voltage is out of bounds
 				if (root_note_input < 0 || root_note_input > 10) {
 					// clamp the root input voltage
@@ -290,7 +268,7 @@ struct Slips : Module, Quantizer {
 			}
 			else {
 				// get the root input voltage
-				float root_note_input = inputs[ROOT_INPUT].getVoltage();
+				float root_note_input = inputs[ROOT_CV_INPUT].getVoltage();
 				// the root note input expects a v/oct value,
 				// so strip out the octave and convert to a note
 				// number between 0 and 11
@@ -299,9 +277,9 @@ struct Slips : Module, Quantizer {
 		}
 
 		// check if the scale input is connected
-		if (inputs[SCALE_INPUT].isConnected()) {
+		if (inputs[SCALE_CV_INPUT].isConnected()) {
 			// get the scale input voltage
-			float current_scale_input = inputs[SCALE_INPUT].getVoltage();
+			float current_scale_input = inputs[SCALE_CV_INPUT].getVoltage();
 			// check if the scale input voltage is out of bounds
 			if (current_scale_input < 0 || current_scale_input > 10) {
 				// clamp the scale input voltage
@@ -312,9 +290,9 @@ struct Slips : Module, Quantizer {
 		}
 
 		// check if the slip amount input is connected
-		if (inputs[SLIPS_INPUT].isConnected()) {
+		if (inputs[SLIPS_CV_INPUT].isConnected()) {
 			// get the slip amount input voltage
-			float slip_amount_input = inputs[SLIPS_INPUT].getVoltage();
+			float slip_amount_input = inputs[SLIPS_CV_INPUT].getVoltage();
 			// check if the slip amount input voltage is out of bounds
 			if (slip_amount_input < 0 || slip_amount_input > 10) {
 				// clamp the slip amount input voltage
@@ -325,9 +303,9 @@ struct Slips : Module, Quantizer {
 		}
 
 		// check if the slip range input is connected
-		if (inputs[SLIP_RANGE_INPUT].isConnected()) {
+		if (inputs[SLIP_RANGE_CV_INPUT].isConnected()) {
 			// get the slip range input voltage
-			float slip_range_input = inputs[SLIP_RANGE_INPUT].getVoltage();
+			float slip_range_input = inputs[SLIP_RANGE_CV_INPUT].getVoltage();
 			// check if the slip range input voltage is out of bounds
 			if (slip_range_input < 0 || slip_range_input > 10) {
 				// clamp the slip range input voltage
@@ -337,23 +315,92 @@ struct Slips : Module, Quantizer {
 			slip_range = slip_range_input / 10;
 		}
 
-		// if the sequence is empty, generate a new sequence
-		if (the_sequence.empty()) {
-			generate_sequence(num_steps, root_note, current_scale);
+		// check if the step probability input is connected
+		if (inputs[PROB_CV_INPUT].isConnected()) {
+			// get the step probability input voltage
+			float step_prob_input = inputs[PROB_CV_INPUT].getVoltage();
+			// check if the step probability input voltage is out of bounds
+			if (step_prob_input < 0 || step_prob_input > 10) {
+				// clamp the step probability input voltage
+				step_prob_input = clamp(step_prob_input, 0.0f, 10.0f);
+			}
+			// set the step probability
+			step_prob = step_prob_input / 10;
 		}
 
-		// if the slip vector is empty, generate a new slip vector
-		if (the_slips.empty()) {
-			for (int i = 0; i < num_steps; i++) {
-				the_slips.push_back(0);
+		// check if the generatee input is high
+		if (generate_trigger.process(inputs[GENERATE_TRIGGER_INPUT].getVoltage())) {
+			// request a reset
+			reset_requested = true;
+			// generate a new sequence
+			generate_sequence();
+		}
+
+		// check if the generatee button is pressed
+		if (generate_button_trigger.process(params[GENERATE_PARAM].getValue())) {
+			// request a reset
+			reset_requested = true;
+			// generate a new sequence
+			generate_sequence();
+		}
+
+		// check if the clock input is high
+		if (clock_trigger.process(inputs[CLOCK_INPUT].getVoltage())) {
+			// check if a reset has been requested
+			if (reset_requested) {
+				// reset the step
+				current_step = starting_step;
+				// reset the steps gone through counter
+				steps_gone_through = 0;
+				// reset the reset request
+				reset_requested = false;
+				// break out of the conditional
+				return;
+			}
+			
+			// reset the skip flag
+			skip_step = false;
+			
+			// increment the step
+			current_step++;
+
+			// increment the steps gone through counter
+			steps_gone_through++;
+			
+			// get the number of steps left in the sequence
+			int steps_left = num_steps - steps_gone_through;
+			
+			// if there are no steps left in the sequence
+			if (steps_left == 0) {
+				// reset the step
+				current_step = starting_step;
+				// reset the steps gone through counter
+				steps_gone_through = 0;
+			}
+
+			// check if the current step is higher than the number of steps
+			if (current_step > MAX_STEPS) {
+				// loop back around to the beginning
+				current_step = 0;
+			}
+
+			// determine if the step should be skipped
+			if (step_prob < 1) {
+				// get a random number between 0 and 1
+				float rand = random::uniform();
+				// check if the random number is greater than the step probability
+				if (rand > step_prob) {
+					// skip the step
+					skip_step = true;
+				}
 			}
 		}
-
+		
 		// if we're on the first step
-		if (current_step == 0) {
-			// if we haven't generated a new slip vector for this cycle
+		if (current_step == starting_step) {
+			// if we haven't generated new slips for this cycle
 			if (!slips_generated) {
-				// generate a new slip vector
+				// generate new slips
 				generate_slips(slip_amount, slip_range);
 				// set the slips generated flag
 				slips_generated = true;
@@ -363,87 +410,76 @@ struct Slips : Module, Quantizer {
 			slips_generated = false;
 		}
 
-		// check if the generatee input is high
-		if (generate_trigger.process(inputs[GENERATE_INPUT].getVoltage())) {
+		// check if the reset input is high
+		if (reset_trigger.process(inputs[RESET_INPUT].getVoltage())) {
 			// request a reset
 			reset_requested = true;
-			// generate a new sequence
-			generate_sequence(num_steps, root_note, current_scale);
-		}
-
-		// check if the generatee button is pressed
-		if (generate_button_trigger.process(params[GENERATE_PARAM].getValue())) {
-			// request a reset
-			reset_requested = true;
-			// generate a new sequence
-			generate_sequence(num_steps, root_note, current_scale);
 		}
 
 		// check if this step is a slip (the_slips[current_step] != 0)
-		float out = the_slips[current_step] != 0 ? clamp(the_sequence[current_step] + the_slips[current_step], -10.f, 10.f) : clamp(the_sequence[current_step], -10.f, 10.f);
-		// set the output voltage
-		outputs[SEQUENCE_OUTPUT].setVoltage(quantize(out, root_note, current_scale));
-		// set the gate output
-		if (outputs[GATE_OUTPUT].isConnected() && inputs[CLOCK_INPUT].isConnected()) {
-			// set the gate output voltage to the same as the clock input
-			outputs[GATE_OUTPUT].setVoltage(inputs[CLOCK_INPUT].getVoltage());
+		bool is_slip = the_slips[current_step] != 0;
+
+		// get the voltage for the current step
+		float out = clamp(the_sequence[current_step], -10.f, 10.f);
+
+		// scale the voltage to the desired range
+		out = cv_range.map(out);
+
+		// if the step is a slip
+		if (is_slip) {
+			// add the slip amount to the output
+			out = clamp(the_sequence[current_step] + the_slips[current_step], -10.f, 10.f);
 		}
 
-		// set the slip gate output
-		if (outputs[SLIP_GATE_OUTPUT].isConnected() && inputs[CLOCK_INPUT].isConnected()) {
-			// if this step is a slip (the_slips[current_step] != 0)
-			if (the_slips[current_step] != 0) {
-				// set the slip gate output voltage to the same as the clock input
-				outputs[SLIP_GATE_OUTPUT].setVoltage(inputs[CLOCK_INPUT].getVoltage());
-			} else {
-				// set the slip gate output voltage to 0
-				outputs[SLIP_GATE_OUTPUT].setVoltage(0);
+		// if the step should be skipped
+		if (skip_step) {
+			// check if the sequence output is connected
+			if (outputs[SEQUENCE_OUTPUT].isConnected()) {
+				// set the output voltage to the last value
+				outputs[SEQUENCE_OUTPUT].setVoltage(quantize(last_value, root_note, current_scale));
 			}
+			// check if the gate output is connected
+			if (outputs[GATE_OUTPUT].isConnected()) {
+				// set the gate output to 0
+				outputs[GATE_OUTPUT].setVoltage(0);
+			}
+			// set the gate light
+			lights[GATE_LIGHT].setBrightness(0);
+		}
+		else {
+			// set the last value
+			last_value = out;
+			// check if the sequence output is connected
+			if (outputs[SEQUENCE_OUTPUT].isConnected()) {
+				// set the output voltage
+				outputs[SEQUENCE_OUTPUT].setVoltage(quantize(out, root_note, current_scale));
+			}
+			// check if the gate output is connected
+			if (outputs[GATE_OUTPUT].isConnected()) {
+				// set the gate output to the incoming clock signal
+				outputs[GATE_OUTPUT].setVoltage(inputs[CLOCK_INPUT].getVoltage());
+			}
+			// check if the slip gate output is connected
+			if (outputs[SLIP_GATE_OUTPUT].isConnected()) {
+				// set the slip gate output to the incoming clock signal
+				outputs[SLIP_GATE_OUTPUT].setVoltage(is_slip ? inputs[CLOCK_INPUT].getVoltage() : 0);
+			}
+			// set the gate light
+			lights[GATE_LIGHT].setBrightness(inputs[CLOCK_INPUT].getVoltage() / 10);
+
+			// set the slip gate light
+			lights[SLIP_GATE_LIGHT].setBrightness(is_slip ? inputs[CLOCK_INPUT].getVoltage() / 10 : 0);
 		}
 
 		// get the input voltage to be quantized
-		float quantize_input = inputs[QUANTIZE_INPUT].getVoltage();
-		// set the quantize output voltage
-		outputs[QUANTIZE_OUTPUT].setVoltage(quantize(quantize_input, root_note, current_scale));
-
-		// set the gate light
-		lights[GATE_LIGHT].setBrightness(inputs[CLOCK_INPUT].getVoltage() / 10);
-
-		// set the slip gate light
-		lights[SLIP_GATE_LIGHT].setBrightness(the_slips[current_step] != 0 ? inputs[CLOCK_INPUT].getVoltage() / 10 : 0);
-
-		// set the step lights
-		for (int i = 0; i < 16; i++) {
-			lights[STEP_1_LIGHT + (i * 4)].setBrightness(i == current_step ? 1.f : 0.f);
-			lights[STEP_1_LIGHT + (i * 4) + 1].setBrightness(i + 16 == current_step ? 1.f : 0.f);
-			lights[STEP_1_LIGHT + (i * 4) + 2].setBrightness(i + 32 == current_step ? 1.f : 0.f);
-			lights[STEP_1_LIGHT + (i * 4) + 3].setBrightness(i + 48 == current_step ? 1.f : 0.f);
+		if (inputs[QUANTIZE_INPUT].isConnected() && outputs[QUANTIZE_OUTPUT].isConnected()) {
+			// get the input voltage
+			float in = inputs[QUANTIZE_INPUT].getVoltage();
+			// quantize the input voltage
+			float out = quantize(in, root_note, current_scale);
+			// set the output voltage
+			outputs[QUANTIZE_OUTPUT].setVoltage(out);
 		}
-	}
-};
-
-static const NVGcolor COLOR_RED = nvgRGB(0xff, 0x00, 0x00);
-static const NVGcolor COLOR_GREEN = nvgRGB(0x00, 0xff, 0x00);
-static const NVGcolor COLOR_BLUE = nvgRGB(0x00, 0x00, 0xff);
-static const NVGcolor COLOR_YELLOW = nvgRGB(0xff, 0xff, 0x00);
-static const NVGcolor COLOR_CYAN = nvgRGB(0x00, 0xff, 0xff);
-static const NVGcolor COLOR_MAGENTA = nvgRGB(0xff, 0x00, 0xff);
-static const NVGcolor COLOR_IBM_PURPLE = nvgRGB(0x78, 0x5e, 0xf0);
-static const NVGcolor COLOR_IBM_MAGENTA = nvgRGB(0xdc, 0x26, 0x7f);
-static const NVGcolor COLOR_IBM_ORANGE = nvgRGB(0xfe, 0x61, 0x00);
-static const NVGcolor COLOR_IBM_YELLOW = nvgRGB(0xff, 0xb0, 0x00);
-static const NVGcolor COLOR_CUD_ORANGE = nvgRGB(0xe6, 0x9f, 0x00);
-static const NVGcolor COLOR_CUD_BLUE = nvgRGB(0x00, 0x72, 0xb2);
-static const NVGcolor COLOR_CUD_SKYBLUE = nvgRGB(0x56, 0xb4, 0xe9);
-static const NVGcolor COLOR_CUD_GREEN = nvgRGB(0x00, 0x9e, 0x73);
-static const NVGcolor COLOR_CUD_PINK = nvgRGB(0xcc, 0x79, 0xa7);
-
-struct LightColors : GrayModuleLightWidget {
-	LightColors() {
-		addBaseColor(COLOR_RED);
-		addBaseColor(COLOR_GREEN);
-	}
-};
 
 		// set the segment lights
 		for (int i = 0; i < MAX_STEPS; i++) {
@@ -463,27 +499,34 @@ struct SlipsWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(51.651, 25.72)), module, Slips::STEPS_PARAM));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.164, 25.72)), module, Slips::STEPS_INPUT));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(51.651, 40.056)), module, Slips::ROOT_PARAM));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.164, 39.845)), module, Slips::ROOT_INPUT));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(51.651, 54.391)), module, Slips::SCALE_PARAM));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.164, 54.181)), module, Slips::SCALE_INPUT));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(51.651, 68.938)), module, Slips::SLIPS_PARAM));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.164, 68.727)), module, Slips::SLIPS_INPUT));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(51.651, 82.852)), module, Slips::SLIP_RANGE_PARAM));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.164, 82.641)), module, Slips::SLIP_RANGE_INPUT));
-		addParam(createParamCentered<LEDButton>(mm2px(Vec(18.552, 54.391)), module, Slips::GENERATE_PARAM));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.854, 54.181)), module, Slips::GENERATE_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.854, 25.72)), module, Slips::CLOCK_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.854, 40.056)), module, Slips::RESET_INPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.854, 87.912)), module, Slips::SEQUENCE_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.028, 87.912)), module, Slips::GATE_OUTPUT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(20.028, 96.134)), module, Slips::GATE_LIGHT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(31.412, 87.912)), module, Slips::SLIP_GATE_OUTPUT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(31.412, 96.134)), module, Slips::SLIP_GATE_LIGHT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.854, 67.462)), module, Slips::QUANTIZE_INPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.552, 67.673)), module, Slips::QUANTIZE_OUTPUT));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(30.279, 24.08)), module, Slips::ROOT_PARAM));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(51.782, 24.08)), module, Slips::STEPS_PARAM));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(30.279, 41.974)), module, Slips::SCALE_PARAM));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(51.782, 41.974)), module, Slips::START_PARAM));
+		addParam(createParamCentered<LEDButton>(mm2px(Vec(18.254, 59.869)), module, Slips::GENERATE_PARAM));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(51.782, 59.869)), module, Slips::PROB_PARAM));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(51.782, 77.763)), module, Slips::SLIPS_PARAM));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(51.782, 95.657)), module, Slips::SLIP_RANGE_PARAM));
+
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.854, 24.08)), module, Slips::CLOCK_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.082, 24.08)), module, Slips::ROOT_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.586, 24.08)), module, Slips::STEPS_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.854, 41.974)), module, Slips::RESET_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.082, 41.974)), module, Slips::SCALE_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.586, 41.974)), module, Slips::START_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.556, 59.869)), module, Slips::GENERATE_TRIGGER_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.586, 59.869)), module, Slips::PROB_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.258, 77.763)), module, Slips::QUANTIZE_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.586, 77.763)), module, Slips::SLIPS_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.586, 95.657)), module, Slips::SLIP_RANGE_CV_INPUT));
+
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(19.745, 77.763)), module, Slips::QUANTIZE_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.854, 95.657)), module, Slips::SEQUENCE_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.763, 95.657)), module, Slips::GATE_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.882, 95.657)), module, Slips::SLIP_GATE_OUTPUT));
+
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(23.255, 92.872)), module, Slips::GATE_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(33.541, 92.872)), module, Slips::SLIP_GATE_LIGHT));
 
 		float start_x = box.size.x / 2 - RACK_GRID_WIDTH * 4.5;
 		float start_y = box.size.y - RACK_GRID_WIDTH * 5;
