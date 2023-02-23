@@ -144,6 +144,14 @@
         "Random",
         "Quantizer"
       ]
+    },
+    {
+      "slug": "trigs",
+      "name": "trigs",
+      "description": "generate triggers from an input signal with different modes",
+      "tags": [
+        "Utility"
+      ]
     }
   ]
 }
