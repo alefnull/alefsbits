@@ -36,13 +36,6 @@ struct Trigs : Module {
 		}
 		samples[BUFFER_SIZE - 1] = inputs[SOURCE_INPUT].getVoltage();
 
-		// debug samples
-		if (args.frame % 1000) {
-			for (int i = 0; i < BUFFER_SIZE; i++) {
-				DEBUG("sample %d: %f", i, samples[i]);
-			}
-		}
-
 		for (int i = 0; i < BUFFER_SIZE - 1; i++) {
 			deltas[i] = samples[i + 1] - samples[i];
 		}
