@@ -66,7 +66,7 @@ struct Slips : Module, Quantizer {
 		configInput(STEPS_CV_INPUT, "steps cv");
 		getInputInfo(STEPS_CV_INPUT)->description = "0V to 10V";
 		configInput(ROOT_CV_INPUT, "root cv");
-		getInputInfo(ROOT_CV_INPUT)->description = "0V to 10V";
+		getInputInfo(ROOT_CV_INPUT)->description = "0V to 10V (v/oct if enabled)";
 		configInput(SCALE_CV_INPUT, "scale cv");
 		getInputInfo(SCALE_CV_INPUT)->description = "0V to 10V";
 		configInput(GENERATE_TRIGGER_INPUT, "generate");
