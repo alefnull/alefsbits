@@ -1,5 +1,6 @@
 #include "plugin.hpp"
 
+#define BUFFER_SIZE 10
 
 struct Trigs : Module {
 	enum ParamId {
@@ -25,39 +26,41 @@ struct Trigs : Module {
 		configOutput(TRIG_OUTPUT, "trigger");
 	}
 
-	float prev_input = 0.f;
-	float prev_delta = 0.f;
+	float samples[BUFFER_SIZE] = { 0.f };
+	float deltas[BUFFER_SIZE - 1] = { 0.f };
 	dsp::PulseGenerator pulse;
 
 	void process(const ProcessArgs& args) override {
-		// get the input value
-		float input = inputs[SOURCE_INPUT].getVoltage();
-		// calculate the delta between the current input value and the previous input value
-		float delta = input - prev_input;
-		
-		// if the current delta is negative and the previous delta was positive
-		// or if the current delta is positive and the previous delta was negative
-		if ((delta < 0.f && prev_delta >= 0.f) || (delta > 0.f && prev_delta <= 0.f)) {
-			// generate a trigger
+		for (int i = 0; i < BUFFER_SIZE - 1; i++) {
+			samples[i] = samples[i + 1];
+		}
+		samples[BUFFER_SIZE - 1] = inputs[SOURCE_INPUT].getVoltage();
+
+		// debug samples
+		if (args.frame % 1000) {
+			for (int i = 0; i < BUFFER_SIZE; i++) {
+				DEBUG("sample %d: %f", i, samples[i]);
+			}
+		}
+
+		for (int i = 0; i < BUFFER_SIZE - 1; i++) {
+			deltas[i] = samples[i + 1] - samples[i];
+		}
+
+		bool trig = true;
+		// if all deltas are 0, positive, or negative, no trigger
+		for (int i = 0; i < BUFFER_SIZE - 1; i++) {
+			if (deltas[i] != 0.f) {
+				trig = false;
+				break;
+			}
+		}
+
+		if (trig) {
 			pulse.trigger(1e-3f);
 		}
 
-		// set the output
-		// if the pulse generator is generating a trigger
-		if (pulse.process(args.sampleTime)) {
-			// set the output to high
-			outputs[TRIG_OUTPUT].setVoltage(10.f);
-		}
-		// if the pulse generator is not generating a trigger
-		else {
-			// set the output to low
-			outputs[TRIG_OUTPUT].setVoltage(0.f);
-		}
-
-		// set the last input value to the current input value
-		prev_input = input;
-		// set the last delta to the current delta
-		prev_delta = delta;
+		outputs[TRIG_OUTPUT].setVoltage(pulse.process(args.sampleTime) ? 10.f : 0.f);
 	}
 };
 
