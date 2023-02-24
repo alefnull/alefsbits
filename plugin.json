@@ -146,9 +146,9 @@
       ]
     },
     {
-      "slug": "trigs",
-      "name": "trigs",
-      "description": "generate triggers from an input signal with different modes",
+      "slug": "turnt",
+      "name": "turnt",
+      "description": "generate triggers when a CV signal changes direction, crosses zero, or both",
       "tags": [
         "Utility"
       ]
