@@ -106,8 +106,6 @@ struct Slips : Module, Quantizer {
 	dsp::SchmittTrigger generate_trigger;
 	// schmitt trigger for generatee manual button
 	dsp::SchmittTrigger generate_button_trigger;
-	// a bool to check if a reset has been requested
-	bool reset_requested = false;
 	// a bool to check if slips have already been generated for this cycle
 	bool slips_generated = false;
 	// a bool to check if root note input expects 0-10V or a v/oct value
@@ -237,7 +235,7 @@ struct Slips : Module, Quantizer {
 				starting_step_input = clamp(starting_step_input, 0.0f, 10.0f);
 			}
 			// set the starting step
-			starting_step = (int) (starting_step_input / 10 * 64);
+			starting_step = (int) ((starting_step_input / 10) * 64);
 		}
 
 		// check if the steps input is connected
@@ -250,11 +248,12 @@ struct Slips : Module, Quantizer {
 				num_steps_input = clamp(num_steps_input, 0.0f, 10.0f);
 			}
 			// set the number of steps
-			num_steps = (int) (num_steps_input / 10 * 64);
+			num_steps = (int) ((num_steps_input / 10) * 64);
 		}
 
 		// check if the root input is connected
 		if (inputs[ROOT_CV_INPUT].isConnected()) {
+			// if the root input is not in v/oct mode
 			if (!root_input_voct) {
 				// get the root input voltage
 				float root_note_input = inputs[ROOT_CV_INPUT].getVoltage();
@@ -264,14 +263,13 @@ struct Slips : Module, Quantizer {
 					root_note_input = clamp(root_note_input, 0.0f, 10.0f);
 				}
 				// set the root note
-				root_note = (int) (root_note_input / 10 * 12);
+				root_note = (int) ((root_note_input / 10) * 12);
 			}
+			// if the root input is in v/oct mode
 			else {
 				// get the root input voltage
 				float root_note_input = inputs[ROOT_CV_INPUT].getVoltage();
-				// the root note input expects a v/oct value,
-				// so strip out the octave and convert to a note
-				// number between 0 and 11
+				// strip out the octave and convert to a note number between 0 and 11
 				root_note = (int) (root_note_input * 12) % 12;
 			}
 		}
@@ -286,7 +284,7 @@ struct Slips : Module, Quantizer {
 				current_scale_input = clamp(current_scale_input, 0.0f, 10.0f);
 			}
 			// set the scale
-			current_scale = (int) (current_scale_input / 10 * 11);
+			current_scale = (int) ((current_scale_input / 10) * 11);
 		}
 
 		// check if the slip amount input is connected
@@ -328,36 +326,8 @@ struct Slips : Module, Quantizer {
 			step_prob = step_prob_input / 10;
 		}
 
-		// check if the generatee input is high
-		if (generate_trigger.process(inputs[GENERATE_TRIGGER_INPUT].getVoltage())) {
-			// request a reset
-			reset_requested = true;
-			// generate a new sequence
-			generate_sequence();
-		}
-
-		// check if the generatee button is pressed
-		if (generate_button_trigger.process(params[GENERATE_PARAM].getValue())) {
-			// request a reset
-			reset_requested = true;
-			// generate a new sequence
-			generate_sequence();
-		}
-
 		// check if the clock input is high
 		if (clock_trigger.process(inputs[CLOCK_INPUT].getVoltage())) {
-			// check if a reset has been requested
-			if (reset_requested) {
-				// reset the step
-				current_step = starting_step;
-				// reset the steps gone through counter
-				steps_gone_through = 0;
-				// reset the reset request
-				reset_requested = false;
-				// break out of the conditional
-				return;
-			}
-			
 			// reset the skip flag
 			skip_step = false;
 			
@@ -371,7 +341,7 @@ struct Slips : Module, Quantizer {
 			int steps_left = num_steps - steps_gone_through;
 			
 			// if there are no steps left in the sequence
-			if (steps_left == 0) {
+			if (steps_left <= 0) {
 				// reset the step
 				current_step = starting_step;
 				// reset the steps gone through counter
@@ -412,8 +382,30 @@ struct Slips : Module, Quantizer {
 
 		// check if the reset input is high
 		if (reset_trigger.process(inputs[RESET_INPUT].getVoltage())) {
-			// request a reset
-			reset_requested = true;
+			// reset the step
+			current_step = starting_step;
+			// reset the steps gone through counter
+			steps_gone_through = 0;
+		}
+
+		// check if the generatee input is high
+		if (generate_trigger.process(inputs[GENERATE_TRIGGER_INPUT].getVoltage())) {
+			// reset the step
+			current_step = starting_step;
+			// reset the steps gone through counter
+			steps_gone_through = 0;
+			// generate a new sequence
+			generate_sequence();
+		}
+
+		// check if the generatee button is pressed
+		if (generate_button_trigger.process(params[GENERATE_PARAM].getValue())) {
+			// reset the step
+			current_step = starting_step;
+			// reset the steps gone through counter
+			steps_gone_through = 0;
+			// generate a new sequence
+			generate_sequence();
 		}
 
 		// check if this step is a slip (the_slips[current_step] != 0)
