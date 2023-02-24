@@ -2,6 +2,7 @@
 #include "quantizer.hpp"
 #include "cvRange.hpp"
 
+#define MAX_POLY 16
 #define MAX_STEPS 64
 
 
@@ -465,12 +466,16 @@ struct Slips : Module, Quantizer {
 
 		// get the input voltage to be quantized
 		if (inputs[QUANTIZE_INPUT].isConnected() && outputs[QUANTIZE_OUTPUT].isConnected()) {
-			// get the input voltage
-			float in = inputs[QUANTIZE_INPUT].getVoltage();
-			// quantize the input voltage
-			float out = quantize(in, root_note, current_scale);
-			// set the output voltage
-			outputs[QUANTIZE_OUTPUT].setVoltage(out);
+			int q_chans = inputs[QUANTIZE_INPUT].getChannels();
+			outputs[QUANTIZE_OUTPUT].setChannels(q_chans);
+			for (int ch = 0; ch < q_chans; ch++) {
+				// get the input voltage
+				float in = inputs[QUANTIZE_INPUT].getVoltage(ch);
+				// quantize the input voltage
+				float out = quantize(in, root_note, current_scale);
+				// set the output voltage
+				outputs[QUANTIZE_OUTPUT].setVoltage(out, ch);
+			}
 		}
 
 		// set the segment lights
