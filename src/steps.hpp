@@ -1,7 +1,7 @@
 #pragma once
 
 #include "plugin.hpp"
-// #include "stepspander.hpp"
+#include "cvRange.hpp"
 
 struct Steps : Module {
 	enum ParamId {
@@ -57,23 +57,23 @@ struct Steps : Module {
 	dsp::PulseGenerator step_pulse[8];
 	bool reset_queued = false;
 	bool latch = true;
-	bool unipolar = false;
 	int step = 0;
 	int steps = 8;
-	int range = 1;
+	CVRange cv_range;
+
 
 	Steps() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configParam(STEPS_PARAM, 1.f, 8.f, 8.f, "steps");
 		getParamQuantity(STEPS_PARAM)->snapEnabled = true;
-		configParam(STEP1_PARAM, -1.f, 1.f, 0.f, "step 1 cv");
-		configParam(STEP2_PARAM, -1.f, 1.f, 0.f, "step 2 cv");
-		configParam(STEP3_PARAM, -1.f, 1.f, 0.f, "step 3 cv");
-		configParam(STEP4_PARAM, -1.f, 1.f, 0.f, "step 4 cv");
-		configParam(STEP5_PARAM, -1.f, 1.f, 0.f, "step 5 cv");
-		configParam(STEP6_PARAM, -1.f, 1.f, 0.f, "step 6 cv");
-		configParam(STEP7_PARAM, -1.f, 1.f, 0.f, "step 7 cv");
-		configParam(STEP8_PARAM, -1.f, 1.f, 0.f, "step 8 cv");
+		configParam<CVRangeParamQuantity>(STEP1_PARAM, 0.f, 1.f, 0.5f, "step 1", "V")->range = &cv_range;
+		configParam<CVRangeParamQuantity>(STEP2_PARAM, 0.f, 1.f, 0.5f, "step 2", "V")->range = &cv_range;
+		configParam<CVRangeParamQuantity>(STEP3_PARAM, 0.f, 1.f, 0.5f, "step 3", "V")->range = &cv_range;
+		configParam<CVRangeParamQuantity>(STEP4_PARAM, 0.f, 1.f, 0.5f, "step 4", "V")->range = &cv_range;
+		configParam<CVRangeParamQuantity>(STEP5_PARAM, 0.f, 1.f, 0.5f, "step 5", "V")->range = &cv_range;
+		configParam<CVRangeParamQuantity>(STEP6_PARAM, 0.f, 1.f, 0.5f, "step 6", "V")->range = &cv_range;
+		configParam<CVRangeParamQuantity>(STEP7_PARAM, 0.f, 1.f, 0.5f, "step 7", "V")->range = &cv_range;
+		configParam<CVRangeParamQuantity>(STEP8_PARAM, 0.f, 1.f, 0.5f, "step 8", "V")->range = &cv_range;
 		configParam(RAND_PARAM, 0.f, 10.f, 0.f, "randomize steps");
 		configInput(CLOCK_INPUT, "clock");
 		configInput(RESET_INPUT, "reset");

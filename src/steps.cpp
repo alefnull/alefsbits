@@ -36,10 +36,7 @@ void Steps::process(const ProcessArgs& args) {
 
 	if (inputs[CLOCK_INPUT].isConnected()) {
 		float cv_out = step == 0 ? params[STEP1_PARAM].getValue() : params[STEP1_PARAM + step - 1].getValue();
-		cv_out *= range;
-		if (unipolar) {
-			cv_out = (cv_out + range) / 2.0;
-		}
+		cv_out = cv_range.map(cv_out);
 		outputs[CV_OUTPUT].setVoltage(cv_out);
 		outputs[EOC_OUTPUT].setVoltage(eoc_pulse.process(args.sampleTime) ? 10.f : 0.f);
 	} else {
@@ -62,8 +59,7 @@ void Steps::onRandomize() {
 json_t* Steps::dataToJson() {
 	json_t* rootJ = json_object();
 	json_object_set_new(rootJ, "steps", json_integer(steps));
-	json_object_set_new(rootJ, "unipolar", json_boolean(unipolar));
-	json_object_set_new(rootJ, "range", json_real(range));
+	json_object_set_new(rootJ, "cv range", cv_range.dataToJson());
 	return rootJ;
 }
 
@@ -72,13 +68,9 @@ void Steps::dataFromJson(json_t* rootJ) {
 	if (stepsJ) {
 		steps = json_integer_value(stepsJ);
 	}
-	json_t* unipolarJ = json_object_get(rootJ, "unipolar");
-	if (unipolarJ) {
-		unipolar = json_boolean_value(unipolarJ);
-	}
-	json_t* rangeJ = json_object_get(rootJ, "range");
-	if (rangeJ) {
-		range = json_real_value(rangeJ);
+	json_t* cv_rangeJ = json_object_get(rootJ, "cv range");
+	if (cv_rangeJ) {
+		cv_range.dataFromJson(cv_rangeJ);
 	}
 }
 
@@ -160,23 +152,28 @@ struct StepsWidget : ModuleWidget {
 	}
 
 	void appendContextMenu(Menu* menu) override {
-		Steps* module = dynamic_cast<Steps*>(this->module);
-		assert(module);
+		Steps* steps_module = dynamic_cast<Steps*>(this->module);
+		assert(steps_module);
+
+		// for (int i = 0; i < 8; i++) {
+		// 	configCVParam(steps_module->STEP1_PARAM + i, steps_module, &steps_module->cv_range, "cv");
+		// }
 
 		menu->addChild(new MenuSeparator());
 		// add a submenu to choose the range, between
 		// +/- 1V, +/- 3V, +/- 5V, +/- 10V
-		menu->addChild(createSubmenuItem("Range", "", [=](Menu* menu) {
-			Menu* rangeMenu = new Menu();
-			rangeMenu->addChild(createMenuItem("-/+ 1v", CHECKMARK(module->range == 1), [module]() { module->range = 1; }));
-			rangeMenu->addChild(createMenuItem("-/+ 2v", CHECKMARK(module->range == 2), [module]() { module->range = 2; }));
-			rangeMenu->addChild(createMenuItem("-/+ 3v", CHECKMARK(module->range == 3), [module]() { module->range = 3; }));
-			rangeMenu->addChild(createMenuItem("-/+ 5v", CHECKMARK(module->range == 5), [module]() { module->range = 5; }));
-			rangeMenu->addChild(createMenuItem("-/+ 10v", CHECKMARK(module->range == 10), [module]() { module->range = 10; }));
-			menu->addChild(rangeMenu);
-		}));
-		menu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar), [module]() { module->unipolar = !module->unipolar; }));
-		menu->addChild(createMenuItem("Latch", CHECKMARK(module->latch), [module]() { module->latch = !module->latch; }));
+		// menu->addChild(createSubmenuItem("Range", "", [=](Menu* menu) {
+		// 	Menu* rangeMenu = new Menu();
+		// 	rangeMenu->addChild(createMenuItem("-/+ 1v", CHECKMARK(module->range == 1), [module]() { module->range = 1; }));
+		// 	rangeMenu->addChild(createMenuItem("-/+ 2v", CHECKMARK(module->range == 2), [module]() { module->range = 2; }));
+		// 	rangeMenu->addChild(createMenuItem("-/+ 3v", CHECKMARK(module->range == 3), [module]() { module->range = 3; }));
+		// 	rangeMenu->addChild(createMenuItem("-/+ 5v", CHECKMARK(module->range == 5), [module]() { module->range = 5; }));
+		// 	rangeMenu->addChild(createMenuItem("-/+ 10v", CHECKMARK(module->range == 10), [module]() { module->range = 10; }));
+		// 	menu->addChild(rangeMenu);
+		// }));
+		// menu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar), [module]() { module->unipolar = !module->unipolar; }));
+		menu->addChild(createMenuItem("latch", CHECKMARK(steps_module->latch), [steps_module]() { steps_module->latch = !steps_module->latch; }));
+		steps_module->cv_range.addMenu(steps_module, menu);
 	}
 };
 
