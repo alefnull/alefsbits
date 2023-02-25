@@ -2,13 +2,13 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="20.32mm"
+   width="40.639999mm"
    height="128.5mm"
-   viewBox="0 0 20.32 128.5"
+   viewBox="0 0 40.64 128.5"
    version="1.1"
    id="svg5"
    inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
-   sodipodi:docname="trigs.svg"
+   sodipodi:docname="turnt.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -25,9 +25,9 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="1.2550228"
-     inkscape:cx="-9.9599784"
+     inkscape:cx="-30.676734"
      inkscape:cy="237.44589"
-     inkscape:current-layer="layer1" />
+     inkscape:current-layer="layer2" />
   <defs
      id="defs2" />
   <g
@@ -35,15 +35,15 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:#f9f9f9;stroke-width:0.964999"
+       style="fill:#f9f9f9;stroke-width:1.32984"
        id="rect231"
-       width="22.97933"
+       width="43.639645"
        height="132.18385"
        x="-1.3296652"
        y="-1.8419266" />
     <g
        id="text3498"
-       transform="matrix(0.35277774,0,0,0.35277774,2.5394715,2.8468836e-4)">
+       transform="matrix(0.35277774,0,0,0.35277774,12.699471,2.8468836e-4)">
       <path
          id="path15128"
          d="m 26.956,347.987 h -0.422 a 3.344,3.344 0 0 0 -0.811,-2.014 L 18.949,338.2 a 2.584,2.584 0 0 0 -1.734,2.248 5.4,5.4 0 0 0 1.109,2.731 6.089,6.089 0 0 1 1.28,3.028 q 0,1.5 -1.14,1.5 h -2.95 v -0.422 a 1.072,1.072 0 0 0 0.937,-1.078 7.389,7.389 0 0 0 -0.593,-2.044 7.026,7.026 0 0 1 -0.594,-2.341 q 0,-2.514 3.091,-4.277 l -1.92,-2.17 a 4.308,4.308 0 0 1 -1.2,-2.857 3.689,3.689 0 0 1 1.093,-2.528 h 0.406 a 3.487,3.487 0 0 0 0.811,2.185 l 5.869,6.665 a 11.888,11.888 0 0 1 1.733,-4.2 q -2.481,-0.405 -2.482,-2.5 a 3.687,3.687 0 0 1 0.64,-2.154 h 0.406 a 1.549,1.549 0 0 0 1.2,1.2 l 1.342,0.313 a 1.952,1.952 0 0 1 1.765,1.982 3.588,3.588 0 0 1 -0.141,1.109 6.522,6.522 0 0 1 -1.7,0.156 8.5,8.5 0 0 0 -1.623,4.183 3.2,3.2 0 0 0 0.827,2.153 l 1.452,1.671 a 4.331,4.331 0 0 1 1.217,2.872 3.127,3.127 0 0 1 -1.094,2.362 z"
@@ -52,7 +52,8 @@
     <g
        aria-label="turnt"
        id="text358"
-       style="font-size:6.35px;line-height:1.25;font-family:'Agency FB';-inkscape-font-specification:'Agency FB';stroke-width:0.264583">
+       style="font-size:6.35px;line-height:1.25;font-family:'Agency FB';-inkscape-font-specification:'Agency FB';stroke-width:0.264583"
+       transform="translate(10.16)">
       <path
          d="M 6.5509179,12.196347 H 5.9649072 q -0.3472657,0 -0.3472657,-0.350366 V 9.5422457 H 5.254873 V 9.1794772 H 5.6176415 V 8.2399996 H 6.0238183 V 9.1794772 H 6.5509179 V 9.5422457 H 6.0238183 v 2.2913333 h 0.5270996 z"
          id="path360" />
@@ -74,27 +75,5 @@
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="components"
-     style="display:none">
-    <circle
-       style="fill:#00ff00;stroke-width:0.964999"
-       id="path724"
-       cx="10.16"
-       cy="49.598042"
-       r="3.7947519"
-       inkscape:label="source" />
-    <circle
-       style="fill:#ff0000;stroke-width:0.964999"
-       id="circle726"
-       cx="10.16"
-       cy="64.25"
-       r="3.7947519"
-       inkscape:label="mode" />
-    <circle
-       style="fill:#0000ff;stroke-width:0.964999"
-       id="circle728"
-       cx="10.16"
-       cy="78.901955"
-       r="3.7947519"
-       inkscape:label="trig" />
-  </g>
+     style="display:none" />
 </svg>
