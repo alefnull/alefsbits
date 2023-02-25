@@ -2,6 +2,7 @@
 
 #define MAX_POLY 16
 #define BUFFER_SIZE 3
+#define PT_BUFFER_SIZE 256
 
 struct Turnt : Module {
 	enum ParamId {
@@ -24,6 +25,11 @@ struct Turnt : Module {
 		LIGHTS_LEN
 	};
 
+	struct Point {
+		float min = 0.f;
+		float max = 0.f;
+	};
+
 	Turnt() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configSwitch(MODE_PARAM, 0.f, 2.f, 0.f, "mode", {"direction", "through zero", "both"});
@@ -39,6 +45,10 @@ struct Turnt : Module {
 	bool gate_high[MAX_POLY] = { false };
 	float samples[MAX_POLY][BUFFER_SIZE] = { 0.f };
 	dsp::PulseGenerator pulse[MAX_POLY];
+	Point point_buffer[PT_BUFFER_SIZE];
+	int buffer_index = 0;
+	int frame_index = 0;
+	Point current_point;
 
 	void process(const ProcessArgs& args) override {
 		int mode = params[MODE_PARAM].getValue();
@@ -107,6 +117,30 @@ struct Turnt : Module {
 			} else {
 				outputs[TRIG_OUTPUT].setVoltage(pulse[ch].process(args.sampleTime) ? 10.f : 0.f, ch);
 			}
+
+			if (ch == 0) {
+				// add point to buffer
+				if (buffer_index < PT_BUFFER_SIZE) {
+					float dt = dsp::approxExp2_taylor5(-(-std::log2(1.f))) / PT_BUFFER_SIZE;
+					int frame_count = (int) std::ceil(dt * args.sampleRate);
+
+					current_point.min = std::min(current_point.min, in);
+					current_point.max = std::max(current_point.max, in);
+
+					if (++frame_index >= frame_count) {
+						frame_index = 0;
+						point_buffer[buffer_index] = current_point;
+						current_point = Point();
+						buffer_index++;
+					}
+				}
+				else {
+					// buffer full - reset
+					buffer_index = 0;
+					frame_index = 0;
+					current_point = Point();
+				}
+			}
 		}
 	}
 
@@ -128,6 +162,99 @@ struct Turnt : Module {
 		json_t* rootJ = json_object();
 		json_object_set_new(rootJ, "trigger mode", json_integer(trigger_mode));
 		return rootJ;
+	}
+};
+
+
+struct Scope : LedDisplay {
+    Turnt* module;
+    ModuleWidget* moduleWidget;
+
+    Scope() {
+        // set the box position to the bottom center of the module
+		box.pos = Vec(moduleWidget->box.size.x / 2 - 100, moduleWidget->box.size.y - 100);
+		box.size = Vec(200, 200);
+    }
+    
+	void draw_wave(const DrawArgs& args) {
+		if (!module) {
+			return;
+		}
+
+		// copy point buffer
+		Turnt::Point point_buffer[PT_BUFFER_SIZE];
+		std::copy(std::begin(module->point_buffer), std::end(module->point_buffer), std::begin(point_buffer));
+
+		// draw the waveform
+		nvgSave(args.vg);
+		Rect b = box.zeroPos().shrink(Vec(0, 15));
+		nvgScissor(args.vg, RECT_ARGS(b));
+		nvgBeginPath(args.vg);
+		for (int i = 0; i < PT_BUFFER_SIZE; i++) {
+			const Turnt::Point& p = point_buffer[i];
+			float max = p.max;
+			if (!std::isfinite(max))
+				max = 0.f;
+			Vec pt;
+			pt.x = (float) i / (PT_BUFFER_SIZE - 1);
+			pt.y = max * 0.1f + 0.5f;
+			pt = b.interpolate(pt);
+			pt.y -= 0.5f;
+			if (i == 0)
+				nvgMoveTo(args.vg, pt.x, pt.y);
+			else
+				nvgLineTo(args.vg, pt.x, pt.y);
+		}
+		for (int i = PT_BUFFER_SIZE - 1; i >= 0; i--) {
+			const Turnt::Point& p = point_buffer[i];
+			float min = p.min;
+			if (!std::isfinite(min))
+				min = 0.f;
+			Vec pt;
+			pt.x = (float) i / (PT_BUFFER_SIZE - 1);
+			pt.y = min * 0.1f + 0.5f;
+			pt = b.interpolate(pt);
+			pt.y += 0.5f;
+			nvgLineTo(args.vg, pt.x, pt.y);
+		}
+		nvgClosePath(args.vg);
+		nvgGlobalCompositeOperation(args.vg, NVG_LIGHTER);
+		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x75));
+		nvgFill(args.vg);
+		nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0xff));
+		nvgStrokeWidth(args.vg, 1.0);
+		nvgStroke(args.vg);
+		nvgRestore(args.vg);
+	}
+
+	void draw_background(const DrawArgs& args) {
+		Rect b = box.zeroPos().shrink(Vec(0, 15));
+
+		nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x20));
+		for (int i = 0; i < 5; i++) {
+			nvgBeginPath(args.vg);
+			Vec pt;
+			pt.x = 0.f;
+			pt.y = (float) i / 4.f;
+			nvgMoveTo(args.vg, VEC_ARGS(b.interpolate(pt)));
+
+			pt.x = 1.f;
+			nvgLineTo(args.vg, VEC_ARGS(b.interpolate(pt)));
+			nvgStroke(args.vg);	
+		}
+	}
+
+	void drawLayer(const DrawArgs& args, int layer) override {
+		if (layer != 1)
+			return;
+		
+		draw_background(args);
+
+		if (!module) {
+			return;
+		}
+
+		draw_wave(args);
 	}
 };
 
@@ -163,6 +290,13 @@ struct TurntWidget : ModuleWidget {
 		addParam(createParamCentered<CKSSThreeHorizontal>(Vec(x, y), module, Turnt::MODE_PARAM));
 		y += dy * 2;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Turnt::TRIG_OUTPUT));
+
+		y += dy * 2;
+		Scope *scope = createWidget<Scope>(Vec(x - 50.f, y));
+		scope->box.size = Vec(100.f, 100.f);
+		scope->module = module;
+		scope->moduleWidget = this;
+		addChild(scope);
 	}
 
 	void appendContextMenu(Menu* menu) override {
