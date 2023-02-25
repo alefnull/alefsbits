@@ -1,5 +1,5 @@
 # If RACK_DIR is not defined when calling the Makefile, default to two directories above
-RACK_DIR ?= ../..
+RACK_DIR ?= ../Rack-SDK
 
 # FLAGS will be passed to both the C and C++ compiler
 FLAGS += -std=c++17
@@ -10,8 +10,14 @@ CXXFLAGS += -std=c++17
 # Static libraries are fine, but they should be added to this plugin's build system.
 LDFLAGS +=
 
+CXXFLAGS += -Isrc/utils
+CXXFLAGS += -Isrc/widgets
+
+
 # Add .cpp files to the build
 SOURCES += $(wildcard src/*.cpp)
+SOURCES += $(wildcard src/utils/*.cpp)
+SOURCES += $(wildcard src/widgets/*.cpp)
 
 # Add files to the ZIP package when running `make dist`
 # The compiled plugin and "plugin.json" are automatically added.
