@@ -19,9 +19,9 @@ struct Polyrand : Module {
 		LIGHTS_LEN
 	};
 
-	dsp::SchmittTrigger trigger;
-	float last_value = 0.0f;
-	int current_channel = 0;
+	dsp::SchmittTrigger trigger[MAX_POLY];
+	float last_value[MAX_POLY] = { 0.f };
+	int current_channel[MAX_POLY] = { 0 };
 
 	Polyrand() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -31,18 +31,32 @@ struct Polyrand : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		if (inputs[TRIGGER_INPUT].isConnected() && inputs[POLY_INPUT].isConnected()) {
-			int channels = inputs[POLY_INPUT].getChannels();
-			if (channels > MAX_POLY) {
-				channels = MAX_POLY;
-			}
-			if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
-				int chan = random::u32() % channels;
-				current_channel = chan;
-			}
-			last_value = inputs[POLY_INPUT].getVoltage(current_channel);
+		int trig_channels = inputs[TRIGGER_INPUT].isConnected() ? inputs[TRIGGER_INPUT].getChannels() : 1;
+		if (trig_channels > MAX_POLY) {
+			trig_channels = MAX_POLY;
 		}
-		outputs[RANDOM_OUTPUT].setVoltage(last_value);
+		outputs[RANDOM_OUTPUT].setChannels(trig_channels);
+
+		if (inputs[TRIGGER_INPUT].isConnected() && 
+				inputs[POLY_INPUT].isConnected() && 
+				outputs[RANDOM_OUTPUT].isConnected()) {
+
+			int poly_channels = inputs[POLY_INPUT].getChannels();
+			if (poly_channels > MAX_POLY) {
+				poly_channels = MAX_POLY;
+			}
+			for (int i = 0; i < trig_channels; i++) {
+				if (trigger[i].process(inputs[TRIGGER_INPUT].getVoltage(i))) {
+					int chan = random::u32() % poly_channels;
+					current_channel[i] = chan;
+				}
+				last_value[i] = inputs[POLY_INPUT].getVoltage(current_channel[i]);
+			}
+
+			for (int i = 0; i < trig_channels; i++) {
+				outputs[RANDOM_OUTPUT].setVoltage(last_value[i], i);
+			}
+		}
 	}
 };
 
