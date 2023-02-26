@@ -2,6 +2,7 @@
 #include "utils/ResizableRingBuffer.hpp"
 #include "widgets/Scope.hpp"
 #include "widgets/ScopeData.hpp"
+#include "widgets/TabDisplay.cpp"
 
 #define MAX_POLY 16
 #define BUFFER_SIZE 3
@@ -33,17 +34,17 @@ struct Turnt : Module {
         scope_data.backgroundColor = nvgRGB(0x1e, 0x1e, 0x1e);
         // very bright white
         scope_data.wavePrimaryColor = nvgRGB(0xff, 0xff, 0xff);
-        // mid gray
-        scope_data.waveSecondaryColor = nvgRGB(0x50, 0x57, 0x5c);
         // dark gray
         scope_data.gridColor = nvgRGB(0x50, 0x57, 0x5c);
         // desaturated red
-        scope_data.triggerColor = nvgRGB(0x9f, 0x3b, 0x3b);
+        scope_data.triggerColor = nvgRGB(0x8f, 0x3b, 0x3b);
 
-        scope_data.buffer.resize(PT_BUFFER_SIZE);
-        for (int i = 0; i < PT_BUFFER_SIZE; i++) {
-            point_buffer[i] = 0.f;
-            scope_data.buffer.add(std::make_pair(0.f, false));
+        for (int ch = 0; ch < MAX_POLY; ch++) {
+            scope_data.buffer[ch].resize(PT_BUFFER_SIZE);
+            for (int i = 0; i < PT_BUFFER_SIZE; i++) {
+                point_buffer[i] = 0.f;
+                scope_data.buffer[ch].add(std::make_pair(0.f, false));
+            }
         }
     }
 
@@ -56,14 +57,15 @@ struct Turnt : Module {
     float samples[MAX_POLY][BUFFER_SIZE] = {0.f};
     dsp::PulseGenerator pulse[MAX_POLY];
     float point_buffer[PT_BUFFER_SIZE];
-    int buffer_index = 0;
-    int frame_index = 0;
+    int buffer_index[MAX_POLY] = {0};
+    int frame_index[MAX_POLY] = {0};
+    int current_channel = 0;
     float current_point;
 
     void process(const ProcessArgs& args) override {
         int mode = params[MODE_PARAM].getValue();
         float zero = params[ZERO_PARAM].getValue();
-        scope_data.zeroThreshold = zero;
+        scope_data.zeroThreshold[current_channel] = zero;
         float prob = params[PROB_PARAM].getValue();
         if (inputs[ZERO_INPUT].isConnected()) {
             // use param as attenuverter
@@ -73,6 +75,10 @@ struct Turnt : Module {
             // use param as attenuator
             prob *= inputs[PROB_INPUT].getVoltage() / 10.f;
         }
+
+        int channels = inputs[SOURCE_INPUT].isConnected()
+                           ? inputs[SOURCE_INPUT].getChannels()
+                           : 1;
 
         if (!inputs[SOURCE_INPUT].isConnected()) {
             if (freeze_when_idle) {
@@ -135,18 +141,14 @@ struct Turnt : Module {
                         case 0:  // trigger
                             pulse[ch].trigger(1e-3f);
                             break;
-                        case 1:  // gate
-                            // output a gate for 0.5 seconds
-                            pulse[ch].trigger(0.5f);
-                            break;
-                        case 2:  // latch
+                        case 1:  // latch
                             gate_high[ch] = !gate_high[ch];
                             break;
                     }
                 }
             }
 
-            if (trigger_mode == 2) {
+            if (trigger_mode == 1) {
                 outputs[TRIG_OUTPUT].setVoltage(gate_high[ch] ? 10.f : 0.f, ch);
                 triggered = gate_high[ch] || triggered;
             } else {
@@ -155,28 +157,26 @@ struct Turnt : Module {
                 triggered = bool(pulseValue) || triggered;
             }
 
-            if (ch == 0) {
-                // add point to buffer
-                if (buffer_index < PT_BUFFER_SIZE) {
-                    float dt = dsp::approxExp2_taylor5(
-                                   -(-std::log2(scope_data.timeScale))) /
-                               PT_BUFFER_SIZE;
-                    int frame_count = (int)std::ceil(dt * args.sampleRate);
+            // add point to buffer
+            if (buffer_index[ch] < PT_BUFFER_SIZE) {
+                float dt = dsp::approxExp2_taylor5(
+                                -(-std::log2(scope_data.timeScale))) /
+                            PT_BUFFER_SIZE;
+                int frame_count = (int)std::ceil(dt * args.sampleRate);
 
-                    current_point = -in;
+                current_point = -in;
 
-                    if (++frame_index >= frame_count) {
-                        frame_index = 0;
-                        point_buffer[buffer_index] = current_point;
-                        scope_data.buffer.add(std::make_pair(in, triggered));
-                        triggered = false;
-                        buffer_index++;
-                    }
-                } else {
-                    // buffer full - reset
-                    buffer_index = 0;
-                    frame_index = 0;
+                if (++frame_index[ch] >= frame_count) {
+                    frame_index[ch] = 0;
+                    point_buffer[buffer_index[ch]] = current_point;
+                    scope_data.buffer[current_channel].add(std::make_pair(in, triggered));
+                    triggered = false;
+                    buffer_index[ch]++;
                 }
+            } else {
+                // buffer full - reset
+                buffer_index[ch] = 0;
+                frame_index[ch] = 0;
             }
         }
     }
@@ -201,6 +201,8 @@ struct Turnt : Module {
 
     json_t* dataToJson() override {
         json_t* rootJ = json_object();
+        json_object_set_new(rootJ, "trigger mode", 
+                            json_integer(trigger_mode));
         json_object_set_new(rootJ, "freeze on disconnect",
                             json_boolean(freeze_when_idle));
         return rootJ;
@@ -256,7 +258,25 @@ struct TurntWidget : ModuleWidget {
         auto scope = new Scope(scopeData);
         scope->box.pos = Vec(x - 50.f, y);
         scope->box.size = Vec(100.f, 100.f);
-
+        auto tabDisplay = new TabDisplay();
+        tabDisplay->box.pos = Vec(x - 50.f, scope->box.pos.y - 10.f);
+        tabDisplay->box.size = Vec(100.f, 10.f);
+        tabDisplay->addTab("ch 1", [tabDisplay, scopeData]() {
+            tabDisplay->selectedTab = 0;
+            tabDisplay->activeLabelColor = scopeData->backgroundColor;
+            scopeData->activeChannel = 0;
+        });
+        tabDisplay->addTab("ch 2", [tabDisplay, scopeData]() {
+            tabDisplay->selectedTab = 1;
+            tabDisplay->activeLabelColor = scopeData->backgroundColor;
+            scopeData->activeChannel = 1;
+        });
+        tabDisplay->addTab("ch 3", [tabDisplay, scopeData]() {
+            tabDisplay->selectedTab = 2;
+            tabDisplay->activeLabelColor = scopeData->backgroundColor;
+            scopeData->activeChannel = 2;
+        });
+        addChild(tabDisplay);
         addChild(scope);
     }
 
@@ -276,11 +296,8 @@ struct TurntWidget : ModuleWidget {
                 createMenuItem("trigger", CHECKMARK(module->trigger_mode == 0),
                                [module]() { module->trigger_mode = 0; }));
             trigMenu->addChild(
-                createMenuItem("gate", CHECKMARK(module->trigger_mode == 1),
+                createMenuItem("latch", CHECKMARK(module->trigger_mode == 1),
                                [module]() { module->trigger_mode = 1; }));
-            trigMenu->addChild(
-                createMenuItem("latch", CHECKMARK(module->trigger_mode == 2),
-                               [module]() { module->trigger_mode = 2; }));
             menu->addChild(trigMenu);
         }));
 
@@ -288,11 +305,11 @@ struct TurntWidget : ModuleWidget {
         menu->addChild(createSubmenuItem("scope mode", "", [=](Menu* menu) {
             Menu* scopeMenu = new Menu();
             scopeMenu->addChild(createMenuItem(
-                "bipolar", CHECKMARK(module->scope_data.scopeMode == 0),
-                [module]() { module->scope_data.scopeMode = 0; }));
+                "bipolar", CHECKMARK(module->scope_data.scopeMode[module->current_channel] == 0),
+                [module]() { module->scope_data.scopeMode[module->current_channel] = 0; }));
             scopeMenu->addChild(createMenuItem(
-                "unipolar", CHECKMARK(module->scope_data.scopeMode == 1),
-                [module]() { module->scope_data.scopeMode = 1; }));
+                "unipolar", CHECKMARK(module->scope_data.scopeMode[module->current_channel] == 1),
+                [module]() { module->scope_data.scopeMode[module->current_channel] = 1; }));
             menu->addChild(scopeMenu);
         }));
 
@@ -300,14 +317,14 @@ struct TurntWidget : ModuleWidget {
         menu->addChild(createSubmenuItem("time scale", "", [=](Menu* menu) {
             Menu* divMenu = new Menu();
             divMenu->addChild(createMenuItem(
-                "Low", CHECKMARK(module->scope_data.buffer.size == 64),
-                [module]() { module->scope_data.buffer.resize(64); }));
+                "Low", CHECKMARK(module->scope_data.buffer[module->current_channel].size == 64),
+                [module]() { module->scope_data.buffer[module->current_channel].resize(64); }));
             divMenu->addChild(createMenuItem(
-                "Medium", CHECKMARK(module->scope_data.buffer.size == 256),
-                [module]() { module->scope_data.buffer.resize(256); }));
+                "Medium", CHECKMARK(module->scope_data.buffer[module->current_channel].size == 256),
+                [module]() { module->scope_data.buffer[module->current_channel].resize(256); }));
             divMenu->addChild(createMenuItem(
-                "High", CHECKMARK(module->scope_data.buffer.size == 2048),
-                [module]() { module->scope_data.buffer.resize(2048); }));
+                "High", CHECKMARK(module->scope_data.buffer[module->current_channel].size == 2048),
+                [module]() { module->scope_data.buffer[module->current_channel].resize(2048); }));
             menu->addChild(divMenu);
         }));
     }

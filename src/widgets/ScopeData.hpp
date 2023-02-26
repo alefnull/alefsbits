@@ -2,15 +2,17 @@
 
 #include "../utils/ResizableRingBuffer.hpp"
 
+#define MAX_POLY 16
+
 struct ScopeData {
-    int scopeMode = 0;
-    float zeroThreshold = 0.0f;
+    int scopeMode[MAX_POLY];
+    float zeroThreshold[MAX_POLY] = {0.f};
     float timeScale = 1.0f;
-    ResizableRingBuffer<std::pair<float, bool>> buffer;
+    int activeChannel = 0;
+    ResizableRingBuffer<std::pair<float, bool>> buffer[MAX_POLY];
 
     NVGcolor backgroundColor;
     NVGcolor wavePrimaryColor;
-    NVGcolor waveSecondaryColor;
     NVGcolor gridColor;
     NVGcolor triggerColor;
 };

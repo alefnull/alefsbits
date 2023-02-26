@@ -4,7 +4,7 @@ Scope::Scope(ScopeData* data) : data(data) {}
 
 void Scope::onButton(const event::Button& e) {
     if (e.button == GLFW_MOUSE_BUTTON_LEFT && e.action == GLFW_PRESS) {
-        data->scopeMode = (data->scopeMode + 1) % 2;
+        data->scopeMode[data->activeChannel] = (data->scopeMode[data->activeChannel] + 1) % 2;
         e.consume(this);
         return;
     }
@@ -24,7 +24,7 @@ void Scope::onHoverScroll(const event::HoverScroll& e) {
 }
 
 std::pair<float, float> Scope::rangeForMode() {
-    if (data->scopeMode == 1) {
+    if (data->scopeMode[data->activeChannel] == 1) {
         return {0.f, 10.f};
     }
 
@@ -32,7 +32,7 @@ std::pair<float, float> Scope::rangeForMode() {
 }
 
 float Scope::calculateX(int i) {
-    return (float)i / (data->buffer.size - 1) * box.size.x;
+    return (float)i / (data->buffer[data->activeChannel].size - 1) * box.size.x;
 }
 
 float Scope::calculateY(float min, float max, float value) {
@@ -49,18 +49,15 @@ void Scope::drawCurve(const DrawArgs& args,
 
     withPath(args, [=]() {
         withStroke(args, 1.f, data->wavePrimaryColor, [=]() {
-            // withFill(args, data->waveSecondaryColor, [=]() {
-            auto range = valueMax - valueMin;
-
             // draw the zero line
-            float zeroY = calculateY(valueMin, valueMax, data->zeroThreshold);
+            float zeroY = calculateY(valueMin, valueMax, data->zeroThreshold[data->activeChannel]);
             zeroY = box.size.y - zeroY;  // invert y axis
             nvgMoveTo(args.vg, 0, zeroY);
             nvgLineTo(args.vg, box.size.x, zeroY);
 
             // draw the wave by iterating over point_buffer in reverse
-            for (int i = data->buffer.size - 1; i >= 0; i--) {
-                auto value = data->buffer.get(i).first;
+            for (int i = data->buffer[data->activeChannel].size - 1; i >= 0; i--) {
+                auto value = data->buffer[data->activeChannel].get(i).first;
                 float x = calculateX(i);
                 float y = calculateY(valueMin, valueMax, value);
                 y = box.size.y - y;   // invert y axis
@@ -115,8 +112,12 @@ void Scope::drawWave(const DrawArgs& args) {
 }
 
 void Scope::drawTriggers(const DrawArgs& args) {
-    for (int i = 0; i < data->buffer.size; i++) {
-        auto triggered = data->buffer.get(i).second;
+    if (!data) {
+        return;
+    }
+
+    for (int i = 0; i < data->buffer[data->activeChannel].size; i++) {
+        auto triggered = data->buffer[data->activeChannel].get(i).second;
         if (triggered) {
             float x = calculateX(i);
             withStroke(args, 1.f, data->triggerColor, [=]() {
@@ -130,6 +131,10 @@ void Scope::drawTriggers(const DrawArgs& args) {
 }
 
 void Scope::drawGridline(const DrawArgs& args, float percent) {
+    if (!data) {
+        return;
+    }
+
     auto quarterY = box.size.y - box.size.y * percent;
     withPath(args, [=]() {
         withStroke(args, 1.f, data->gridColor, [=] {
@@ -140,7 +145,11 @@ void Scope::drawGridline(const DrawArgs& args, float percent) {
 }
 
 void Scope::drawGridlines(const DrawArgs& args) {
-    if (data->scopeMode == 0) {
+    if (!data) {
+        return;
+    }
+
+    if (data->scopeMode[data->activeChannel] == 0) {
         drawGridline(args, 0.25f);
         drawGridline(args, 0.75f);
     } else {
@@ -149,9 +158,13 @@ void Scope::drawGridlines(const DrawArgs& args) {
 }
 
 void Scope::drawBackground(const DrawArgs& args) {
+    if (!data) {
+        return;
+    }
+
     withFill(args, data->backgroundColor, [=] {
         withPath(args,
-                 [=]() { nvgRect(args.vg, 0, 0, box.size.x, box.size.y); });
+                [=]() { nvgRect(args.vg, 0, 0, box.size.x, box.size.y); });
     });
 }
 
@@ -159,6 +172,6 @@ void Scope::draw(const DrawArgs& args) {
     OpaqueWidget::draw(args);
     drawBackground(args);
     drawGridlines(args);
-    drawWave(args);
     drawTriggers(args);
+    drawWave(args);
 }
