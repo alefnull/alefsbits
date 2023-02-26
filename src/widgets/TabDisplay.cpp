@@ -21,7 +21,7 @@ struct TabDisplay : FancyWidget {
     NVGcolor tabBorderColor = nvgRGB(0x3b, 0x3b, 0x3b);
     NVGcolor inactiveLabelColor = nvgRGB(0xb0, 0xb0, 0xb0);
     NVGcolor activeLabelColor = nvgRGB(0xff, 0xff, 0xff);
-    
+
     TabDisplay() {
         if (tabLabels.size() > 0) {
             tabWidth = this->box.size.x / (float)tabLabels.size();
@@ -43,36 +43,55 @@ struct TabDisplay : FancyWidget {
 
     void draw(const DrawArgs &args) override {
         // // draw the tab display background
-        withFill(args, nvgRGB(0x1b, 0x1b, 0x1b), [&] {
-            nvgRect(args.vg, 0, 0, this->box.size.x, this->box.size.y);
-            nvgFill(args.vg);
+        withPath(args, [&] {
+            withFill(args, nvgRGB(0x1b, 0x1b, 0x1b), [&] {
+                nvgRect(args.vg, 0, 0, this->box.size.x, this->box.size.y);
+            });
         });
 
         // // draw the tab display border
-        withStroke(args, 1, nvgRGB(0x5e, 0x5e, 0x5e), [&] {
-            nvgRect(args.vg, 0, 0, this->box.size.x, this->box.size.y);
-            nvgStroke(args.vg);
+        withPath(args, [&] {
+            withStroke(args, 1, nvgRGB(0x5e, 0x5e, 0x5e), [&] {
+                nvgRect(args.vg, 0, 0, this->box.size.x, this->box.size.y);
+            });
         });
 
         // draw the tab display tabs
         for (int i = 0; i < (int)tabLabels.size(); i++) {
             // draw the tab background
-            withFill(args, i == selectedTab ? activeTabColor : inactiveTabColor, [&] {
-                nvgRect(args.vg, 0, 0, this->box.size.x, this->box.size.y);
+            withPath(args, [&] {
+                withFill(args,
+                         i == selectedTab ? activeTabColor : inactiveTabColor,
+                         [&] {
+                             nvgRect(args.vg, i * tabWidth, 0,
+                                     this->box.size.x / (float)tabLabels.size(),
+                                     this->box.size.y);
+                         });
             });
 
             // draw the tab label
-            withFill(args, i == selectedTab ? activeLabelColor : inactiveLabelColor, [&] {
-
-                nvgFontFaceId(args.vg, APP->window->uiFont->handle);
-                nvgFontSize(args.vg, 12);
-                nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-                nvgText(args.vg, i * tabWidth + tabWidth / 2, this->box.size.y / 2, tabLabels[i].c_str(), NULL);
+            withPath(args, [&] {
+                withFill(
+                    args,
+                    i == selectedTab ? activeLabelColor : inactiveLabelColor,
+                    [&] {
+                        nvgFontFaceId(args.vg, APP->window->uiFont->handle);
+                        nvgFontSize(args.vg, 12);
+                        nvgTextAlign(args.vg,
+                                     NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+                        nvgText(args.vg, i * tabWidth + tabWidth / 2,
+                                this->box.size.y / 2, tabLabels[i].c_str(),
+                                NULL);
+                    });
             });
 
             // draw the tab border
-            withStroke(args, 1, tabBorderColor, [&] {
-                nvgRect(args.vg, i * tabWidth, 0, this->box.size.x / (float)tabLabels.size(), this->box.size.y);
+            withPath(args, [&] {
+                withStroke(args, 1, tabBorderColor, [&] {
+                    nvgRect(args.vg, i * tabWidth, 0,
+                            this->box.size.x / (float)tabLabels.size(),
+                            this->box.size.y);
+                });
             });
         }
     }
