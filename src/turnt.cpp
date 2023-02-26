@@ -49,6 +49,7 @@ struct Turnt : Module {
 
     ScopeData scope_data;
 
+    bool freeze_when_idle = false;
     bool triggered = false;
     int trigger_mode = 0;
     bool gate_high[MAX_POLY] = {false};
@@ -73,8 +74,17 @@ struct Turnt : Module {
             prob *= inputs[PROB_INPUT].getVoltage() / 10.f;
         }
 
-        int channels = inputs[SOURCE_INPUT].getChannels();
-        outputs[TRIG_OUTPUT].setChannels(channels);
+        if (!inputs[SOURCE_INPUT].isConnected()) {
+            if (freeze_when_idle) {
+                return;
+            }
+            // clear buffer
+            for (int ch = 0; ch < MAX_POLY; ch++) {
+                for (int i = 0; i < BUFFER_SIZE; i++) {
+                    samples[ch][i] = 0.f;
+                }
+            }
+        }
 
         for (int ch = 0; ch < channels; ch++) {
             auto in = inputs[SOURCE_INPUT].getVoltage(ch);
@@ -183,11 +193,16 @@ struct Turnt : Module {
         if (modeJ) {
             trigger_mode = json_integer_value(modeJ);
         }
+        json_t* freezeJ = json_object_get(rootJ, "freeze when idle");
+        if (freezeJ) {
+            freeze_when_idle = json_boolean_value(freezeJ);
+        }
     }
 
     json_t* dataToJson() override {
         json_t* rootJ = json_object();
-        json_object_set_new(rootJ, "trigger mode", json_integer(trigger_mode));
+        json_object_set_new(rootJ, "freeze on disconnect",
+                            json_boolean(freeze_when_idle));
         return rootJ;
     }
 };
@@ -250,6 +265,10 @@ struct TurntWidget : ModuleWidget {
         assert(module);
 
         menu->addChild(new MenuSeparator());
+
+        menu->addChild(createMenuItem("freeze when idle",
+            CHECKMARK(module->freeze_when_idle), 
+            [module]() { module->freeze_when_idle = !module->freeze_when_idle; }));
 
         menu->addChild(createSubmenuItem("trigger mode", "", [=](Menu* menu) {
             Menu* trigMenu = new Menu();
