@@ -1,5 +1,6 @@
 #include "plugin.hpp"
 #include "inc/SimplexNoise.cpp"
+#include "inc/cvRange.hpp"
 
 #define MAX_POLY 16
 

@@ -1,6 +1,6 @@
 #include "plugin.hpp"
 #include "quantizer.hpp"
-#include "cvRange.hpp"
+#include "inc/cvRange.hpp"
 
 #define MAX_POLY 16
 #define MAX_STEPS 64

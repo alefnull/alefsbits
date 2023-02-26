@@ -1,7 +1,7 @@
 #pragma once
 
 #include "plugin.hpp"
-#include "cvRange.hpp"
+#include "inc/cvRange.hpp"
 
 struct Steps : Module {
 	enum ParamId {
