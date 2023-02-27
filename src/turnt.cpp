@@ -5,7 +5,6 @@
 #include "widgets/TabDisplay.cpp"
 
 #define MAX_POLY 16
-#define PT_BUFFER_SIZE 256
 
 struct Turnt : Module {
     enum ParamId { MODE_PARAM, ZERO_PARAM, PROB_PARAM, PARAMS_LEN };
@@ -39,8 +38,8 @@ struct Turnt : Module {
         scope_data.triggerColor = nvgRGB(0x8f, 0x3b, 0x3b);
 
         for (int ch = 0; ch < MAX_POLY; ch++) {
-            scope_data.buffer[ch].resize(PT_BUFFER_SIZE);
-            for (int i = 0; i < PT_BUFFER_SIZE; i++) {
+            scope_data.buffer[ch].resize(256);
+            for (int i = 0; i < scope_data.buffer[ch].size; i++) {
                 scope_data.buffer[ch].add(std::make_pair(0.f, false));
             }
         }
@@ -90,16 +89,16 @@ struct Turnt : Module {
         for (int ch = 0; ch < channels; ch++) {
             auto in = inputs[SOURCE_INPUT].getVoltage(ch);
 
-            if (in != scope_data.buffer[ch].get(PT_BUFFER_SIZE - 1).first) {
-                scope_data.buffer[ch].get(buffer_index[ch]).operator=(
-                    std::make_pair(in, false));
-
-                auto v1 = scope_data.buffer[ch].get(buffer_index[ch]).first;
-                auto v2 = scope_data.buffer[ch].get(
-                    (buffer_index[ch] + 1) % PT_BUFFER_SIZE).first;
+            if (in != scope_data.buffer[ch].get(scope_data.buffer[ch].size - 1).first) {
+                // get the float value from the very last element in the buffer
+                auto v1 = scope_data.buffer[ch].get(scope_data.buffer[ch].size - 1).first;
+                // get the float value from the second to last element in the buffer
+                auto v2 = scope_data.buffer[ch].get(scope_data.buffer[ch].size - 2).first;
+                // get the difference between the second to last and the very last element
                 auto d1 = v2 - v1;
-                auto v3 = scope_data.buffer[ch].get(
-                    (buffer_index[ch] + 2) % PT_BUFFER_SIZE).first;
+                // get the float value from the third to last element in the buffer
+                auto v3 = scope_data.buffer[ch].get(scope_data.buffer[ch].size - 3).first;
+                // get the difference between the third to last and the second to last element
                 auto d2 = v3 - v2;
 
                 bool trig = false;
@@ -154,9 +153,9 @@ struct Turnt : Module {
             }
 
             // add point to buffer
-            if (buffer_index[ch] < PT_BUFFER_SIZE) {
+            if (buffer_index[ch] < scope_data.buffer[ch].size) {
                 float dt = dsp::approxExp2_taylor5(
-                                -(-std::log2(scope_data.timeScale))) / PT_BUFFER_SIZE;
+                                -(-std::log2(scope_data.timeScale))) / scope_data.buffer[ch].size;
                 int frame_count = (int)std::ceil(dt * args.sampleRate);
 
                 if (++frame_index[ch] >= frame_count) {
