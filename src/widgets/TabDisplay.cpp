@@ -42,21 +42,7 @@ struct TabDisplay : FancyWidget {
     }
 
     void draw(const DrawArgs &args) override {
-        // // draw the tab display background
-        withPath(args, [&] {
-            withFill(args, nvgRGB(0x1b, 0x1b, 0x1b), [&] {
-                nvgRect(args.vg, 0, 0, this->box.size.x, this->box.size.y);
-            });
-        });
-
-        // // draw the tab display border
-        withPath(args, [&] {
-            withStroke(args, 1, nvgRGB(0x5e, 0x5e, 0x5e), [&] {
-                nvgRect(args.vg, 0, 0, this->box.size.x, this->box.size.y);
-            });
-        });
-
-        // draw the tab display tabs
+        // draw the tab display
         for (int i = 0; i < (int)tabLabels.size(); i++) {
             // draw the tab background
             withPath(args, [&] {
@@ -66,7 +52,7 @@ struct TabDisplay : FancyWidget {
                              nvgRect(args.vg, i * tabWidth, 0,
                                      this->box.size.x / (float)tabLabels.size(),
                                      this->box.size.y);
-                         });
+                        });
             });
 
             // draw the tab label
