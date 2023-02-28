@@ -62,7 +62,7 @@ struct TabDisplay : FancyWidget {
                     i == selectedTab ? activeLabelColor : inactiveLabelColor,
                     [&] {
                         nvgFontFaceId(args.vg, APP->window->uiFont->handle);
-                        nvgFontSize(args.vg, 12);
+                        nvgFontSize(args.vg, 8);
                         nvgTextAlign(args.vg,
                                      NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
                         nvgText(args.vg, i * tabWidth + tabWidth / 2,

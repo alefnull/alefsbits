@@ -163,10 +163,10 @@ void Scope::drawBackground(const DrawArgs& args) {
     }
 
     withFill(args, data->backgroundColor, [=] {
-        withStroke(args, 1.f, data->backgroundColor, [=]() {
+        // withStroke(args, 1.f, data->backgroundColor, [=]() {
             withPath(args,
                     [=]() { nvgRect(args.vg, 0, 0, box.size.x, box.size.y); });
-        });
+        // });
     });
 }
 

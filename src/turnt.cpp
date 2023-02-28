@@ -47,6 +47,7 @@ struct Turnt : Module {
 
     ScopeData scope_data;
 
+    float samples[3] = {0.f, 0.f, 0.f};
     bool freeze_when_idle = false;
     bool triggered[MAX_POLY] = {false};
     int trigger_mode = {0};
@@ -89,16 +90,22 @@ struct Turnt : Module {
         for (int ch = 0; ch < channels; ch++) {
             auto in = inputs[SOURCE_INPUT].getVoltage(ch);
 
-            if (in != scope_data.buffer[ch].get(scope_data.buffer[ch].size - 1).first) {
-                // get the float value from the very last element in the buffer
-                auto v1 = scope_data.buffer[ch].get(scope_data.buffer[ch].size - 1).first;
-                // get the float value from the second to last element in the buffer
-                auto v2 = scope_data.buffer[ch].get(scope_data.buffer[ch].size - 2).first;
-                // get the difference between the second to last and the very last element
+            // if the input isn't the same as the last value in the sample buffer
+            if (in != samples[0]) {
+                // add the input to the sample buffer
+                samples[2] = samples[1];
+                samples[1] = samples[0];
+                samples[0] = in;
+
+                // auto v1 = samples[2];
+                // auto v2 = samples[1];
+                // auto d1 = v2 - v1;
+                // auto v3 = samples[0];
+                // auto d2 = v3 - v2;
+                auto v1 = samples[0];
+                auto v2 = samples[1];
                 auto d1 = v2 - v1;
-                // get the float value from the third to last element in the buffer
-                auto v3 = scope_data.buffer[ch].get(scope_data.buffer[ch].size - 3).first;
-                // get the difference between the third to last and the second to last element
+                auto v3 = samples[2];
                 auto d2 = v3 - v2;
 
                 bool trig = false;
@@ -112,18 +119,15 @@ struct Turnt : Module {
                                 : false;
                         break;
                     case 1:  // through zero
-                        trig =
-                            (v2 > zero && v3 <= zero) ||
-                                    (v2 < zero && v3 >= zero)
+                        trig = ((v1 > zero && v2 <= zero) || (v1 < zero && v2 >= zero))
                                 ? (r < prob)
                                 : false;
                         break;
                     case 2:  // both
                         trig =
-                            (((d1 > 0.f && d2 < 0.f) ||
-                              (d1 < 0.f && d2 > 0.f)) ||
-                             (v2 > zero && v3 <= zero) ||
-                             (v2 < zero && v3 >= zero))
+                            ((d1 > 0.f && d2 < 0.f) || (d1 < 0.f && d2 > 0.f)
+                                                    || (v1 > zero && v2 <= zero)
+                                                    || (v1 < zero && v2 >= zero))
                                 ? (r < prob)
                                 : false;
                         break;
@@ -235,7 +239,7 @@ struct TurntWidget : ModuleWidget {
         y += dy * 2;
         addParam(createParamCentered<RoundBlackKnob>(Vec(x, y), module,
                                                      Turnt::PROB_PARAM));
-        y += dy * 3;
+        y += dy * 2;
         x -= RACK_GRID_WIDTH * 1.5;
         addParam(createParamCentered<CKSSThreeHorizontal>(Vec(x, y), module,
                                                           Turnt::MODE_PARAM));
@@ -243,29 +247,36 @@ struct TurntWidget : ModuleWidget {
         addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module,
                                                    Turnt::TRIG_OUTPUT));
 
-        y += dy * 2;
+        y += dy * 2.f;
 
         auto scopeData = module ? &module->scope_data : nullptr;
         auto scope = new Scope(scopeData);
-        scope->box.pos = Vec(x - 50.f, y);
-        scope->box.size = Vec(100.f, 100.f);
-        auto tabDisplay = new TabDisplay();
-        tabDisplay->box.pos = Vec(x - 50.f, scope->box.pos.y - 10.f);
-        tabDisplay->box.size = Vec(100.f, 10.f);
-        tabDisplay->addTab("ch 1", [tabDisplay, scopeData]() {
-            tabDisplay->selectedTab = 0;
-            scopeData->activeChannel = 0;
-        });
-        tabDisplay->addTab("ch 2", [tabDisplay, scopeData]() {
-            tabDisplay->selectedTab = 1;
-            scopeData->activeChannel = 1;
-        });
-        tabDisplay->addTab("ch 3", [tabDisplay, scopeData]() {
-            tabDisplay->selectedTab = 2;
-            scopeData->activeChannel = 2;
-        });
-        tabDisplay->selectedTab = 0;
-        addChild(tabDisplay);
+        scope->box.pos = Vec(0.f, y);
+        scope->box.size = Vec(box.size.x, 100.f);
+        auto topTabDisplay = new TabDisplay();
+        auto bottomTabDisplay = new TabDisplay();
+        topTabDisplay->box.pos = Vec(scope->box.pos.x, scope->box.pos.y - 9.f);
+        topTabDisplay->box.size = Vec(scope->box.size.x, 10.f);
+        bottomTabDisplay->box.pos = Vec(scope->box.pos.x, scope->box.pos.y + scope->box.size.y - 1.f);
+        bottomTabDisplay->box.size = Vec(scope->box.size.x, 10.f);
+        for (int i = 0; i < 8; i++) {
+            topTabDisplay->addTab(std::to_string(i + 1), [topTabDisplay, bottomTabDisplay, scopeData, i]() {
+                scopeData->activeChannel = i;
+                bottomTabDisplay->selectedTab = -1;
+                topTabDisplay->selectedTab = i;
+            });
+        }
+        for (int i = 8; i < 16; i++) {
+            bottomTabDisplay->addTab(std::to_string(i + 1), [bottomTabDisplay, topTabDisplay, scopeData, i]() {
+                scopeData->activeChannel = i;
+                topTabDisplay->selectedTab = -1;
+                bottomTabDisplay->selectedTab = i - 8;
+            });
+        }
+        topTabDisplay->selectedTab = 0;
+        bottomTabDisplay->selectedTab = -1;
+        addChild(topTabDisplay);
+        addChild(bottomTabDisplay);
         addChild(scope);
     }
 
