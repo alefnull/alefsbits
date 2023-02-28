@@ -47,7 +47,7 @@ struct Turnt : Module {
 
     ScopeData scope_data;
 
-    float samples[3] = {0.f, 0.f, 0.f};
+    float samples[MAX_POLY][3] = {0.f, 0.f, 0.f};
     bool freeze_when_idle = false;
     bool triggered[MAX_POLY] = {false};
     int trigger_mode = {0};
@@ -91,21 +91,16 @@ struct Turnt : Module {
             auto in = inputs[SOURCE_INPUT].getVoltage(ch);
 
             // if the input isn't the same as the last value in the sample buffer
-            if (in != samples[0]) {
+            if (in != samples[ch][0]) {
                 // add the input to the sample buffer
-                samples[2] = samples[1];
-                samples[1] = samples[0];
-                samples[0] = in;
+                samples[ch][2] = samples[ch][1];
+                samples[ch][1] = samples[ch][0];
+                samples[ch][0] = in;
 
-                // auto v1 = samples[2];
-                // auto v2 = samples[1];
-                // auto d1 = v2 - v1;
-                // auto v3 = samples[0];
-                // auto d2 = v3 - v2;
-                auto v1 = samples[0];
-                auto v2 = samples[1];
+                auto v1 = samples[ch][0];
+                auto v2 = samples[ch][1];
                 auto d1 = v2 - v1;
-                auto v3 = samples[2];
+                auto v3 = samples[ch][2];
                 auto d2 = v3 - v2;
 
                 bool trig = false;
@@ -205,6 +200,8 @@ struct Turnt : Module {
 };
 
 struct TurntWidget : ModuleWidget {
+    TabDisplay *topTabDisplay = new TabDisplay();
+    TabDisplay *bottomTabDisplay = new TabDisplay();
     TurntWidget(Turnt* module) {
         setModule(module);
         setPanel(createPanel(asset::plugin(pluginInstance, "res/turnt.svg")));
@@ -253,24 +250,48 @@ struct TurntWidget : ModuleWidget {
         auto scope = new Scope(scopeData);
         scope->box.pos = Vec(0.f, y);
         scope->box.size = Vec(box.size.x, 100.f);
-        auto topTabDisplay = new TabDisplay();
-        auto bottomTabDisplay = new TabDisplay();
         topTabDisplay->box.pos = Vec(scope->box.pos.x, scope->box.pos.y - 9.f);
         topTabDisplay->box.size = Vec(scope->box.size.x, 10.f);
         bottomTabDisplay->box.pos = Vec(scope->box.pos.x, scope->box.pos.y + scope->box.size.y - 1.f);
         bottomTabDisplay->box.size = Vec(scope->box.size.x, 10.f);
         for (int i = 0; i < 8; i++) {
-            topTabDisplay->addTab(std::to_string(i + 1), [topTabDisplay, bottomTabDisplay, scopeData, i]() {
-                scopeData->activeChannel = i;
-                bottomTabDisplay->selectedTab = -1;
+            topTabDisplay->addTab(std::to_string(i + 1), [this, scopeData, i]() {
+                // bottomTabDisplay->selectedTab = -1;
+                // topTabDisplay->selectedTab = i;
+                // scopeData->activeChannel = i;
+
+                // if the channel is not available,
+                // or if the channel is available and selected, do nothing
+                if (topTabDisplay->tabAvailable[i] == false ||
+                    (topTabDisplay->tabAvailable[i] == true &&
+                     topTabDisplay->selectedTab == i)) {
+                    return;
+                }
+
+                // if the channel is available and not selected, select it
                 topTabDisplay->selectedTab = i;
+                bottomTabDisplay->selectedTab = -1;
+                scopeData->activeChannel = i;
             });
         }
         for (int i = 8; i < 16; i++) {
-            bottomTabDisplay->addTab(std::to_string(i + 1), [bottomTabDisplay, topTabDisplay, scopeData, i]() {
-                scopeData->activeChannel = i;
+            bottomTabDisplay->addTab(std::to_string(i + 1), [this, scopeData, i]() {
+                // topTabDisplay->selectedTab = -1;
+                // bottomTabDisplay->selectedTab = i - 8;
+                // scopeData->activeChannel = i;
+
+                // if the channel is not available,
+                // or if the channel is available and selected, do nothing
+                if (bottomTabDisplay->tabAvailable[i - 8] == false ||
+                    (bottomTabDisplay->tabAvailable[i - 8] == true &&
+                     bottomTabDisplay->selectedTab == i - 8)) {
+                    return;
+                }
+
+                // if the channel is available and not selected, select it
                 topTabDisplay->selectedTab = -1;
                 bottomTabDisplay->selectedTab = i - 8;
+                scopeData->activeChannel = i;
             });
         }
         topTabDisplay->selectedTab = 0;
@@ -279,6 +300,30 @@ struct TurntWidget : ModuleWidget {
         addChild(bottomTabDisplay);
         addChild(scope);
     }
+
+    void step() override {
+        ModuleWidget::step();
+        if (module) {
+            // check the number of input channels
+            int numChannels = module->inputs[Turnt::SOURCE_INPUT].getChannels();
+
+            // if the number of channels has changed, update the tab displays
+            for (int i = 0; i < 8; i++) {
+                if (i < numChannels) {
+                    topTabDisplay->tabAvailable[i] = true;
+                } else {
+                    topTabDisplay->tabAvailable[i] = false;
+                }
+            }
+            for (int i = 8; i < 16; i++) {
+                if (i < numChannels) {
+                    bottomTabDisplay->tabAvailable[i - 8] = true;
+                } else {
+                    bottomTabDisplay->tabAvailable[i - 8] = false;
+                }
+            }
+        }
+    }   
 
     void appendContextMenu(Menu* menu) override {
         Turnt* module = dynamic_cast<Turnt*>(this->module);
