@@ -51,7 +51,8 @@ struct SimplexOSC {
         buffer[buffer_pos] = value;
         buffer_pos++;
         if (tick % 256 == 0) {
-            auto minmax = std::minmax_element(begin(buffer), end(buffer));
+            // auto minmax = std::minmax_element(begin(buffer), end(buffer));
+            auto minmax = std::minmax_element(buffer, buffer + BUFFER_LEN);
             min = *minmax.first;
             max = *minmax.second;
         }
@@ -59,5 +60,9 @@ struct SimplexOSC {
 
         value = clamp(rescale(value, min, max, -1.0, 1.0), -1.0, 1.0);
         return value;
+    }
+
+    double rescale(double value, double old_min, double old_max, double new_min, double new_max) {
+        return (value - old_min) / (old_max - old_min) * (new_max - new_min) + new_min;
     }
 };
