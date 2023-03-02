@@ -28,7 +28,7 @@ struct Simplexandhold : ThemeableModule {
 	bool unipolar = false;
 	float last_sample[MAX_POLY] = {0.0};
 	double x[MAX_POLY] = {0.0};
-	float range = 1.0;
+	CVRange cv_range;
 
 	Simplexandhold() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -41,16 +41,13 @@ struct Simplexandhold : ThemeableModule {
 		int chans = std::max(1, inputs[TRIGGER_INPUT].getChannels());
 		outputs[SAMPLE_OUTPUT].setChannels(chans);
 		for (int c = 0; c < chans; c++) {
+			float out = 0.0;
 			if (trigger[c].process(inputs[TRIGGER_INPUT].getVoltage(c))) {
-				last_sample[c] = noise.noise(x[c], 0.0) * range;
+				last_sample[c] = noise.noise(x[c], 0.0);
+				out = cv_range.map(last_sample[c]);
 			}
 			x[c] += 0.1;
-			if (unipolar) {
-				outputs[SAMPLE_OUTPUT].setVoltage((last_sample[c] + range) / 2.0, c);
-			}
-			else {
-				outputs[SAMPLE_OUTPUT].setVoltage(last_sample[c], c);
-			}
+				outputs[SAMPLE_OUTPUT].setVoltage(out, c);
 		}
 	}
 
@@ -59,7 +56,7 @@ struct Simplexandhold : ThemeableModule {
 		json_object_set_new(rootJ, "contrast", json_real(contrast));
 		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
 		json_object_set_new(rootJ, "unipolar", json_boolean(unipolar));
-		json_object_set_new(rootJ, "range", json_real(range));
+		json_object_set_new(rootJ, "cv_range", cv_range.dataToJson());
 		return rootJ;
 	}
 
@@ -73,9 +70,9 @@ struct Simplexandhold : ThemeableModule {
 		json_t* unipolarJ = json_object_get(rootJ, "unipolar");
 		if (unipolarJ)
 			unipolar = json_boolean_value(unipolarJ);
-		json_t* rangeJ = json_object_get(rootJ, "range");
-		if (rangeJ)
-			range = json_real_value(rangeJ);
+		json_t* cv_rangeJ = json_object_get(rootJ, "cv_range");
+		if (cv_rangeJ)
+			cv_range.dataFromJson(cv_rangeJ);
 	}
 };
 
@@ -150,18 +147,7 @@ struct SimplexandholdWidget : ModuleWidget {
         }));
 
 		menu->addChild(new MenuSeparator());
-		// add a submenu to choose the range, between
-		// +/- 1V, +/- 3V, +/- 5V, +/- 10V
-		menu->addChild(createSubmenuItem("Range", "", [=](Menu* menu) {
-			Menu* rangeMenu = new Menu();
-			rangeMenu->addChild(createMenuItem("-/+ 1v", CHECKMARK(module->range == 1), [module]() { module->range = 1; }));
-			rangeMenu->addChild(createMenuItem("-/+ 2v", CHECKMARK(module->range == 2), [module]() { module->range = 2; }));
-			rangeMenu->addChild(createMenuItem("-/+ 3v", CHECKMARK(module->range == 3), [module]() { module->range = 3; }));
-			rangeMenu->addChild(createMenuItem("-/+ 5v", CHECKMARK(module->range == 5), [module]() { module->range = 5; }));
-			rangeMenu->addChild(createMenuItem("-/+ 10v", CHECKMARK(module->range == 10), [module]() { module->range = 10; }));
-			menu->addChild(rangeMenu);
-		}));
-		menu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar), [module]() { module->unipolar = !module->unipolar; }));
+		module->cv_range.addMenu(module, menu);
 	}
 };
 
