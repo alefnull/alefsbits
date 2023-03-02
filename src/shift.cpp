@@ -1,7 +1,10 @@
 #include "plugin.hpp"
+#include "widgets/PanelBackground.hpp"
+#include "widgets/InverterWidget.hpp"
+#include "widgets/BitPort.hpp"
 
 
-struct Shift : Module {
+struct Shift : ThemeableModule {
 	enum ParamId {
 		REGISTER_1_PARAM,
 		REGISTER_2_PARAM,
@@ -134,6 +137,8 @@ struct Shift : Module {
 
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
+		json_object_set_new(rootJ, "contrast", json_real(contrast));
+		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
 		json_object_set_new(rootJ, "unipolar", json_boolean(unipolar));
 		json_object_set_new(rootJ, "scrambled", json_boolean(scrambled));
 		json_object_set_new(rootJ, "range", json_real(range));
@@ -141,6 +146,14 @@ struct Shift : Module {
 	}
 
 	void dataFromJson(json_t* rootJ) override {
+		json_t* contrastJ = json_object_get(rootJ, "contrast");
+		if (contrastJ) {
+			contrast = json_real_value(contrastJ);
+		}
+		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
+		if (use_global_contrastJ) {
+			use_global_contrast = json_boolean_value(use_global_contrastJ);
+		}
 		json_t* unipolarJ = json_object_get(rootJ, "unipolar");
 		if (unipolarJ) {
 			unipolar = json_boolean_value(unipolarJ);
@@ -158,14 +171,19 @@ struct Shift : Module {
 
 
 struct ShiftWidget : ModuleWidget {
+    PanelBackground *panelBackground = new PanelBackground();
+    SvgPanel *svgPanel;
+    Inverter *inverter = new Inverter();
 	ShiftWidget(Shift* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/shift.svg")));
+		svgPanel = createPanel(asset::plugin(pluginInstance, "res/shift.svg"));
+		setPanel(svgPanel);
 
-		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+        panelBackground->box.size = svgPanel->box.size;
+        svgPanel->fb->addChildBottom(panelBackground);
+        inverter->box.pos = Vec(0.f, 0.f);
+        inverter->box.size = Vec(box.size.x, box.size.y);
+        addChild(inverter);
 
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(14.588, 41.655)), module, Shift::REGISTER_1_PARAM));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(14.588, 50.764)), module, Shift::REGISTER_2_PARAM));
@@ -176,30 +194,74 @@ struct ShiftWidget : ModuleWidget {
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(14.588, 96.311)), module, Shift::REGISTER_7_PARAM));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(14.588, 105.42)), module, Shift::REGISTER_8_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(12.871, 21.057)), module, Shift::SIGNAL_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(22.689, 21.057)), module, Shift::TRIGGER_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(5.54, 41.655)), module, Shift::REGISTER_1_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(5.54, 50.764)), module, Shift::REGISTER_2_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(5.54, 59.874)), module, Shift::REGISTER_3_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(5.54, 68.983)), module, Shift::REGISTER_4_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(5.54, 78.092)), module, Shift::REGISTER_5_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(5.54, 87.202)), module, Shift::REGISTER_6_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(5.54, 96.311)), module, Shift::REGISTER_7_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(5.54, 105.42)), module, Shift::REGISTER_8_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(12.871, 21.057)), module, Shift::SIGNAL_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(22.689, 21.057)), module, Shift::TRIGGER_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(5.54, 41.655)), module, Shift::REGISTER_1_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(5.54, 50.764)), module, Shift::REGISTER_2_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(5.54, 59.874)), module, Shift::REGISTER_3_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(5.54, 68.983)), module, Shift::REGISTER_4_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(5.54, 78.092)), module, Shift::REGISTER_5_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(5.54, 87.202)), module, Shift::REGISTER_6_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(5.54, 96.311)), module, Shift::REGISTER_7_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(5.54, 105.42)), module, Shift::REGISTER_8_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(26.908, 41.655)), module, Shift::REGISTER_1_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(26.908, 50.764)), module, Shift::REGISTER_2_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(26.908, 59.874)), module, Shift::REGISTER_3_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(26.908, 68.983)), module, Shift::REGISTER_4_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(26.908, 78.092)), module, Shift::REGISTER_5_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(26.908, 87.202)), module, Shift::REGISTER_6_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(26.908, 96.311)), module, Shift::REGISTER_7_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(26.908, 105.42)), module, Shift::REGISTER_8_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(26.908, 41.655)), module, Shift::REGISTER_1_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(26.908, 50.764)), module, Shift::REGISTER_2_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(26.908, 59.874)), module, Shift::REGISTER_3_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(26.908, 68.983)), module, Shift::REGISTER_4_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(26.908, 78.092)), module, Shift::REGISTER_5_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(26.908, 87.202)), module, Shift::REGISTER_6_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(26.908, 96.311)), module, Shift::REGISTER_7_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(26.908, 105.42)), module, Shift::REGISTER_8_OUTPUT));
 	}
 
+	void step() override {
+		Shift* shiftModule = dynamic_cast<Shift*>(this->module);
+		if (!shiftModule) return;
+		if (shiftModule->contrast != shiftModule->global_contrast) {
+			shiftModule->use_global_contrast = false;
+		}
+		if (shiftModule->contrast != panelBackground->contrast) {
+			panelBackground->contrast = shiftModule->contrast;
+			if (panelBackground->contrast < 0.4f) {
+				panelBackground->invert(true);
+				inverter->invert = true;
+			}
+			else {
+				panelBackground->invert(false);
+				inverter->invert = false;
+			}
+			svgPanel->fb->dirty = true;
+		}
+		ModuleWidget::step();
+	}
 	void appendContextMenu(Menu* menu) override {
 		Shift* module = dynamic_cast<Shift*>(this->module);
 		assert(module);
+
+        menu->addChild(new MenuSeparator());
+
+        menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
+            Menu* contrastMenu = new Menu();
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            contrastSlider->box.size.x = 200.f;
+            contrastMenu->addChild(createMenuItem("use global contrast",
+                CHECKMARK(module->use_global_contrast),
+                [module]() { 
+                    module->use_global_contrast = !module->use_global_contrast;
+                    if (module->use_global_contrast) {
+                        module->load_global_contrast();
+                        module->contrast = module->global_contrast;
+                    }
+                }));
+            contrastMenu->addChild(new MenuSeparator());
+            contrastMenu->addChild(contrastSlider);
+            contrastMenu->addChild(createMenuItem("set global contrast", "",
+                [module]() {
+                    module->save_global_contrast(module->contrast);
+                }));
+            menu->addChild(contrastMenu);
+        }));
 
 		menu->addChild(new MenuSeparator());
 		// add a submenu to choose the range, between

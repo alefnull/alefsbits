@@ -7,7 +7,7 @@
    viewBox="0 0 20.32 128.5"
    version="1.1"
    id="svg5"
-   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
    sodipodi:docname="fibb.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -25,9 +25,11 @@
      showgrid="false"
      borderlayer="true"
      inkscape:zoom="2.5620932"
-     inkscape:cx="129.97185"
-     inkscape:cy="146.55985"
-     inkscape:current-layer="layer1" />
+     inkscape:cx="120.79966"
+     inkscape:cy="177.58917"
+     inkscape:current-layer="layer1"
+     inkscape:showpageshadow="0"
+     inkscape:deskcolor="#505050" />
   <defs
      id="defs2" />
   <g
@@ -35,7 +37,7 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:#ffffff;stroke-width:0.964999"
+       style="display:none;fill:#ffffff;stroke-width:0.964999"
        id="rect846"
        width="21.686369"
        height="130.5313"

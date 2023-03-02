@@ -1,12 +1,15 @@
 #include "plugin.hpp"
 #include "quantizer.hpp"
 #include "inc/cvRange.hpp"
+#include "widgets/PanelBackground.hpp"
+#include "widgets/InverterWidget.hpp"
+#include "widgets/BitPort.hpp"
 
 #define MAX_POLY 16
 #define MAX_STEPS 64
 
 
-struct Slips : Module, Quantizer {
+struct Slips : ThemeableModule, Quantizer {
 	enum ParamId {
 		ROOT_PARAM,
 		STEPS_PARAM,
@@ -120,6 +123,8 @@ struct Slips : Module, Quantizer {
 	// dataToJson override
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
+		json_object_set_new(rootJ, "contrast", json_real(contrast));
+		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
 		// the sequence
 		json_t* sequenceJ = json_array();
 		for (int i = 0; i < MAX_STEPS; i++) {
@@ -143,6 +148,14 @@ struct Slips : Module, Quantizer {
 
 	// dataFromJson override
 	void dataFromJson(json_t* rootJ) override {
+		json_t* contrastJ = json_object_get(rootJ, "contrast");
+		if (contrastJ) {
+			contrast = json_number_value(contrastJ);
+		}
+		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
+		if (use_global_contrastJ) {
+			use_global_contrast = json_is_true(use_global_contrastJ);
+		}
 		// the sequence
 		json_t* sequenceJ = json_object_get(rootJ, "sequence");
 		if (sequenceJ) {
@@ -487,14 +500,19 @@ struct Slips : Module, Quantizer {
 
 
 struct SlipsWidget : ModuleWidget {
+    PanelBackground *panelBackground = new PanelBackground();
+    SvgPanel *svgPanel;
+    Inverter *inverter = new Inverter();
 	SlipsWidget(Slips* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/slips.svg")));
+		svgPanel = createPanel(asset::plugin(pluginInstance, "res/slips.svg"));
+		setPanel(svgPanel);
 
-		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+        panelBackground->box.size = svgPanel->box.size;
+        svgPanel->fb->addChildBottom(panelBackground);
+        inverter->box.pos = Vec(0.f, 0.f);
+        inverter->box.size = Vec(box.size.x, box.size.y);
+        addChild(inverter);
 
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(30.279, 24.08)), module, Slips::ROOT_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(51.782, 24.08)), module, Slips::STEPS_PARAM));
@@ -505,22 +523,22 @@ struct SlipsWidget : ModuleWidget {
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(51.782, 77.763)), module, Slips::SLIPS_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(51.782, 95.657)), module, Slips::SLIP_RANGE_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.854, 24.08)), module, Slips::CLOCK_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.082, 24.08)), module, Slips::ROOT_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.586, 24.08)), module, Slips::STEPS_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.854, 41.974)), module, Slips::RESET_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.082, 41.974)), module, Slips::SCALE_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.586, 41.974)), module, Slips::START_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.556, 59.869)), module, Slips::GENERATE_TRIGGER_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.586, 59.869)), module, Slips::PROB_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.258, 77.763)), module, Slips::QUANTIZE_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.586, 77.763)), module, Slips::SLIPS_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.586, 95.657)), module, Slips::SLIP_RANGE_CV_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(8.854, 24.08)), module, Slips::CLOCK_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(21.082, 24.08)), module, Slips::ROOT_CV_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(42.586, 24.08)), module, Slips::STEPS_CV_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(8.854, 41.974)), module, Slips::RESET_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(21.082, 41.974)), module, Slips::SCALE_CV_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(42.586, 41.974)), module, Slips::START_CV_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(8.556, 59.869)), module, Slips::GENERATE_TRIGGER_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(42.586, 59.869)), module, Slips::PROB_CV_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(8.258, 77.763)), module, Slips::QUANTIZE_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(42.586, 77.763)), module, Slips::SLIPS_CV_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(42.586, 95.657)), module, Slips::SLIP_RANGE_CV_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(19.745, 77.763)), module, Slips::QUANTIZE_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.854, 95.657)), module, Slips::SEQUENCE_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.763, 95.657)), module, Slips::GATE_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.882, 95.657)), module, Slips::SLIP_GATE_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(19.745, 77.763)), module, Slips::QUANTIZE_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(8.854, 95.657)), module, Slips::SEQUENCE_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(18.763, 95.657)), module, Slips::GATE_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(28.882, 95.657)), module, Slips::SLIP_GATE_OUTPUT));
 
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(23.255, 92.872)), module, Slips::GATE_LIGHT));
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(33.541, 92.872)), module, Slips::SLIP_GATE_LIGHT));
@@ -550,10 +568,54 @@ struct SlipsWidget : ModuleWidget {
 		fourth_segment_display->setLights<RedLight>(module, Slips::SEGMENT_LIGHTS + 48, 16);
 		addChild(fourth_segment_display);
 	}
+	
+	void step() override {
+		Slips* slipsModule = dynamic_cast<Slips*>(this->module);
+		if (!slipsModule) return;
+		if (slipsModule->contrast != slipsModule->global_contrast) {
+			slipsModule->use_global_contrast = false;
+		}
+		if (slipsModule->contrast != panelBackground->contrast) {
+			panelBackground->contrast = slipsModule->contrast;
+			if (panelBackground->contrast < 0.4f) {
+				panelBackground->invert(true);
+				inverter->invert = true;
+			}
+			else {
+				panelBackground->invert(false);
+				inverter->invert = false;
+			}
+			svgPanel->fb->dirty = true;
+		}
+		ModuleWidget::step();
+	}
 
 	void appendContextMenu(Menu* menu) override {
 		Slips* module = dynamic_cast<Slips*>(this->module);
 		assert(module);
+        menu->addChild(new MenuSeparator());
+
+        menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
+            Menu* contrastMenu = new Menu();
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            contrastSlider->box.size.x = 200.f;
+            contrastMenu->addChild(createMenuItem("use global contrast",
+                CHECKMARK(module->use_global_contrast),
+                [module]() { 
+                    module->use_global_contrast = !module->use_global_contrast;
+                    if (module->use_global_contrast) {
+                        module->load_global_contrast();
+                        module->contrast = module->global_contrast;
+                    }
+                }));
+            contrastMenu->addChild(new MenuSeparator());
+            contrastMenu->addChild(contrastSlider);
+            contrastMenu->addChild(createMenuItem("set global contrast", "",
+                [module]() {
+                    module->save_global_contrast(module->contrast);
+                }));
+            menu->addChild(contrastMenu);
+        }));
 		menu->addChild(new MenuSeparator());
 		menu->addChild(createMenuItem("root input v/oct", CHECKMARK(module->root_input_voct), [module]() { module->root_input_voct = !module->root_input_voct; }));
 		module->cv_range.addMenu(module, menu);

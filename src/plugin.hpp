@@ -1,6 +1,10 @@
 #pragma once
 #include <rack.hpp>
 
+#include "inc/ThemeableModule.hpp"
+
+#define CONTRAST_MIN 0.1f
+#define CONTRAST_MAX 0.9f
 
 using namespace rack;
 
@@ -24,3 +28,49 @@ extern Model* modelPolyplay;
 extern Model* modelLights;
 extern Model* modelSlips;
 extern Model* modelTurnt;
+
+
+struct ContrastQuantity : Quantity {
+    float* contrast;
+
+    ContrastQuantity(float* contrast) {
+        this->contrast = contrast;
+    }
+
+    void setValue(float value) override {
+        *contrast = clamp(value, CONTRAST_MIN, CONTRAST_MAX);
+    }
+
+    float getValue() override {
+        return *contrast;
+    }
+
+    float getDefaultValue() override {
+        return CONTRAST_MAX;
+    }
+
+    float getMinValue() override {
+        return CONTRAST_MIN;
+    }
+
+    float getMaxValue() override {
+        return CONTRAST_MAX;
+    }
+
+    float getDisplayValue() override {
+        return getValue();
+    }
+
+    std::string getUnit() override {
+        return "";
+    }
+};
+
+struct ContrastSlider : ui::Slider {
+    ContrastSlider(float* contrast) {
+        quantity = new ContrastQuantity(contrast);
+    }
+    ~ContrastSlider() {
+        delete quantity;
+    }
+};

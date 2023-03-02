@@ -25,9 +25,9 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="1.3744101"
-     inkscape:cx="-16.734452"
+     inkscape:cx="-60.753337"
      inkscape:cy="246.65127"
-     inkscape:current-layer="layer2" />
+     inkscape:current-layer="layer1" />
   <defs
      id="defs2" />
   <g
@@ -35,7 +35,7 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:#ffffff;stroke-width:0.964999"
+       style="display:none;fill:#ffffff;stroke-width:0.964999"
        id="rect491"
        width="11.165396"
        height="130.51962"

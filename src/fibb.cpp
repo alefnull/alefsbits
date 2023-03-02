@@ -1,7 +1,10 @@
 #include "plugin.hpp"
+#include "widgets/PanelBackground.hpp"
+#include "widgets/InverterWidget.hpp"
+#include "widgets/BitPort.hpp"
 
 
-struct Fibb : Module {
+struct Fibb : ThemeableModule {
 	enum ParamId {
 		PARAMS_LEN
 	};
@@ -117,33 +120,106 @@ struct Fibb : Module {
 		out_8 = false;
 		out_13 = false;
 	}
+
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
+		json_object_set_new(rootJ, "contrast", json_real(contrast));
+		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
+		return rootJ;
+	}
+
+	void dataFromJson(json_t* rootJ) override {
+		json_t* contrastJ = json_object_get(rootJ, "contrast");
+		if (contrastJ) {
+			contrast = json_number_value(contrastJ);
+		}
+		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
+		if (use_global_contrastJ) {
+			use_global_contrast = json_is_true(use_global_contrastJ);
+		}
+	}
 };
 
 
 struct FibbWidget : ModuleWidget {
+    PanelBackground *panelBackground = new PanelBackground();
+    SvgPanel *svgPanel;
+    Inverter *inverter = new Inverter();
 	FibbWidget(Fibb* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/fibb.svg")));
+		svgPanel = createPanel(asset::plugin(pluginInstance, "res/fibb.svg"));
+		setPanel(svgPanel);
 
-		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+        panelBackground->box.size = svgPanel->box.size;
+        svgPanel->fb->addChildBottom(panelBackground);
+        inverter->box.pos = Vec(0.f, 0.f);
+        inverter->box.size = Vec(box.size.x, box.size.y);
+        addChild(inverter);
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(5.16, 22.719)), module, Fibb::CLOCK_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(15.16, 22.719)), module, Fibb::RESET_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(5.16, 22.719)), module, Fibb::CLOCK_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(15.16, 22.719)), module, Fibb::RESET_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(9.16, 37.177)), module, Fibb::FIBB2_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(9.16, 53.028)), module, Fibb::FIBB3_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(9.16, 68.88)), module, Fibb::FIBB5_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(9.16, 84.732)), module, Fibb::FIBB8_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(9.16, 100.583)), module, Fibb::FIBB13_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(9.16, 37.177)), module, Fibb::FIBB2_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(9.16, 53.028)), module, Fibb::FIBB3_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(9.16, 68.88)), module, Fibb::FIBB5_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(9.16, 84.732)), module, Fibb::FIBB8_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(9.16, 100.583)), module, Fibb::FIBB13_OUTPUT));
 
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(15.16, 37.177)), module, Fibb::FIBB2_LIGHT));
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(15.16, 53.028)), module, Fibb::FIBB3_LIGHT));
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(15.16, 68.88)), module, Fibb::FIBB5_LIGHT));
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(15.16, 84.732)), module, Fibb::FIBB8_LIGHT));
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(15.16, 100.583)), module, Fibb::FIBB13_LIGHT));
+	}
+
+	void step() override {
+		Fibb* fibbModule = dynamic_cast<Fibb*>(this->module);
+		if (!fibbModule) return;
+		if (fibbModule->contrast != fibbModule->global_contrast) {
+			fibbModule->use_global_contrast = false;
+		}
+		if (fibbModule->contrast != panelBackground->contrast) {
+			panelBackground->contrast = fibbModule->contrast;
+			if (panelBackground->contrast < 0.4f) {
+				panelBackground->invert(true);
+				inverter->invert = true;
+			}
+			else {
+				panelBackground->invert(false);
+				inverter->invert = false;
+			}
+			svgPanel->fb->dirty = true;
+		}
+		ModuleWidget::step();
+	}
+
+	void appendContextMenu(Menu* menu) override {
+        Fibb* module = dynamic_cast<Fibb*>(this->module);
+        assert(module);
+
+        menu->addChild(new MenuSeparator());
+
+        menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
+            Menu* contrastMenu = new Menu();
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            contrastSlider->box.size.x = 200.f;
+            contrastMenu->addChild(createMenuItem("use global contrast",
+                CHECKMARK(module->use_global_contrast),
+                [module]() { 
+                    module->use_global_contrast = !module->use_global_contrast;
+                    if (module->use_global_contrast) {
+                        module->load_global_contrast();
+                        module->contrast = module->global_contrast;
+                    }
+                }));
+            contrastMenu->addChild(new MenuSeparator());
+            contrastMenu->addChild(contrastSlider);
+            contrastMenu->addChild(createMenuItem("set global contrast", "",
+                [module]() {
+                    module->save_global_contrast(module->contrast);
+                }));
+            menu->addChild(contrastMenu);
+        }));
 	}
 };
 

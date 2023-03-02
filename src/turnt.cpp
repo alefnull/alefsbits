@@ -1,12 +1,16 @@
 #include "plugin.hpp"
+#include "inc/ThemeableModule.hpp"
 #include "utils/ResizableRingBuffer.hpp"
 #include "widgets/Scope.hpp"
 #include "widgets/ScopeData.hpp"
 #include "widgets/TabDisplay.cpp"
+#include "widgets/PanelBackground.hpp"
+#include "widgets/InverterWidget.hpp"
+#include "widgets/BitPort.hpp"
 
 #define MAX_POLY 16
 
-struct Turnt : Module {
+struct Turnt : ThemeableModule {
     enum ParamId { MODE_PARAM, ZERO_PARAM, PROB_PARAM, PARAMS_LEN };
     enum InputId { SOURCE_INPUT, ZERO_INPUT, PROB_INPUT, INPUTS_LEN };
     enum OutputId { TRIG_OUTPUT, OUTPUTS_LEN };
@@ -81,8 +85,7 @@ struct Turnt : Module {
             // clear buffers otherwise
             for (int ch = 0; ch < MAX_POLY; ch++) {
                 for (int i = 0; i < scope_data.buffer[ch].size; i++) {
-                    scope_data.buffer[ch].get(i).operator=(std::make_pair(
-                        0.f, false));
+                    scope_data.buffer[ch].get(i).operator=(std::make_pair(0.f, false));
                 }
             }
         }
@@ -114,7 +117,8 @@ struct Turnt : Module {
                                 : false;
                         break;
                     case 1:  // through zero
-                        trig = ((v1 > zero && v2 <= zero) || (v1 < zero && v2 >= zero))
+                        trig = 
+                            ((v1 > zero && v2 <= zero) || (v1 < zero && v2 >= zero))
                                 ? (r < prob)
                                 : false;
                         break;
@@ -130,7 +134,6 @@ struct Turnt : Module {
 
                 if (trig) {
                     triggered[ch] = true;
-                    // pulse.trigger(1e-3f);
                     switch (trigger_mode) {
                         case 0:  // trigger
                             pulse[ch].trigger(1e-3f);
@@ -164,7 +167,6 @@ struct Turnt : Module {
                     buffer_index[ch]++;
                 }
             } else {
-                // buffer full - reset
                 buffer_index[ch] = 0;
                 frame_index[ch] = 0;
             }
@@ -179,6 +181,14 @@ struct Turnt : Module {
     }
 
     void dataFromJson(json_t* rootJ) override {
+        json_t* contrastJ = json_object_get(rootJ, "contrast");
+        if (contrastJ) {
+            contrast = json_real_value(contrastJ);
+        }
+        json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
+        if (use_global_contrastJ) {
+            use_global_contrast = json_boolean_value(use_global_contrastJ);
+        }
         json_t* modeJ = json_object_get(rootJ, "trigger mode");
         if (modeJ) {
             trigger_mode = json_integer_value(modeJ);
@@ -191,6 +201,8 @@ struct Turnt : Module {
 
     json_t* dataToJson() override {
         json_t* rootJ = json_object();
+        json_object_set_new(rootJ, "contrast", json_real(contrast));
+        json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
         json_object_set_new(rootJ, "trigger mode", 
                             json_integer(trigger_mode));
         json_object_set_new(rootJ, "freeze on disconnect",
@@ -202,36 +214,38 @@ struct Turnt : Module {
 struct TurntWidget : ModuleWidget {
     TabDisplay *topTabDisplay = new TabDisplay();
     TabDisplay *bottomTabDisplay = new TabDisplay();
+    PanelBackground *panelBackground = new PanelBackground();
+    SvgPanel *svgPanel;
+    Inverter *inverter = new Inverter();
+
     TurntWidget(Turnt* module) {
         setModule(module);
-        setPanel(createPanel(asset::plugin(pluginInstance, "res/turnt.svg")));
+        svgPanel = createPanel(asset::plugin(pluginInstance, "res/turnt.svg"));
+        setPanel(svgPanel);
 
-        // addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-        // addChild(createWidget<ScrewSilver>(
-        //     Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-        // addChild(createWidget<ScrewSilver>(
-        //     Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-        // addChild(
-        //     createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH,
-        //                                   RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+        panelBackground->box.size = svgPanel->box.size;
+        svgPanel->fb->addChildBottom(panelBackground);
+        inverter->box.pos = Vec(0.f, 0.f);
+        inverter->box.size = Vec(box.size.x, box.size.y);
+        addChild(inverter);
 
         float y_start = RACK_GRID_WIDTH * 4;
         float dy = RACK_GRID_WIDTH;
         float x = box.size.x / 2;
         float y = y_start;
 
-        addInput(createInputCentered<PJ301MPort>(Vec(x, y), module,
+        addInput(createInputCentered<BitPort>(Vec(x, y + dy), module,
                                                  Turnt::SOURCE_INPUT));
         y += dy * 3;
         x -= RACK_GRID_WIDTH * 1.5;
-        addInput(createInputCentered<PJ301MPort>(Vec(x, y), module,
+        addInput(createInputCentered<BitPort>(Vec(x, y), module,
                                                  Turnt::ZERO_INPUT));
         y += dy * 2;
         addParam(createParamCentered<RoundBlackKnob>(Vec(x, y), module,
                                                      Turnt::ZERO_PARAM));
         y -= dy * 2;
         x += RACK_GRID_WIDTH * 3;
-        addInput(createInputCentered<PJ301MPort>(Vec(x, y), module,
+        addInput(createInputCentered<BitPort>(Vec(x, y), module,
                                                  Turnt::PROB_INPUT));
         y += dy * 2;
         addParam(createParamCentered<RoundBlackKnob>(Vec(x, y), module,
@@ -241,25 +255,21 @@ struct TurntWidget : ModuleWidget {
         addParam(createParamCentered<CKSSThreeHorizontal>(Vec(x, y), module,
                                                           Turnt::MODE_PARAM));
         y += dy * 2;
-        addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module,
+        addOutput(createOutputCentered<BitPort>(Vec(x, y), module,
                                                    Turnt::TRIG_OUTPUT));
 
         y += dy * 2.f;
 
         auto scopeData = module ? &module->scope_data : nullptr;
         auto scope = new Scope(scopeData);
-        scope->box.pos = Vec(0.f, y);
-        scope->box.size = Vec(box.size.x, 100.f);
+        scope->box.pos = Vec(1.f, y);
+        scope->box.size = Vec(box.size.x - 2.f, 100.f);
         topTabDisplay->box.pos = Vec(scope->box.pos.x, scope->box.pos.y - 9.f);
         topTabDisplay->box.size = Vec(scope->box.size.x, 10.f);
         bottomTabDisplay->box.pos = Vec(scope->box.pos.x, scope->box.pos.y + scope->box.size.y - 1.f);
         bottomTabDisplay->box.size = Vec(scope->box.size.x, 10.f);
         for (int i = 0; i < 8; i++) {
             topTabDisplay->addTab(std::to_string(i + 1), [this, scopeData, i]() {
-                // bottomTabDisplay->selectedTab = -1;
-                // topTabDisplay->selectedTab = i;
-                // scopeData->activeChannel = i;
-
                 // if the channel is not available,
                 // or if the channel is available and selected, do nothing
                 if (topTabDisplay->tabAvailable[i] == false ||
@@ -276,10 +286,6 @@ struct TurntWidget : ModuleWidget {
         }
         for (int i = 8; i < 16; i++) {
             bottomTabDisplay->addTab(std::to_string(i + 1), [this, scopeData, i]() {
-                // topTabDisplay->selectedTab = -1;
-                // bottomTabDisplay->selectedTab = i - 8;
-                // scopeData->activeChannel = i;
-
                 // if the channel is not available,
                 // or if the channel is available and selected, do nothing
                 if (bottomTabDisplay->tabAvailable[i - 8] == false ||
@@ -302,7 +308,6 @@ struct TurntWidget : ModuleWidget {
     }
 
     void step() override {
-        ModuleWidget::step();
         if (module) {
             // check the number of input channels
             int numChannels = module->inputs[Turnt::SOURCE_INPUT].getChannels();
@@ -322,14 +327,64 @@ struct TurntWidget : ModuleWidget {
                     bottomTabDisplay->tabAvailable[i - 8] = false;
                 }
             }
+
+            Turnt* turntModule = dynamic_cast<Turnt*>(this->module);
+            if (!turntModule) return;
+            if (turntModule->contrast != turntModule->global_contrast) {
+                turntModule->use_global_contrast = false;
+            }
+            if (turntModule->contrast != panelBackground->contrast) {
+                panelBackground->contrast = turntModule->contrast;
+                if (panelBackground->contrast < 0.4f) {
+                    panelBackground->invert(true);
+                    inverter->invert = true;
+                }
+                else {
+                    panelBackground->invert(false);
+                    inverter->invert = false;
+                }
+                svgPanel->fb->dirty = true;
+            }
         }
-    }   
+        ModuleWidget::step();
+    }
+
+    void drawLayer(const DrawArgs& args, int layer) override {
+        ModuleWidget::drawLayer(args, layer);
+    }
+
+    void draw(const DrawArgs& args) override {
+        ModuleWidget::draw(args);
+    }
+
 
     void appendContextMenu(Menu* menu) override {
         Turnt* module = dynamic_cast<Turnt*>(this->module);
         assert(module);
 
         menu->addChild(new MenuSeparator());
+
+        menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
+            Menu* contrastMenu = new Menu();
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            contrastSlider->box.size.x = 200.f;
+            contrastMenu->addChild(createMenuItem("use global contrast",
+                CHECKMARK(module->use_global_contrast),
+                [module]() { 
+                    module->use_global_contrast = !module->use_global_contrast;
+                    if (module->use_global_contrast) {
+                        module->load_global_contrast();
+                        module->contrast = module->global_contrast;
+                    }
+                }));
+            contrastMenu->addChild(new MenuSeparator());
+            contrastMenu->addChild(contrastSlider);
+            contrastMenu->addChild(createMenuItem("set global contrast", "",
+                [module]() {
+                    module->save_global_contrast(module->contrast);
+                }));
+            menu->addChild(contrastMenu);
+        }));
 
         menu->addChild(createMenuItem("freeze when idle",
             CHECKMARK(module->freeze_when_idle), 

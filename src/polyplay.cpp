@@ -4,11 +4,14 @@
 #include <osdialog.h>
 #include <samplerate.h>
 #include "inc/AudioFile.h"
+#include "widgets/PanelBackground.hpp"
+#include "widgets/InverterWidget.hpp"
+#include "widgets/BitPort.hpp"
 
 #define MAX_POLY 16
 
 
-struct Polyplay : Module {
+struct Polyplay : ThemeableModule {
 	enum ParamId {
 		POLY_PARAM,
 		TRIGGER_PARAM,
@@ -207,6 +210,8 @@ struct Polyplay : Module {
 
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
+		json_object_set_new(rootJ, "contrast", json_real(contrast));
+		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
 		json_object_set_new(rootJ, "loaded_file_name", json_string(loaded_file_name.c_str()));
 		json_object_set_new(rootJ, "file_loaded", json_boolean(file_loaded));
 		json_object_set_new(rootJ, "phase_range", json_real(phase_range));
@@ -215,6 +220,14 @@ struct Polyplay : Module {
 	}
 
 	void dataFromJson(json_t* rootJ) override {
+		json_t* contrastJ = json_object_get(rootJ, "contrast");
+		if (contrastJ) {
+			contrast = json_real_value(contrastJ);
+		}
+		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
+		if (use_global_contrastJ) {
+			use_global_contrast = json_boolean_value(use_global_contrastJ);
+		}
 		json_t* loaded_file_nameJ = json_object_get(rootJ, "loaded_file_name");
 		if (loaded_file_nameJ) {
 			loaded_file_name = json_string_value(loaded_file_nameJ);
@@ -246,14 +259,19 @@ struct Polyplay : Module {
 
 
 struct PolyplayWidget : ModuleWidget {
+    PanelBackground *panelBackground = new PanelBackground();
+    SvgPanel *svgPanel;
+    Inverter *inverter = new Inverter();
 	PolyplayWidget(Polyplay* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/polyplay.svg")));
+		svgPanel = createPanel(asset::plugin(pluginInstance, "res/polyplay.svg"));
+		setPanel(svgPanel);
 
-		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+        panelBackground->box.size = svgPanel->box.size;
+        svgPanel->fb->addChildBottom(panelBackground);
+        inverter->box.pos = Vec(0.f, 0.f);
+        inverter->box.size = Vec(box.size.x, box.size.y);
+        addChild(inverter);
 
 		float x_start = RACK_GRID_WIDTH * 2;
 		float y_start = RACK_GRID_WIDTH * 7 - RACK_GRID_WIDTH / 2;
@@ -267,21 +285,66 @@ struct PolyplayWidget : ModuleWidget {
 		y += dy * 2 - RACK_GRID_WIDTH;
 		addParam(createParamCentered<TL1105>(Vec(x, y), module, Polyplay::TRIGGER_PARAM));
 		y += dy - RACK_GRID_WIDTH / 2;
-		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::TRIGGER_INPUT));
+		addInput(createInputCentered<BitPort>(Vec(x, y), module, Polyplay::TRIGGER_INPUT));
 		y += dy * 2 - RACK_GRID_WIDTH / 4;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::PHASE_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(Vec(x, y), module, Polyplay::PHASE_OUTPUT));
 		y += dy * 2 + RACK_GRID_WIDTH / 4;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::LEFT_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(Vec(x, y), module, Polyplay::LEFT_OUTPUT));
 		y += dy;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Polyplay::RIGHT_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(Vec(x, y), module, Polyplay::RIGHT_OUTPUT));
+	}
+
+	void step() override {
+		Polyplay* playModule = dynamic_cast<Polyplay*>(this->module);
+		if (!playModule) return;
+		if (playModule->contrast != playModule->global_contrast) {
+			playModule->use_global_contrast = false;
+		}
+		if (playModule->contrast != panelBackground->contrast) {
+			panelBackground->contrast = playModule->contrast;
+			if (panelBackground->contrast < 0.4f) {
+				panelBackground->invert(true);
+				inverter->invert = true;
+			}
+			else {
+				panelBackground->invert(false);
+				inverter->invert = false;
+			}
+			svgPanel->fb->dirty = true;
+		}
+		ModuleWidget::step();
 	}
 
 	void appendContextMenu(Menu* menu) override {
 		Polyplay* module = dynamic_cast<Polyplay*>(this->module);
 		assert(module);
 
+        menu->addChild(new MenuSeparator());
+
+        menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
+            Menu* contrastMenu = new Menu();
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            contrastSlider->box.size.x = 200.f;
+            contrastMenu->addChild(createMenuItem("use global contrast",
+                CHECKMARK(module->use_global_contrast),
+                [module]() { 
+                    module->use_global_contrast = !module->use_global_contrast;
+                    if (module->use_global_contrast) {
+                        module->load_global_contrast();
+                        module->contrast = module->global_contrast;
+                    }
+                }));
+            contrastMenu->addChild(new MenuSeparator());
+            contrastMenu->addChild(contrastSlider);
+            contrastMenu->addChild(createMenuItem("set global contrast", "",
+                [module]() {
+                    module->save_global_contrast(module->contrast);
+                }));
+            menu->addChild(contrastMenu);
+        }));
+
 		menu->addChild(new MenuSeparator());
-		menu->addChild(createSubmenuItem("Phase Range", "", [=](Menu* menu) {
+		menu->addChild(createSubmenuItem("phase range", "", [=](Menu* menu) {
 			Menu* rangeMenu = new Menu();
 			rangeMenu->addChild(createMenuItem("-/+ 1v", CHECKMARK(module->phase_range == 1), [module]() { module->phase_range = 1; }));
 			rangeMenu->addChild(createMenuItem("-/+ 2v", CHECKMARK(module->phase_range == 2), [module]() { module->phase_range = 2; }));
@@ -316,7 +379,7 @@ struct PolyplayWidget : ModuleWidget {
 		};
 
 		menu->addChild(new MenuSeparator());
-		LoadWavItem* loadWavItem = createMenuItem<LoadWavItem>("Load Sample");
+		LoadWavItem* loadWavItem = createMenuItem<LoadWavItem>("load sample");
 		loadWavItem->module = module;
 		menu->addChild(loadWavItem);
 

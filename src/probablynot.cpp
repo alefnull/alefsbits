@@ -1,9 +1,12 @@
 #include "plugin.hpp"
+#include "widgets/PanelBackground.hpp"
+#include "widgets/InverterWidget.hpp"
+#include "widgets/BitPort.hpp"
 
 
 #define MAX_POLY 16
 
-struct Probablynot : Module {
+struct Probablynot : ThemeableModule {
 	enum ParamId {
 		PROBABILITY_PARAM,
 		PARAMS_LEN
@@ -81,12 +84,22 @@ struct Probablynot : Module {
 
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
+		json_object_set_new(rootJ, "contrast", json_real(contrast));
+		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
 		json_object_set_new(rootJ, "fade", json_boolean(fade));
 		json_object_set_new(rootJ, "fade_dur", json_real(fade_dur));
 		return rootJ;
 	}
 
 	void dataFromJson(json_t* rootJ) override {
+		json_t* contrastJ = json_object_get(rootJ, "contrast");
+		if (contrastJ) {
+			contrast = json_real_value(contrastJ);
+		}
+		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
+		if (use_global_contrastJ) {
+			use_global_contrast = json_boolean_value(use_global_contrastJ);
+		}
 		json_t* fadeJ = json_object_get(rootJ, "fade");
 		if (fadeJ) {
 			fade = json_boolean_value(fadeJ);
@@ -100,22 +113,27 @@ struct Probablynot : Module {
 
 
 struct ProbablynotWidget : ModuleWidget {
+    PanelBackground *panelBackground = new PanelBackground();
+    SvgPanel *svgPanel;
+    Inverter *inverter = new Inverter();
 	ProbablynotWidget(Probablynot* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/probablynot.svg")));
+		svgPanel = createPanel(asset::plugin(pluginInstance, "res/probablynot.svg"));
+		setPanel(svgPanel);
 
-		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+        panelBackground->box.size = svgPanel->box.size;
+        svgPanel->fb->addChildBottom(panelBackground);
+        inverter->box.pos = Vec(0.f, 0.f);
+        inverter->box.size = Vec(box.size.x, box.size.y);
+        addChild(inverter);
 
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.62, 57.765)), module, Probablynot::PROBABILITY_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 27.196)), module, Probablynot::SIGNAL_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 42.164)), module, Probablynot::TRIGGER_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 73.576)), module, Probablynot::PROBABILITY_CV_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(7.62, 27.196)), module, Probablynot::SIGNAL_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(7.62, 42.164)), module, Probablynot::TRIGGER_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(7.62, 73.576)), module, Probablynot::PROBABILITY_CV_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 94.026)), module, Probablynot::SIGNAL_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(7.62, 94.026)), module, Probablynot::SIGNAL_OUTPUT));
 	}
 
 	struct FadeDurationQuantity : Quantity {
@@ -152,9 +170,53 @@ struct ProbablynotWidget : ModuleWidget {
 		}
 	};
 
+	void step() override {
+		Probablynot* notModule = dynamic_cast<Probablynot*>(this->module);
+		if (!notModule) return;
+		if (notModule->contrast != notModule->global_contrast) {
+			notModule->use_global_contrast = false;
+		}
+		if (notModule->contrast != panelBackground->contrast) {
+			panelBackground->contrast = notModule->contrast;
+			if (panelBackground->contrast < 0.4f) {
+				panelBackground->invert(true);
+				inverter->invert = true;
+			}
+			else {
+				panelBackground->invert(false);
+				inverter->invert = false;
+			}
+			svgPanel->fb->dirty = true;
+		}
+		ModuleWidget::step();
+	}
 	void appendContextMenu(Menu* menu) override {
 		Probablynot* module = dynamic_cast<Probablynot*>(this->module);
 		assert(module);
+
+        menu->addChild(new MenuSeparator());
+
+        menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
+            Menu* contrastMenu = new Menu();
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            contrastSlider->box.size.x = 200.f;
+            contrastMenu->addChild(createMenuItem("use global contrast",
+                CHECKMARK(module->use_global_contrast),
+                [module]() { 
+                    module->use_global_contrast = !module->use_global_contrast;
+                    if (module->use_global_contrast) {
+                        module->load_global_contrast();
+                        module->contrast = module->global_contrast;
+                    }
+                }));
+            contrastMenu->addChild(new MenuSeparator());
+            contrastMenu->addChild(contrastSlider);
+            contrastMenu->addChild(createMenuItem("set global contrast", "",
+                [module]() {
+                    module->save_global_contrast(module->contrast);
+                }));
+            menu->addChild(contrastMenu);
+        }));
 
 		menu->addChild(new MenuSeparator());
 		menu->addChild(createMenuItem("Fade in/out", CHECKMARK(module->fade), [module]() { module->fade = !module->fade; }));

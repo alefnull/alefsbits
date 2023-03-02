@@ -3,7 +3,7 @@
 #include "plugin.hpp"
 #include "inc/cvRange.hpp"
 
-struct Steps : Module {
+struct Steps : ThemeableModule {
 	enum ParamId {
 		STEPS_PARAM,
 		STEP1_PARAM,

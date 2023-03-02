@@ -1,4 +1,8 @@
 #include "steps.hpp"
+#include "inc/cvRange.hpp"
+#include "widgets/PanelBackground.hpp"
+#include "widgets/InverterWidget.hpp"
+#include "widgets/BitPort.hpp"
 
 
 void Steps::process(const ProcessArgs& args) {
@@ -58,12 +62,22 @@ void Steps::onRandomize() {
 
 json_t* Steps::dataToJson() {
 	json_t* rootJ = json_object();
+	json_object_set_new(rootJ, "contrast", json_real(contrast));
+	json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
 	json_object_set_new(rootJ, "steps", json_integer(steps));
 	json_object_set_new(rootJ, "cv range", cv_range.dataToJson());
 	return rootJ;
 }
 
 void Steps::dataFromJson(json_t* rootJ) {
+	json_t* contrastJ = json_object_get(rootJ, "contrast");
+	if (contrastJ) {
+		contrast = json_real_value(contrastJ);
+	}
+	json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
+	if (use_global_contrastJ) {
+		use_global_contrast = json_boolean_value(use_global_contrastJ);
+	}
 	json_t* stepsJ = json_object_get(rootJ, "steps");
 	if (stepsJ) {
 		steps = json_integer_value(stepsJ);
@@ -104,14 +118,19 @@ void Steps::advance_gate_outputs(int step) {
 
 
 struct StepsWidget : ModuleWidget {
+    PanelBackground *panelBackground = new PanelBackground();
+    SvgPanel *svgPanel;
+    Inverter *inverter = new Inverter();
 	StepsWidget(Steps* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/steps.svg")));
+		svgPanel = createPanel(asset::plugin(pluginInstance, "res/steps.svg"));
+		setPanel(svgPanel);
 
-		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+        panelBackground->box.size = svgPanel->box.size;
+        svgPanel->fb->addChildBottom(panelBackground);
+        inverter->box.pos = Vec(0.f, 0.f);
+        inverter->box.size = Vec(box.size.x, box.size.y);
+        addChild(inverter);
 
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(8.083, 35.226)), module, Steps::STEPS_PARAM));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 23.545)), module, Steps::STEP1_PARAM));
@@ -132,9 +151,9 @@ struct StepsWidget : ModuleWidget {
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(28, 92.689)), module, Steps::STEP7_LIGHT));
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(28, 104.213)), module, Steps::STEP8_LIGHT));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.336, 19.545)), module, Steps::CLOCK_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.336, 73.069)), module, Steps::RESET_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.336, 50.406)), module, Steps::RAND_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(8.336, 19.545)), module, Steps::CLOCK_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(8.336, 73.069)), module, Steps::RESET_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(8.336, 50.406)), module, Steps::RAND_INPUT));
 
 		addParam(createParamCentered<TL1105>(mm2px(Vec(8.336, 64.000)), module, Steps::RAND_PARAM));
 
@@ -150,28 +169,57 @@ struct StepsWidget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.336, 89.08)), module, Steps::EOC_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.336, 102.875)), module, Steps::CV_OUTPUT));
 	}
+	
+	void step() override {
+		Steps* stepsModule = dynamic_cast<Steps*>(this->module);
+		if (!stepsModule) return;
+		if (stepsModule->contrast != stepsModule->global_contrast) {
+			stepsModule->use_global_contrast = false;
+		}
+		if (stepsModule->contrast != panelBackground->contrast) {
+			panelBackground->contrast = stepsModule->contrast;
+			if (panelBackground->contrast < 0.4f) {
+				panelBackground->invert(true);
+				inverter->invert = true;
+			}
+			else {
+				panelBackground->invert(false);
+				inverter->invert = false;
+			}
+			svgPanel->fb->dirty = true;
+		}
+		ModuleWidget::step();
+	}
 
 	void appendContextMenu(Menu* menu) override {
 		Steps* steps_module = dynamic_cast<Steps*>(this->module);
 		assert(steps_module);
 
-		// for (int i = 0; i < 8; i++) {
-		// 	configCVParam(steps_module->STEP1_PARAM + i, steps_module, &steps_module->cv_range, "cv");
-		// }
+        menu->addChild(new MenuSeparator());
+
+        menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
+            Menu* contrastMenu = new Menu();
+            ContrastSlider *contrastSlider = new ContrastSlider(&(steps_module->contrast));
+            contrastSlider->box.size.x = 200.f;
+            contrastMenu->addChild(createMenuItem("use global contrast",
+                CHECKMARK(steps_module->use_global_contrast),
+                [steps_module]() { 
+                    steps_module->use_global_contrast = !steps_module->use_global_contrast;
+                    if (steps_module->use_global_contrast) {
+                        steps_module->load_global_contrast();
+                        steps_module->contrast = steps_module->global_contrast;
+                    }
+                }));
+            contrastMenu->addChild(new MenuSeparator());
+            contrastMenu->addChild(contrastSlider);
+            contrastMenu->addChild(createMenuItem("set global contrast", "",
+                [steps_module]() {
+                    steps_module->save_global_contrast(steps_module->contrast);
+                }));
+            menu->addChild(contrastMenu);
+        }));
 
 		menu->addChild(new MenuSeparator());
-		// add a submenu to choose the range, between
-		// +/- 1V, +/- 3V, +/- 5V, +/- 10V
-		// menu->addChild(createSubmenuItem("Range", "", [=](Menu* menu) {
-		// 	Menu* rangeMenu = new Menu();
-		// 	rangeMenu->addChild(createMenuItem("-/+ 1v", CHECKMARK(module->range == 1), [module]() { module->range = 1; }));
-		// 	rangeMenu->addChild(createMenuItem("-/+ 2v", CHECKMARK(module->range == 2), [module]() { module->range = 2; }));
-		// 	rangeMenu->addChild(createMenuItem("-/+ 3v", CHECKMARK(module->range == 3), [module]() { module->range = 3; }));
-		// 	rangeMenu->addChild(createMenuItem("-/+ 5v", CHECKMARK(module->range == 5), [module]() { module->range = 5; }));
-		// 	rangeMenu->addChild(createMenuItem("-/+ 10v", CHECKMARK(module->range == 10), [module]() { module->range = 10; }));
-		// 	menu->addChild(rangeMenu);
-		// }));
-		// menu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar), [module]() { module->unipolar = !module->unipolar; }));
 		menu->addChild(createMenuItem("latch", CHECKMARK(steps_module->latch), [steps_module]() { steps_module->latch = !steps_module->latch; }));
 		steps_module->cv_range.addMenu(steps_module, menu);
 	}

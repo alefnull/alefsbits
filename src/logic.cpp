@@ -1,8 +1,11 @@
 #include "plugin.hpp"
+#include "widgets/PanelBackground.hpp"
+#include "widgets/InverterWidget.hpp"
+#include "widgets/BitPort.hpp"
 
 #define MAX_POLY 16
 
-struct Logic : Module {
+struct Logic : ThemeableModule {
 	enum ParamId {
 		PARAMS_LEN
 	};
@@ -78,28 +81,51 @@ struct Logic : Module {
 			lights[XNOR_LIGHT].setBrightness(_xnor ? 1.0 : 0.0);
 		}
 	}
+
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
+		json_object_set_new(rootJ, "contrast", json_real(contrast));
+		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
+		return rootJ;
+	}
+
+	void dataFromJson(json_t* rootJ) override {
+		json_t* contrastJ = json_object_get(rootJ, "contrast");
+		if (contrastJ) {
+			contrast = json_number_value(contrastJ);
+		}
+		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
+		if (use_global_contrastJ) {
+			use_global_contrast = json_boolean_value(use_global_contrastJ);
+		}
+	}
 };
 
 
 struct LogicWidget : ModuleWidget {
+    PanelBackground *panelBackground = new PanelBackground();
+    SvgPanel *svgPanel;
+    Inverter *inverter = new Inverter();
 	LogicWidget(Logic* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/logic.svg")));
+		svgPanel = createPanel(asset::plugin(pluginInstance, "res/logic.svg"));
+		setPanel(svgPanel);
+		
+        panelBackground->box.size = svgPanel->box.size;
+        svgPanel->fb->addChildBottom(panelBackground);
+        inverter->box.pos = Vec(0.f, 0.f);
+        inverter->box.size = Vec(box.size.x, box.size.y);
+        addChild(inverter);
 
-		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-		// addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		// addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(10.599, 24.981)), module, Logic::A_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(10.599, 36.724)), module, Logic::B_INPUT));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(10.599, 24.981)), module, Logic::A_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(10.599, 36.724)), module, Logic::B_INPUT));
-
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.285, 51.547)), module, Logic::AND_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.285, 62.079)), module, Logic::OR_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.285, 73.563)), module, Logic::XOR_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.285, 84.639)), module, Logic::NAND_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.285, 96.023)), module, Logic::NOR_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.285, 106.963)), module, Logic::XNOR_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(8.285, 51.547)), module, Logic::AND_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(8.285, 62.079)), module, Logic::OR_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(8.285, 73.563)), module, Logic::XOR_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(8.285, 84.639)), module, Logic::NAND_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(8.285, 96.023)), module, Logic::NOR_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(8.285, 106.963)), module, Logic::XNOR_OUTPUT));
 
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(12.285, 47.547)), module, Logic::AND_LIGHT));
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(12.285, 58.079)), module, Logic::OR_LIGHT));
@@ -107,6 +133,56 @@ struct LogicWidget : ModuleWidget {
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(12.285, 80.639)), module, Logic::NAND_LIGHT));
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(12.285, 92.023)), module, Logic::NOR_LIGHT));
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(12.285, 102.963)), module, Logic::XNOR_LIGHT));
+	}
+
+	void step() override {
+		Logic* logicModule = dynamic_cast<Logic*>(this->module);
+		if (!logicModule) return;
+		if (logicModule->contrast != logicModule->global_contrast) {
+			logicModule->use_global_contrast = false;
+		}
+		if (logicModule->contrast != panelBackground->contrast) {
+			panelBackground->contrast = logicModule->contrast;
+			if (panelBackground->contrast < 0.4f) {
+				panelBackground->invert(true);
+				inverter->invert = true;
+			}
+			else {
+				panelBackground->invert(false);
+				inverter->invert = false;
+			}
+			svgPanel->fb->dirty = true;
+		}
+		ModuleWidget::step();
+	}
+
+	void appendContextMenu(Menu* menu) override {
+        Logic* module = dynamic_cast<Logic*>(this->module);
+        assert(module);
+
+        menu->addChild(new MenuSeparator());
+
+        menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
+            Menu* contrastMenu = new Menu();
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            contrastSlider->box.size.x = 200.f;
+            contrastMenu->addChild(createMenuItem("use global contrast",
+                CHECKMARK(module->use_global_contrast),
+                [module]() { 
+                    module->use_global_contrast = !module->use_global_contrast;
+                    if (module->use_global_contrast) {
+                        module->load_global_contrast();
+                        module->contrast = module->global_contrast;
+                    }
+                }));
+            contrastMenu->addChild(new MenuSeparator());
+            contrastMenu->addChild(contrastSlider);
+            contrastMenu->addChild(createMenuItem("set global contrast", "",
+                [module]() {
+                    module->save_global_contrast(module->contrast);
+                }));
+            menu->addChild(contrastMenu);
+        }));
 	}
 };
 
