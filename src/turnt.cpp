@@ -264,8 +264,8 @@ struct TurntWidget : ModuleWidget {
 
         auto scopeData = module ? &module->scope_data : nullptr;
         auto scope = new Scope(scopeData);
-        scope->box.pos = Vec(1.f, y);
-        scope->box.size = Vec(box.size.x - 2.f, 100.f);
+        scope->box.pos = Vec(1.f, y + 5.f);
+        scope->box.size = Vec(box.size.x - 2.f, 95.f);
         topTabDisplay->box.pos = Vec(scope->box.pos.x, scope->box.pos.y - 9.f);
         topTabDisplay->box.size = Vec(scope->box.size.x, 10.f);
         bottomTabDisplay->box.pos = Vec(scope->box.pos.x, scope->box.pos.y + scope->box.size.y - 1.f);
