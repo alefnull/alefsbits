@@ -53,12 +53,19 @@ struct Blank6hpWidget : ModuleWidget {
 		setModule(module);
         svgPanel = createPanel(asset::plugin(pluginInstance, "res/blank6hp.svg"));
 		setPanel(svgPanel);
+
+        std::shared_ptr<Svg> svgLogo = APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/logo.svg"));
+        SvgWidget* svgLogoWidget = new SvgWidget();
+        svgLogoWidget->setSvg(svgLogo);
+        svgLogoWidget->box.pos = Vec(box.size.x / 2.f - svgLogoWidget->box.size.x / 2.f,
+                                    box.size.y / 2.f - svgLogoWidget->box.size.y / 2.f);
 		
         panelBackground->box.size = svgPanel->box.size;
         svgPanel->fb->addChildBottom(panelBackground);
         inverter->box.pos = Vec(0.f, 0.f);
         inverter->box.size = Vec(box.size.x, box.size.y);
         addChild(inverter);
+        addChild(svgLogoWidget);
 	}
 	
 	void step() override {
