@@ -1,7 +1,6 @@
 # alef's bits
 
-![plugin screenshot](/modules-white.png "plugin screenshot (light)")
-![plugin screenshot](/modules-black.png "plugin screenshot (dark)")
+![plugin screenshot](/screenshot.png "plugin screenshot (light)")
 
 a small collection of my VCV Rack modules in a single plugin. [click here](https://github.com/alefnull/alefsbits/releases) for the latest pre-release build.
 
