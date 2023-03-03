@@ -5,8 +5,8 @@
 #define CONTRAST_MAX 0.9f
 
 struct ThemeableModule : rack::Module {
-    float contrast = CONTRAST_MIN;
-    float global_contrast = CONTRAST_MIN;
+    float contrast = CONTRAST_MAX;
+    float global_contrast = CONTRAST_MAX;
     bool use_global_contrast = true;
 
     ThemeableModule() {
