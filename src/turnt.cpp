@@ -29,7 +29,9 @@ struct Turnt : ThemeableModule {
         configParam(PROB_PARAM, 0.f, 1.f, 1.f, "probability", "%", 0.f, 100.f);
         configInput(SOURCE_INPUT, "source");
         configInput(ZERO_INPUT, "zero threshold");
+        getInputInfo(ZERO_INPUT)->description = "expects -10V to 10V signal";
         configInput(PROB_INPUT, "probability");
+        getInputInfo(PROB_INPUT)->description = "expects 0V to 10V signal";
         configOutput(TRIG_OUTPUT, "trigger");
 
         // dark vscode background color
@@ -238,21 +240,21 @@ struct TurntWidget : ModuleWidget {
                                                  Turnt::SOURCE_INPUT));
         y += dy * 3;
         x -= RACK_GRID_WIDTH * 1.5;
-        addInput(createInputCentered<BitPort>(Vec(x, y), module,
+        addInput(createInputCentered<BitPort>(Vec(x - dy * 1.25, y + dy / 2), module,
                                                  Turnt::ZERO_INPUT));
         y += dy * 2;
-        addParam(createParamCentered<RoundBlackKnob>(Vec(x, y), module,
+        addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x + dy / 2, y - dy - dy / 2), module,
                                                      Turnt::ZERO_PARAM));
         y -= dy * 2;
         x += RACK_GRID_WIDTH * 3;
-        addInput(createInputCentered<BitPort>(Vec(x, y), module,
+        addInput(createInputCentered<BitPort>(Vec(x + dy * 1.25, y + dy / 2), module,
                                                  Turnt::PROB_INPUT));
         y += dy * 2;
-        addParam(createParamCentered<RoundBlackKnob>(Vec(x, y), module,
+        addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x - dy / 2, y - dy - dy / 2), module,
                                                      Turnt::PROB_PARAM));
         y += dy * 2;
         x -= RACK_GRID_WIDTH * 1.5;
-        addParam(createParamCentered<CKSSThreeHorizontal>(Vec(x, y), module,
+        addParam(createParamCentered<CKSSThreeHorizontal>(Vec(x, y - dy / 2), module,
                                                           Turnt::MODE_PARAM));
         y += dy * 2;
         addOutput(createOutputCentered<BitPort>(Vec(x, y), module,
