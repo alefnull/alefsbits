@@ -24,9 +24,9 @@
      inkscape:document-units="mm"
      showgrid="false"
      borderlayer="true"
-     inkscape:zoom="1.2810466"
-     inkscape:cx="-112.79839"
-     inkscape:cy="228.71924"
+     inkscape:zoom="1.8116735"
+     inkscape:cx="-40.018249"
+     inkscape:cy="279.85175"
      inkscape:current-layer="layer1"
      inkscape:showpageshadow="0"
      inkscape:deskcolor="#505050" /><defs
@@ -48,10 +48,12 @@
          style="font-family:serif;-inkscape-font-specification:serif"
          id="path31112" /></g><g
        id="text3498"
-       transform="matrix(0.35277774,0,0,0.35277774,7.6194714,2.8468836e-4)"><path
+       transform="matrix(0.35277774,0,0,0.35277774,7.6194714,2.8468836e-4)"
+       style="fill:#1a1a1a;fill-opacity:1"><path
          id="path15128"
          d="m 26.956,347.987 h -0.422 a 3.344,3.344 0 0 0 -0.811,-2.014 L 18.949,338.2 a 2.584,2.584 0 0 0 -1.734,2.248 5.4,5.4 0 0 0 1.109,2.731 6.089,6.089 0 0 1 1.28,3.028 q 0,1.5 -1.14,1.5 h -2.95 v -0.422 a 1.072,1.072 0 0 0 0.937,-1.078 7.389,7.389 0 0 0 -0.593,-2.044 7.026,7.026 0 0 1 -0.594,-2.341 q 0,-2.514 3.091,-4.277 l -1.92,-2.17 a 4.308,4.308 0 0 1 -1.2,-2.857 3.689,3.689 0 0 1 1.093,-2.528 h 0.406 a 3.487,3.487 0 0 0 0.811,2.185 l 5.869,6.665 a 11.888,11.888 0 0 1 1.733,-4.2 q -2.481,-0.405 -2.482,-2.5 a 3.687,3.687 0 0 1 0.64,-2.154 h 0.406 a 1.549,1.549 0 0 0 1.2,1.2 l 1.342,0.313 a 1.952,1.952 0 0 1 1.765,1.982 3.588,3.588 0 0 1 -0.141,1.109 6.522,6.522 0 0 1 -1.7,0.156 8.5,8.5 0 0 0 -1.623,4.183 3.2,3.2 0 0 0 0.827,2.153 l 1.452,1.671 a 4.331,4.331 0 0 1 1.217,2.872 3.127,3.127 0 0 1 -1.094,2.362 z"
-         transform="translate(-0.041)" /></g></g><g
+         transform="translate(-0.041)"
+         style="fill:#1a1a1a;fill-opacity:1" /></g></g><g
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="components"

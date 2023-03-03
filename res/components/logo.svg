@@ -12,7 +12,20 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <defs
-     id="defs14766" />
+     id="defs14766">
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Lightness-Contrast"
+       id="filter30546"
+       x="0"
+       y="0"
+       width="1"
+       height="1">
+      <feColorMatrix
+         values="1 0 0 -0.1 -0 0 1 0 -0.1 -0 0 0 1 -0.1 -0 0 0 0 1 0"
+         id="feColorMatrix30544" />
+    </filter>
+  </defs>
   <sodipodi:namedview
      id="namedview14764"
      pagecolor="#505050"
@@ -24,12 +37,13 @@
      inkscape:deskcolor="#505050"
      showgrid="false"
      inkscape:zoom="6.734375"
-     inkscape:cx="45.958236"
-     inkscape:cy="54.348028"
+     inkscape:cx="20.788863"
+     inkscape:cy="38.013921"
      inkscape:current-layer="svg14762" />
   <g
      id="g7452"
-     transform="scale(1.5)">
+     transform="scale(1.5)"
+     style="mix-blend-mode:normal;filter:url(#filter30546)">
     <rect
        x="19"
        y="0"

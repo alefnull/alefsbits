@@ -5,11 +5,13 @@
 #define CONTRAST_MAX 0.9f
 
 struct ThemeableModule : rack::Module {
-    float contrast = CONTRAST_MAX;
-    float global_contrast = CONTRAST_MAX;
+    float contrast = CONTRAST_MIN;
+    float global_contrast = CONTRAST_MIN;
     bool use_global_contrast = true;
 
-    ThemeableModule() {}
+    ThemeableModule() {
+        load_global_contrast();
+    }
 
     void load_global_contrast() {
         FILE *f = fopen(rack::asset::user("alefsbits.json").c_str(), "r");
@@ -30,6 +32,9 @@ struct ThemeableModule : rack::Module {
                 json_decref(rootJ);
             }
             fclose(f);
+        }
+        else {
+            this->global_contrast = CONTRAST_MIN;
         }
     }
 
