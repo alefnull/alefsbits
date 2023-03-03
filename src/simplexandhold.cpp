@@ -41,13 +41,12 @@ struct Simplexandhold : ThemeableModule {
 		int chans = std::max(1, inputs[TRIGGER_INPUT].getChannels());
 		outputs[SAMPLE_OUTPUT].setChannels(chans);
 		for (int c = 0; c < chans; c++) {
-			float out = 0.0;
 			if (trigger[c].process(inputs[TRIGGER_INPUT].getVoltage(c))) {
-				last_sample[c] = noise.noise(x[c], 0.0);
-				out = cv_range.map(last_sample[c]);
+				last_sample[c] = ((noise.noise(x[c], 0.0) + 1.0) / 2.0);
+				last_sample[c] = cv_range.map(last_sample[c]);
 			}
 			x[c] += 0.1;
-				outputs[SAMPLE_OUTPUT].setVoltage(out, c);
+			outputs[SAMPLE_OUTPUT].setVoltage(last_sample[c], c);
 		}
 	}
 
