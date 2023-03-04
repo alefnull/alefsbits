@@ -6,7 +6,7 @@
 #define MAX_POLY 16
 
 
-struct Octsclr : ThemeableModule {
+struct Octsclr : Module {
 	enum ParamId {
 		SCALER_PARAM,
 		OFFSET_PARAM,
@@ -32,6 +32,9 @@ struct Octsclr : ThemeableModule {
 		getParamQuantity(OFFSET_PARAM)->snapEnabled = true;
 		configInput(SOURCE_INPUT, "source");
 		configOutput(SCALED_OUTPUT, "scaled");
+		if (use_global_contrast[OCTSCLR]) {
+			module_contrast[OCTSCLR] = global_contrast;
+		}
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -45,24 +48,6 @@ struct Octsclr : ThemeableModule {
 		for (int i = 0; i < channels; i++) {
 			float source = inputs[SOURCE_INPUT].getPolyVoltage(i);
 			outputs[SCALED_OUTPUT].setVoltage(clamp(source * scaler + offset, -10.0f, 10.0f), i);
-		}
-	}
-
-	json_t* dataToJson() override {
-		json_t* rootJ = json_object();
-		json_object_set_new(rootJ, "contrast", json_real(contrast));
-		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
-		return rootJ;
-	}
-
-	void dataFromJson(json_t* rootJ) override {
-		json_t* contrastJ = json_object_get(rootJ, "contrast");
-		if (contrastJ) {
-			contrast = json_number_value(contrastJ);
-		}
-		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
-		if (use_global_contrastJ) {
-			use_global_contrast = json_is_true(use_global_contrastJ);
 		}
 	}
 };
@@ -94,11 +79,11 @@ struct OctsclrWidget : ModuleWidget {
 	void step() override {
 		Octsclr* octModule = dynamic_cast<Octsclr*>(this->module);
 		if (!octModule) return;
-		if (octModule->contrast != octModule->global_contrast) {
-			octModule->use_global_contrast = false;
+		if (use_global_contrast[OCTSCLR]) {
+			module_contrast[OCTSCLR] = global_contrast;
 		}
-		if (octModule->contrast != panelBackground->contrast) {
-			panelBackground->contrast = octModule->contrast;
+		if (module_contrast[OCTSCLR] != panelBackground->contrast) {
+			panelBackground->contrast = module_contrast[OCTSCLR];
 			if (panelBackground->contrast < 0.4f) {
 				panelBackground->invert(true);
 				inverter->invert = true;
@@ -120,22 +105,21 @@ struct OctsclrWidget : ModuleWidget {
 
         menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
             Menu* contrastMenu = new Menu();
-            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[OCTSCLR]));
             contrastSlider->box.size.x = 200.f;
             contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(module->use_global_contrast),
+                CHECKMARK(use_global_contrast[OCTSCLR]),
                 [module]() { 
-                    module->use_global_contrast = !module->use_global_contrast;
-                    if (module->use_global_contrast) {
-                        module->load_global_contrast();
-                        module->contrast = module->global_contrast;
+                    use_global_contrast[OCTSCLR] = !use_global_contrast[OCTSCLR];
+                    if (use_global_contrast[OCTSCLR]) {
+						module_contrast[OCTSCLR] = global_contrast;
                     }
                 }));
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
-                    module->save_global_contrast(module->contrast);
+					global_contrast = module_contrast[OCTSCLR];
                 }));
             menu->addChild(contrastMenu);
         }));

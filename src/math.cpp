@@ -5,7 +5,7 @@
 
 #define MAX_POLY 16
 
-struct Math : ThemeableModule {
+struct Math : Module {
 	enum ParamId {
 		PARAMS_LEN
 	};
@@ -37,6 +37,9 @@ struct Math : ThemeableModule {
 		configOutput(DIV_OUTPUT, "");
 		configOutput(MOD_OUTPUT, "");
 		configOutput(AVG_OUTPUT, "");
+		if (use_global_contrast[MATH]) {
+			module_contrast[MATH] = global_contrast;
+		}
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -55,24 +58,6 @@ struct Math : ThemeableModule {
 			outputs[DIV_OUTPUT].setVoltage(clamp(a / b, -10.0f, 10.0f), c);
 			outputs[MOD_OUTPUT].setVoltage(clamp(fmod(a, b), -10.0f, 10.0f), c);
 			outputs[AVG_OUTPUT].setVoltage(clamp((a + b) / 2.0f, -10.0f, 10.0f), c);
-		}
-	}
-
-	json_t* dataToJson() override {
-		json_t* rootJ = json_object();
-		json_object_set_new(rootJ, "contrast", json_real(contrast));
-		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
-		return rootJ;
-	}
-
-	void dataFromJson(json_t* rootJ) override {
-		json_t* contrastJ = json_object_get(rootJ, "contrast");
-		if (contrastJ) {
-			contrast = json_number_value(contrastJ);
-		}
-		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
-		if (use_global_contrastJ) {
-			use_global_contrast = json_is_true(use_global_contrastJ);
 		}
 	}
 };
@@ -106,11 +91,11 @@ struct MathWidget : ModuleWidget {
 	void step() override {
 		Math* mathModule = dynamic_cast<Math*>(this->module);
 		if (!mathModule) return;
-		if (mathModule->contrast != mathModule->global_contrast) {
-			mathModule->use_global_contrast = false;
+		if (use_global_contrast[MATH]) {
+			module_contrast[MATH] = global_contrast;
 		}
-		if (mathModule->contrast != panelBackground->contrast) {
-			panelBackground->contrast = mathModule->contrast;
+		if (module_contrast[MATH] != panelBackground->contrast) {
+			panelBackground->contrast = module_contrast[MATH];
 			if (panelBackground->contrast < 0.4f) {
 				panelBackground->invert(true);
 				inverter->invert = true;
@@ -132,22 +117,21 @@ struct MathWidget : ModuleWidget {
 
         menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
             Menu* contrastMenu = new Menu();
-            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[MATH]));
             contrastSlider->box.size.x = 200.f;
             contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(module->use_global_contrast),
+                CHECKMARK(use_global_contrast[MATH]),
                 [module]() { 
-                    module->use_global_contrast = !module->use_global_contrast;
-                    if (module->use_global_contrast) {
-                        module->load_global_contrast();
-                        module->contrast = module->global_contrast;
+                    use_global_contrast[MATH] = !use_global_contrast[MATH];
+                    if (use_global_contrast[MATH]) {
+						module_contrast[MATH] = global_contrast;
                     }
                 }));
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
-                    module->save_global_contrast(module->contrast);
+					global_contrast = module_contrast[MATH];
                 }));
             menu->addChild(contrastMenu);
         }));

@@ -1,8 +1,6 @@
 #pragma once
 #include <rack.hpp>
 
-#include "inc/ThemeableModule.hpp"
-
 #define CONTRAST_MIN 0.1f
 #define CONTRAST_MAX 0.9f
 
@@ -29,6 +27,31 @@ extern Model* modelLights;
 extern Model* modelSlips;
 extern Model* modelTurnt;
 
+enum ModuleNames {
+    SIMPLEXANDHOLD,
+    BLANK6HP,
+    POLYRAND,
+    NOIZE,
+    STEPS,
+    FIBB,
+    OCTSCLR,
+    SHIFT,
+    MLT,
+    MATH,
+    LOGIC,
+    PROBABLYNOT,
+    POLYPLAY,
+    LIGHTS,
+    SLIPS,
+    TURNT,
+    MODULES_LEN
+};
+
+extern bool use_global_contrast[MODULES_LEN];
+extern float module_contrast[MODULES_LEN];
+
+// global contrast
+extern float global_contrast;
 
 struct ContrastQuantity : Quantity {
     float* contrast;

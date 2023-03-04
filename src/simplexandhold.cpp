@@ -7,7 +7,7 @@
 
 #define MAX_POLY 16
 
-struct Simplexandhold : ThemeableModule {
+struct Simplexandhold : Module {
 	enum ParamId {
 		PARAMS_LEN
 	};
@@ -35,6 +35,9 @@ struct Simplexandhold : ThemeableModule {
 		configInput(TRIGGER_INPUT, "trigger");
 		configOutput(SAMPLE_OUTPUT, "sample");
 		noise.init();
+		if (use_global_contrast[SIMPLEXANDHOLD]) {
+			module_contrast[SIMPLEXANDHOLD] = global_contrast;
+		}
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -52,20 +55,12 @@ struct Simplexandhold : ThemeableModule {
 
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
-		json_object_set_new(rootJ, "contrast", json_real(contrast));
-		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
 		json_object_set_new(rootJ, "unipolar", json_boolean(unipolar));
 		json_object_set_new(rootJ, "cv_range", cv_range.dataToJson());
 		return rootJ;
 	}
 
 	void dataFromJson(json_t* rootJ) override {
-		json_t* contrastJ = json_object_get(rootJ, "contrast");
-		if (contrastJ)
-			contrast = json_real_value(contrastJ);
-		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
-		if (use_global_contrastJ)
-			use_global_contrast = json_boolean_value(use_global_contrastJ);
 		json_t* unipolarJ = json_object_get(rootJ, "unipolar");
 		if (unipolarJ)
 			unipolar = json_boolean_value(unipolarJ);
@@ -99,11 +94,11 @@ struct SimplexandholdWidget : ModuleWidget {
 	void step() override {
 		Simplexandhold* simplexModule = dynamic_cast<Simplexandhold*>(this->module);
 		if (!simplexModule) return;
-		if (simplexModule->contrast != simplexModule->global_contrast) {
-			simplexModule->use_global_contrast = false;
+		if (use_global_contrast[SIMPLEXANDHOLD]) {
+			module_contrast[SIMPLEXANDHOLD] = global_contrast;
 		}
-		if (simplexModule->contrast != panelBackground->contrast) {
-			panelBackground->contrast = simplexModule->contrast;
+		if (module_contrast[SIMPLEXANDHOLD] != panelBackground->contrast) {
+			panelBackground->contrast = module_contrast[SIMPLEXANDHOLD];
 			if (panelBackground->contrast < 0.4f) {
 				panelBackground->invert(true);
 				inverter->invert = true;
@@ -125,22 +120,21 @@ struct SimplexandholdWidget : ModuleWidget {
 
         menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
             Menu* contrastMenu = new Menu();
-            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[SIMPLEXANDHOLD]));
             contrastSlider->box.size.x = 200.f;
             contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(module->use_global_contrast),
+                CHECKMARK(use_global_contrast[SIMPLEXANDHOLD]),
                 [module]() { 
-                    module->use_global_contrast = !module->use_global_contrast;
-                    if (module->use_global_contrast) {
-                        module->load_global_contrast();
-                        module->contrast = module->global_contrast;
+                    use_global_contrast[SIMPLEXANDHOLD] = !use_global_contrast[SIMPLEXANDHOLD];
+                    if (use_global_contrast[SIMPLEXANDHOLD]) {
+						module_contrast[SIMPLEXANDHOLD] = global_contrast;
                     }
                 }));
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
-                    module->save_global_contrast(module->contrast);
+					global_contrast = module_contrast[SIMPLEXANDHOLD];
                 }));
             menu->addChild(contrastMenu);
         }));

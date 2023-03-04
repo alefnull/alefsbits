@@ -4,7 +4,7 @@
 #include "widgets/BitPort.hpp"
 
 
-struct Shift : ThemeableModule {
+struct Shift : Module {
 	enum ParamId {
 		REGISTER_1_PARAM,
 		REGISTER_2_PARAM,
@@ -72,6 +72,9 @@ struct Shift : ThemeableModule {
 		configOutput(REGISTER_6_OUTPUT, "register 6");
 		configOutput(REGISTER_7_OUTPUT, "register 7");
 		configOutput(REGISTER_8_OUTPUT, "register 8");
+		if (use_global_contrast[SHIFT]) {
+			module_contrast[SHIFT] = global_contrast;
+		}
 	}
 
     dsp::SchmittTrigger trigger;
@@ -137,8 +140,6 @@ struct Shift : ThemeableModule {
 
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
-		json_object_set_new(rootJ, "contrast", json_real(contrast));
-		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
 		json_object_set_new(rootJ, "unipolar", json_boolean(unipolar));
 		json_object_set_new(rootJ, "scrambled", json_boolean(scrambled));
 		json_object_set_new(rootJ, "range", json_real(range));
@@ -146,14 +147,6 @@ struct Shift : ThemeableModule {
 	}
 
 	void dataFromJson(json_t* rootJ) override {
-		json_t* contrastJ = json_object_get(rootJ, "contrast");
-		if (contrastJ) {
-			contrast = json_real_value(contrastJ);
-		}
-		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
-		if (use_global_contrastJ) {
-			use_global_contrast = json_boolean_value(use_global_contrastJ);
-		}
 		json_t* unipolarJ = json_object_get(rootJ, "unipolar");
 		if (unipolarJ) {
 			unipolar = json_boolean_value(unipolarJ);
@@ -218,11 +211,11 @@ struct ShiftWidget : ModuleWidget {
 	void step() override {
 		Shift* shiftModule = dynamic_cast<Shift*>(this->module);
 		if (!shiftModule) return;
-		if (shiftModule->contrast != shiftModule->global_contrast) {
-			shiftModule->use_global_contrast = false;
+		if (use_global_contrast[SHIFT]) {
+			module_contrast[SHIFT] = global_contrast;
 		}
-		if (shiftModule->contrast != panelBackground->contrast) {
-			panelBackground->contrast = shiftModule->contrast;
+		if (module_contrast[SHIFT] != panelBackground->contrast) {
+			panelBackground->contrast = module_contrast[SHIFT];
 			if (panelBackground->contrast < 0.4f) {
 				panelBackground->invert(true);
 				inverter->invert = true;
@@ -243,22 +236,21 @@ struct ShiftWidget : ModuleWidget {
 
         menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
             Menu* contrastMenu = new Menu();
-            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[SHIFT]));
             contrastSlider->box.size.x = 200.f;
             contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(module->use_global_contrast),
+                CHECKMARK(use_global_contrast[SHIFT]),
                 [module]() { 
-                    module->use_global_contrast = !module->use_global_contrast;
-                    if (module->use_global_contrast) {
-                        module->load_global_contrast();
-                        module->contrast = module->global_contrast;
+                    use_global_contrast[SHIFT] = !use_global_contrast[SHIFT];
+                    if (use_global_contrast[SHIFT]) {
+                        module_contrast[SHIFT] = global_contrast;
                     }
                 }));
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
-                    module->save_global_contrast(module->contrast);
+					global_contrast = module_contrast[SHIFT];
                 }));
             menu->addChild(contrastMenu);
         }));

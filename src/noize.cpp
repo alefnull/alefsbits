@@ -4,7 +4,7 @@
 #include "widgets/BitPort.hpp"
 
 
-struct Noize : ThemeableModule {
+struct Noize : Module {
 	enum ParamId {
 		DURATION_PARAM,
 		PARAMS_LEN
@@ -26,6 +26,9 @@ struct Noize : ThemeableModule {
 		configParam(DURATION_PARAM, 0.0f, 0.001f, 0.0f, "duration");
 		configInput(DURATION_INPUT, "duration cv");
 		configOutput(NOISE_OUTPUT, "noize");
+		if (use_global_contrast[NOIZE]) {
+			module_contrast[NOIZE] = global_contrast;
+		}
 	}
 
 	float last_value = 0.0f;
@@ -43,24 +46,6 @@ struct Noize : ThemeableModule {
 		}
 		time += args.sampleTime;
 		outputs[NOISE_OUTPUT].setVoltage(last_value * 5.0f);
-	}
-
-	json_t* dataToJson() override {
-		json_t* rootJ = json_object();
-		json_object_set_new(rootJ, "contrast", json_real(contrast));
-		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
-		return rootJ;
-	}
-
-	void dataFromJson(json_t* rootJ) override {
-		json_t* contrastJ = json_object_get(rootJ, "contrast");
-		if (contrastJ) {
-			contrast = json_number_value(contrastJ);
-		}
-		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
-		if (use_global_contrastJ) {
-			use_global_contrast = json_boolean_value(use_global_contrastJ);
-		}
 	}
 };
 
@@ -89,11 +74,11 @@ struct NoizeWidget : ModuleWidget {
 	void step() override {
 		Noize* noizeModule = dynamic_cast<Noize*>(this->module);
 		if (!noizeModule) return;
-		if (noizeModule->contrast != noizeModule->global_contrast) {
-			noizeModule->use_global_contrast = false;
+		if (use_global_contrast[NOIZE]) {
+			module_contrast[NOIZE] = global_contrast;
 		}
-		if (noizeModule->contrast != panelBackground->contrast) {
-			panelBackground->contrast = noizeModule->contrast;
+		if (module_contrast[NOIZE] != panelBackground->contrast) {
+			panelBackground->contrast = module_contrast[NOIZE];
 			if (panelBackground->contrast < 0.4f) {
 				panelBackground->invert(true);
 				inverter->invert = true;
@@ -115,22 +100,21 @@ struct NoizeWidget : ModuleWidget {
 
         menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
             Menu* contrastMenu = new Menu();
-            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[NOIZE]));
             contrastSlider->box.size.x = 200.f;
             contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(module->use_global_contrast),
+                CHECKMARK(use_global_contrast[NOIZE]),
                 [module]() { 
-                    module->use_global_contrast = !module->use_global_contrast;
-                    if (module->use_global_contrast) {
-                        module->load_global_contrast();
-                        module->contrast = module->global_contrast;
+                    use_global_contrast[NOIZE] = !use_global_contrast[NOIZE];
+                    if (use_global_contrast[NOIZE]) {
+						module_contrast[NOIZE] = global_contrast;
                     }
                 }));
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
-                    module->save_global_contrast(module->contrast);
+					global_contrast = module_contrast[NOIZE];
                 }));
             menu->addChild(contrastMenu);
         }));

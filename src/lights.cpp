@@ -4,7 +4,7 @@
 #include "widgets/BitPort.hpp"
 
 
-struct Lights : ThemeableModule {
+struct Lights : Module {
 	enum ParamId {
 		PARAMS_LEN
 	};
@@ -22,6 +22,9 @@ struct Lights : ThemeableModule {
 
 	Lights() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
+		if (use_global_contrast[LIGHTS]) {
+			module_contrast[LIGHTS] = global_contrast;
+		}
 	}
 
 	bool latch = false;
@@ -46,21 +49,11 @@ struct Lights : ThemeableModule {
 
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
-		json_object_set_new(rootJ, "contrast", json_real(contrast));
-		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
 		json_object_set_new(rootJ, "latch", json_boolean(latch));
 		return rootJ;
 	}
 
 	void dataFromJson(json_t* rootJ) override {
-		json_t* contrastJ = json_object_get(rootJ, "contrast");
-		if (contrastJ) {
-			contrast = json_real_value(contrastJ);
-		}
-		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
-		if (use_global_contrastJ) {
-			use_global_contrast = json_boolean_value(use_global_contrastJ);
-		}
 		json_t* latchJ = json_object_get(rootJ, "latch");
 		if (latchJ) {
 			latch = json_boolean_value(latchJ);
@@ -126,11 +119,11 @@ struct LightsWidget : ModuleWidget {
 	void step() override {
 		Lights* lightsModule = dynamic_cast<Lights*>(this->module);
 		if (!lightsModule) return;
-		if (lightsModule->contrast != lightsModule->global_contrast) {
-			lightsModule->use_global_contrast = false;
+		if (use_global_contrast[LIGHTS]) {
+			module_contrast[LIGHTS] = global_contrast;
 		}
-		if (lightsModule->contrast != panelBackground->contrast) {
-			panelBackground->contrast = lightsModule->contrast;
+		if (module_contrast[LIGHTS] != panelBackground->contrast) {
+			panelBackground->contrast = module_contrast[LIGHTS];
 			if (panelBackground->contrast < 0.4f) {
 				panelBackground->invert(true);
 				inverter->invert = true;
@@ -152,22 +145,21 @@ struct LightsWidget : ModuleWidget {
 
         menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
             Menu* contrastMenu = new Menu();
-            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[LIGHTS]));
             contrastSlider->box.size.x = 200.f;
             contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(module->use_global_contrast),
+                CHECKMARK(use_global_contrast[LIGHTS]),
                 [module]() { 
-                    module->use_global_contrast = !module->use_global_contrast;
-                    if (module->use_global_contrast) {
-                        module->load_global_contrast();
-                        module->contrast = module->global_contrast;
+                    use_global_contrast[LIGHTS] = !use_global_contrast[LIGHTS];
+                    if (use_global_contrast[LIGHTS]) {
+						module_contrast[LIGHTS] = global_contrast;
                     }
                 }));
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
-                    module->save_global_contrast(module->contrast);
+					global_contrast = module_contrast[LIGHTS];
                 }));
             menu->addChild(contrastMenu);
         }));

@@ -6,7 +6,7 @@
 
 #define MAX_POLY 16
 
-struct Probablynot : ThemeableModule {
+struct Probablynot : Module {
 	enum ParamId {
 		PROBABILITY_PARAM,
 		PARAMS_LEN
@@ -38,6 +38,9 @@ struct Probablynot : ThemeableModule {
 		configInput(TRIGGER_INPUT, "trigger");
 		configInput(PROBABILITY_CV_INPUT, "probability cv");
 		configOutput(SIGNAL_OUTPUT, "signal");
+		if (use_global_contrast[PROBABLYNOT]) {
+			module_contrast[PROBABLYNOT] = global_contrast;
+		}
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -84,22 +87,12 @@ struct Probablynot : ThemeableModule {
 
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
-		json_object_set_new(rootJ, "contrast", json_real(contrast));
-		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
 		json_object_set_new(rootJ, "fade", json_boolean(fade));
 		json_object_set_new(rootJ, "fade_dur", json_real(fade_dur));
 		return rootJ;
 	}
 
 	void dataFromJson(json_t* rootJ) override {
-		json_t* contrastJ = json_object_get(rootJ, "contrast");
-		if (contrastJ) {
-			contrast = json_real_value(contrastJ);
-		}
-		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
-		if (use_global_contrastJ) {
-			use_global_contrast = json_boolean_value(use_global_contrastJ);
-		}
 		json_t* fadeJ = json_object_get(rootJ, "fade");
 		if (fadeJ) {
 			fade = json_boolean_value(fadeJ);
@@ -173,11 +166,11 @@ struct ProbablynotWidget : ModuleWidget {
 	void step() override {
 		Probablynot* notModule = dynamic_cast<Probablynot*>(this->module);
 		if (!notModule) return;
-		if (notModule->contrast != notModule->global_contrast) {
-			notModule->use_global_contrast = false;
+		if (use_global_contrast[PROBABLYNOT]) {
+			module_contrast[PROBABLYNOT] = global_contrast;
 		}
-		if (notModule->contrast != panelBackground->contrast) {
-			panelBackground->contrast = notModule->contrast;
+		if (module_contrast[PROBABLYNOT] != panelBackground->contrast) {
+			panelBackground->contrast = module_contrast[PROBABLYNOT];
 			if (panelBackground->contrast < 0.4f) {
 				panelBackground->invert(true);
 				inverter->invert = true;
@@ -198,22 +191,21 @@ struct ProbablynotWidget : ModuleWidget {
 
         menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
             Menu* contrastMenu = new Menu();
-            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[PROBABLYNOT]));
             contrastSlider->box.size.x = 200.f;
             contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(module->use_global_contrast),
+                CHECKMARK(use_global_contrast[PROBABLYNOT]),
                 [module]() { 
-                    module->use_global_contrast = !module->use_global_contrast;
-                    if (module->use_global_contrast) {
-                        module->load_global_contrast();
-                        module->contrast = module->global_contrast;
+                    use_global_contrast[PROBABLYNOT] = !use_global_contrast[PROBABLYNOT];
+                    if (use_global_contrast[PROBABLYNOT]) {
+						module_contrast[PROBABLYNOT] = global_contrast;
                     }
                 }));
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
-                    module->save_global_contrast(module->contrast);
+					global_contrast = module_contrast[PROBABLYNOT];
                 }));
             menu->addChild(contrastMenu);
         }));

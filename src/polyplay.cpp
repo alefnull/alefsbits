@@ -11,7 +11,7 @@
 #define MAX_POLY 16
 
 
-struct Polyplay : ThemeableModule {
+struct Polyplay : Module {
 	enum ParamId {
 		POLY_PARAM,
 		TRIGGER_PARAM,
@@ -62,6 +62,9 @@ struct Polyplay : ThemeableModule {
 		configOutput(LEFT_OUTPUT, "left/mono");
 		configOutput(RIGHT_OUTPUT, "right");
 		configOutput(PHASE_OUTPUT, "phase");
+		if (use_global_contrast[POLYPLAY]) {
+			module_contrast[POLYPLAY] = global_contrast;
+		}
 	}
 
 	~Polyplay() {
@@ -210,8 +213,6 @@ struct Polyplay : ThemeableModule {
 
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
-		json_object_set_new(rootJ, "contrast", json_real(contrast));
-		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
 		json_object_set_new(rootJ, "loaded_file_name", json_string(loaded_file_name.c_str()));
 		json_object_set_new(rootJ, "file_loaded", json_boolean(file_loaded));
 		json_object_set_new(rootJ, "phase_range", json_real(phase_range));
@@ -220,14 +221,6 @@ struct Polyplay : ThemeableModule {
 	}
 
 	void dataFromJson(json_t* rootJ) override {
-		json_t* contrastJ = json_object_get(rootJ, "contrast");
-		if (contrastJ) {
-			contrast = json_real_value(contrastJ);
-		}
-		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
-		if (use_global_contrastJ) {
-			use_global_contrast = json_boolean_value(use_global_contrastJ);
-		}
 		json_t* loaded_file_nameJ = json_object_get(rootJ, "loaded_file_name");
 		if (loaded_file_nameJ) {
 			loaded_file_name = json_string_value(loaded_file_nameJ);
@@ -297,11 +290,11 @@ struct PolyplayWidget : ModuleWidget {
 	void step() override {
 		Polyplay* playModule = dynamic_cast<Polyplay*>(this->module);
 		if (!playModule) return;
-		if (playModule->contrast != playModule->global_contrast) {
-			playModule->use_global_contrast = false;
+		if (use_global_contrast[POLYPLAY]) {
+			module_contrast[POLYPLAY] = global_contrast;
 		}
-		if (playModule->contrast != panelBackground->contrast) {
-			panelBackground->contrast = playModule->contrast;
+		if (module_contrast[POLYPLAY] != panelBackground->contrast) {
+			panelBackground->contrast = module_contrast[POLYPLAY];
 			if (panelBackground->contrast < 0.4f) {
 				panelBackground->invert(true);
 				inverter->invert = true;
@@ -323,22 +316,21 @@ struct PolyplayWidget : ModuleWidget {
 
         menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
             Menu* contrastMenu = new Menu();
-            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[POLYPLAY]));
             contrastSlider->box.size.x = 200.f;
             contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(module->use_global_contrast),
+                CHECKMARK(use_global_contrast[POLYPLAY]),
                 [module]() { 
-                    module->use_global_contrast = !module->use_global_contrast;
-                    if (module->use_global_contrast) {
-                        module->load_global_contrast();
-                        module->contrast = module->global_contrast;
+                    use_global_contrast[POLYPLAY] = !use_global_contrast[POLYPLAY];
+                    if (use_global_contrast[POLYPLAY]) {
+						module_contrast[POLYPLAY] = global_contrast;
                     }
                 }));
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
-                    module->save_global_contrast(module->contrast);
+					global_contrast = module_contrast[POLYPLAY];
                 }));
             menu->addChild(contrastMenu);
         }));

@@ -62,22 +62,12 @@ void Steps::onRandomize() {
 
 json_t* Steps::dataToJson() {
 	json_t* rootJ = json_object();
-	json_object_set_new(rootJ, "contrast", json_real(contrast));
-	json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
 	json_object_set_new(rootJ, "steps", json_integer(steps));
 	json_object_set_new(rootJ, "cv range", cv_range.dataToJson());
 	return rootJ;
 }
 
 void Steps::dataFromJson(json_t* rootJ) {
-	json_t* contrastJ = json_object_get(rootJ, "contrast");
-	if (contrastJ) {
-		contrast = json_real_value(contrastJ);
-	}
-	json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
-	if (use_global_contrastJ) {
-		use_global_contrast = json_boolean_value(use_global_contrastJ);
-	}
 	json_t* stepsJ = json_object_get(rootJ, "steps");
 	if (stepsJ) {
 		steps = json_integer_value(stepsJ);
@@ -173,11 +163,11 @@ struct StepsWidget : ModuleWidget {
 	void step() override {
 		Steps* stepsModule = dynamic_cast<Steps*>(this->module);
 		if (!stepsModule) return;
-		if (stepsModule->contrast != stepsModule->global_contrast) {
-			stepsModule->use_global_contrast = false;
+		if (use_global_contrast[STEPS]) {
+			module_contrast[STEPS] = global_contrast;
 		}
-		if (stepsModule->contrast != panelBackground->contrast) {
-			panelBackground->contrast = stepsModule->contrast;
+		if (module_contrast[STEPS] != panelBackground->contrast) {
+			panelBackground->contrast = module_contrast[STEPS];
 			if (panelBackground->contrast < 0.4f) {
 				panelBackground->invert(true);
 				inverter->invert = true;
@@ -199,22 +189,21 @@ struct StepsWidget : ModuleWidget {
 
         menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
             Menu* contrastMenu = new Menu();
-            ContrastSlider *contrastSlider = new ContrastSlider(&(steps_module->contrast));
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[STEPS]));
             contrastSlider->box.size.x = 200.f;
             contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(steps_module->use_global_contrast),
+                CHECKMARK(use_global_contrast[STEPS]),
                 [steps_module]() { 
-                    steps_module->use_global_contrast = !steps_module->use_global_contrast;
-                    if (steps_module->use_global_contrast) {
-                        steps_module->load_global_contrast();
-                        steps_module->contrast = steps_module->global_contrast;
+                    use_global_contrast[STEPS] = !use_global_contrast[STEPS];
+                    if (use_global_contrast[STEPS]) {
+						module_contrast[STEPS] = global_contrast;
                     }
                 }));
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [steps_module]() {
-                    steps_module->save_global_contrast(steps_module->contrast);
+					global_contrast = module_contrast[STEPS];
                 }));
             menu->addChild(contrastMenu);
         }));

@@ -3,7 +3,7 @@
 #include "plugin.hpp"
 #include "inc/cvRange.hpp"
 
-struct Steps : ThemeableModule {
+struct Steps : Module {
 	enum ParamId {
 		STEPS_PARAM,
 		STEP1_PARAM,
@@ -96,6 +96,9 @@ struct Steps : ThemeableModule {
 		configLight(STEP6_LIGHT, "step 6");
 		configLight(STEP7_LIGHT, "step 7");
 		configLight(STEP8_LIGHT, "step 8");
+		if (use_global_contrast[STEPS]) {
+			module_contrast[STEPS] = global_contrast;
+		}
 	}
 
     void process(const ProcessArgs& args) override;

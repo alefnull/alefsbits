@@ -5,7 +5,7 @@
 
 #define MAX_POLY 16
 
-struct Logic : ThemeableModule {
+struct Logic : Module {
 	enum ParamId {
 		PARAMS_LEN
 	};
@@ -49,6 +49,9 @@ struct Logic : ThemeableModule {
 		configLight(NAND_LIGHT, "");
 		configLight(NOR_LIGHT, "");
 		configLight(XNOR_LIGHT, "");
+		if (use_global_contrast[LOGIC]) {
+			module_contrast[LOGIC] = global_contrast;
+		}
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -79,24 +82,6 @@ struct Logic : ThemeableModule {
 			lights[NOR_LIGHT].setBrightness(_nor ? 1.0 : 0.0);
 			outputs[XNOR_OUTPUT].setVoltage(_xnor ? 10.0 : 0.0, c);
 			lights[XNOR_LIGHT].setBrightness(_xnor ? 1.0 : 0.0);
-		}
-	}
-
-	json_t* dataToJson() override {
-		json_t* rootJ = json_object();
-		json_object_set_new(rootJ, "contrast", json_real(contrast));
-		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
-		return rootJ;
-	}
-
-	void dataFromJson(json_t* rootJ) override {
-		json_t* contrastJ = json_object_get(rootJ, "contrast");
-		if (contrastJ) {
-			contrast = json_number_value(contrastJ);
-		}
-		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
-		if (use_global_contrastJ) {
-			use_global_contrast = json_boolean_value(use_global_contrastJ);
 		}
 	}
 };
@@ -138,11 +123,11 @@ struct LogicWidget : ModuleWidget {
 	void step() override {
 		Logic* logicModule = dynamic_cast<Logic*>(this->module);
 		if (!logicModule) return;
-		if (logicModule->contrast != logicModule->global_contrast) {
-			logicModule->use_global_contrast = false;
+		if (use_global_contrast[LOGIC]) {
+			module_contrast[LOGIC] = global_contrast;
 		}
-		if (logicModule->contrast != panelBackground->contrast) {
-			panelBackground->contrast = logicModule->contrast;
+		if (module_contrast[LOGIC] != panelBackground->contrast) {
+			panelBackground->contrast = module_contrast[LOGIC];
 			if (panelBackground->contrast < 0.4f) {
 				panelBackground->invert(true);
 				inverter->invert = true;
@@ -164,22 +149,21 @@ struct LogicWidget : ModuleWidget {
 
         menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
             Menu* contrastMenu = new Menu();
-            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[LOGIC]));
             contrastSlider->box.size.x = 200.f;
             contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(module->use_global_contrast),
+                CHECKMARK(use_global_contrast[LOGIC]),
                 [module]() { 
-                    module->use_global_contrast = !module->use_global_contrast;
-                    if (module->use_global_contrast) {
-                        module->load_global_contrast();
-                        module->contrast = module->global_contrast;
+                    use_global_contrast[LOGIC] = !use_global_contrast[LOGIC];
+                    if (use_global_contrast[LOGIC]) {
+						module_contrast[LOGIC] = global_contrast;
                     }
                 }));
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
-                    module->save_global_contrast(module->contrast);
+					global_contrast = module_contrast[LOGIC];
                 }));
             menu->addChild(contrastMenu);
         }));

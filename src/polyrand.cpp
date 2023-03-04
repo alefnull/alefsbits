@@ -5,7 +5,7 @@
 
 #define MAX_POLY 16
 
-struct Polyrand : ThemeableModule {
+struct Polyrand : Module {
 	enum ParamId {
 		PARAMS_LEN
 	};
@@ -31,6 +31,9 @@ struct Polyrand : ThemeableModule {
 		configInput(TRIGGER_INPUT, "");
 		configInput(POLY_INPUT, "");
 		configOutput(RANDOM_OUTPUT, "");
+		if (use_global_contrast[POLYRAND]) {
+			module_contrast[POLYRAND] = global_contrast;
+		}
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -61,24 +64,6 @@ struct Polyrand : ThemeableModule {
 			}
 		}
 	}
-
-	json_t* dataToJson() override {
-		json_t* rootJ = json_object();
-		json_object_set_new(rootJ, "contrast", json_real(contrast));
-		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
-		return rootJ;
-	}
-
-	void dataFromJson(json_t* rootJ) override {
-		json_t* contrastJ = json_object_get(rootJ, "contrast");
-		if (contrastJ) {
-			contrast = json_number_value(contrastJ);
-		}
-		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
-		if (use_global_contrastJ) {
-			use_global_contrast = json_boolean_value(use_global_contrastJ);
-		}
-	}
 };
 
 
@@ -106,11 +91,11 @@ struct PolyrandWidget : ModuleWidget {
 	void step() override {
 		Polyrand* randModule = dynamic_cast<Polyrand*>(this->module);
 		if (!randModule) return;
-		if (randModule->contrast != randModule->global_contrast) {
-			randModule->use_global_contrast = false;
+		if (use_global_contrast[POLYRAND]) {
+			module_contrast[POLYRAND] = global_contrast;
 		}
-		if (randModule->contrast != panelBackground->contrast) {
-			panelBackground->contrast = randModule->contrast;
+		if (module_contrast[POLYRAND] != panelBackground->contrast) {
+			panelBackground->contrast = module_contrast[POLYRAND];
 			if (panelBackground->contrast < 0.4f) {
 				panelBackground->invert(true);
 				inverter->invert = true;
@@ -132,22 +117,21 @@ struct PolyrandWidget : ModuleWidget {
 
         menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
             Menu* contrastMenu = new Menu();
-            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[POLYRAND]));
             contrastSlider->box.size.x = 200.f;
             contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(module->use_global_contrast),
+                CHECKMARK(use_global_contrast[POLYRAND]),
                 [module]() { 
-                    module->use_global_contrast = !module->use_global_contrast;
-                    if (module->use_global_contrast) {
-                        module->load_global_contrast();
-                        module->contrast = module->global_contrast;
+                    use_global_contrast[POLYRAND] = !use_global_contrast[POLYRAND];
+                    if (use_global_contrast[POLYRAND]) {
+                        module_contrast[POLYRAND] = global_contrast;
                     }
                 }));
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
-                    module->save_global_contrast(module->contrast);
+					global_contrast = module_contrast[POLYRAND];
                 }));
             menu->addChild(contrastMenu);
         }));

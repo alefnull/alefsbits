@@ -9,7 +9,7 @@
 #define MAX_STEPS 64
 
 
-struct Slips : ThemeableModule, Quantizer {
+struct Slips : Module, Quantizer {
 	enum ParamId {
 		ROOT_PARAM,
 		STEPS_PARAM,
@@ -90,6 +90,9 @@ struct Slips : ThemeableModule, Quantizer {
 		getInputInfo(START_CV_INPUT)->description = "0V to 10V";
 		configInput(PROB_CV_INPUT, "step probability cv");
 		getInputInfo(PROB_CV_INPUT)->description = "0V to 10V";
+		if (use_global_contrast[SLIPS]) {
+			module_contrast[SLIPS] = global_contrast;
+		}
 	}
 
 	// the sequence
@@ -99,7 +102,7 @@ struct Slips : ThemeableModule, Quantizer {
 	// the number of steps gone through in this cycle
 	int steps_gone_through = 0;
 	// the current step
-	int current_step = 0;
+	int current_step = -1;
 	// the last value
 	float last_value = 0.0f;
 	// schmitt trigger for clock input
@@ -123,8 +126,6 @@ struct Slips : ThemeableModule, Quantizer {
 	// dataToJson override
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
-		json_object_set_new(rootJ, "contrast", json_real(contrast));
-		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
 		// the sequence
 		json_t* sequenceJ = json_array();
 		for (int i = 0; i < MAX_STEPS; i++) {
@@ -148,14 +149,6 @@ struct Slips : ThemeableModule, Quantizer {
 
 	// dataFromJson override
 	void dataFromJson(json_t* rootJ) override {
-		json_t* contrastJ = json_object_get(rootJ, "contrast");
-		if (contrastJ) {
-			contrast = json_number_value(contrastJ);
-		}
-		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
-		if (use_global_contrastJ) {
-			use_global_contrast = json_is_true(use_global_contrastJ);
-		}
 		// the sequence
 		json_t* sequenceJ = json_object_get(rootJ, "sequence");
 		if (sequenceJ) {
@@ -572,11 +565,11 @@ struct SlipsWidget : ModuleWidget {
 	void step() override {
 		Slips* slipsModule = dynamic_cast<Slips*>(this->module);
 		if (!slipsModule) return;
-		if (slipsModule->contrast != slipsModule->global_contrast) {
-			slipsModule->use_global_contrast = false;
+		if (use_global_contrast[SLIPS]) {
+			module_contrast[SLIPS] = global_contrast;
 		}
-		if (slipsModule->contrast != panelBackground->contrast) {
-			panelBackground->contrast = slipsModule->contrast;
+		if (module_contrast[SLIPS] != panelBackground->contrast) {
+			panelBackground->contrast = module_contrast[SLIPS];
 			if (panelBackground->contrast < 0.4f) {
 				panelBackground->invert(true);
 				inverter->invert = true;
@@ -597,22 +590,21 @@ struct SlipsWidget : ModuleWidget {
 
         menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
             Menu* contrastMenu = new Menu();
-            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[SLIPS]));
             contrastSlider->box.size.x = 200.f;
             contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(module->use_global_contrast),
+                CHECKMARK(use_global_contrast[SLIPS]),
                 [module]() { 
-                    module->use_global_contrast = !module->use_global_contrast;
-                    if (module->use_global_contrast) {
-                        module->load_global_contrast();
-                        module->contrast = module->global_contrast;
+                    use_global_contrast[SLIPS] = !use_global_contrast[SLIPS];
+                    if (use_global_contrast[SLIPS]) {
+						module_contrast[SLIPS] = global_contrast;
                     }
                 }));
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
-                    module->save_global_contrast(module->contrast);
+					global_contrast = module_contrast[SLIPS];
                 }));
             menu->addChild(contrastMenu);
         }));

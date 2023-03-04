@@ -5,7 +5,7 @@
 
 #define MAX_POLY 16
 
-struct Mlt : ThemeableModule {
+struct Mlt : Module {
 	enum ParamId {
 		PARAMS_LEN
 	};
@@ -45,6 +45,9 @@ struct Mlt : ThemeableModule {
 		configOutput(B3_OUTPUT, "");
 		configOutput(B4_OUTPUT, "");
 		configOutput(B5_OUTPUT, "");
+		if (use_global_contrast[MLT]) {
+			module_contrast[MLT] = global_contrast;
+		}
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -69,22 +72,6 @@ struct Mlt : ThemeableModule {
 				outputs[i].setVoltage(b, chan);
 			}
 		}
-	}
-
-	json_t* dataToJson() override {
-		json_t* rootJ = json_object();
-		json_object_set_new(rootJ, "contrast", json_real(contrast));
-		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
-		return rootJ;
-	}
-
-	void dataFromJson(json_t* rootJ) override {
-		json_t* contrastJ = json_object_get(rootJ, "contrast");
-		if (contrastJ)
-			contrast = json_number_value(contrastJ);
-		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
-		if (use_global_contrastJ)
-			use_global_contrast = json_boolean_value(use_global_contrastJ);
 	}
 };
 
@@ -121,11 +108,11 @@ struct MltWidget : ModuleWidget {
 	void step() override {
 		Mlt* mltModule = dynamic_cast<Mlt*>(this->module);
 		if (!mltModule) return;
-		if (mltModule->contrast != mltModule->global_contrast) {
-			mltModule->use_global_contrast = false;
+		if (use_global_contrast[MLT]) {
+			module_contrast[MLT] = global_contrast;
 		}
-		if (mltModule->contrast != panelBackground->contrast) {
-			panelBackground->contrast = mltModule->contrast;
+		if (module_contrast[MLT] != panelBackground->contrast) {
+			panelBackground->contrast = module_contrast[MLT];
 			if (panelBackground->contrast < 0.4f) {
 				panelBackground->invert(true);
 				inverter->invert = true;
@@ -147,22 +134,21 @@ struct MltWidget : ModuleWidget {
 
         menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
             Menu* contrastMenu = new Menu();
-            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[MLT]));
             contrastSlider->box.size.x = 200.f;
             contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(module->use_global_contrast),
+                CHECKMARK(use_global_contrast[MLT]),
                 [module]() { 
-                    module->use_global_contrast = !module->use_global_contrast;
-                    if (module->use_global_contrast) {
-                        module->load_global_contrast();
-                        module->contrast = module->global_contrast;
+					use_global_contrast[MLT] = !use_global_contrast[MLT];
+                    if (use_global_contrast[MLT]) {
+						module_contrast[MLT] = global_contrast;
                     }
                 }));
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
-                    module->save_global_contrast(module->contrast);
+					global_contrast = module_contrast[MLT];
                 }));
             menu->addChild(contrastMenu);
         }));

@@ -4,7 +4,7 @@
 #include "widgets/BitPort.hpp"
 
 
-struct Fibb : ThemeableModule {
+struct Fibb : Module {
 	enum ParamId {
 		PARAMS_LEN
 	};
@@ -63,6 +63,9 @@ struct Fibb : ThemeableModule {
 		div_5.setDivision(5);
 		div_8.setDivision(8);
 		div_13.setDivision(13);
+        if (use_global_contrast[FIBB]) {
+            module_contrast[FIBB] = global_contrast;
+        }
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -120,24 +123,6 @@ struct Fibb : ThemeableModule {
 		out_8 = false;
 		out_13 = false;
 	}
-
-	json_t* dataToJson() override {
-		json_t* rootJ = json_object();
-		json_object_set_new(rootJ, "contrast", json_real(contrast));
-		json_object_set_new(rootJ, "use_global_contrast", json_boolean(use_global_contrast));
-		return rootJ;
-	}
-
-	void dataFromJson(json_t* rootJ) override {
-		json_t* contrastJ = json_object_get(rootJ, "contrast");
-		if (contrastJ) {
-			contrast = json_number_value(contrastJ);
-		}
-		json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
-		if (use_global_contrastJ) {
-			use_global_contrast = json_is_true(use_global_contrastJ);
-		}
-	}
 };
 
 
@@ -175,11 +160,11 @@ struct FibbWidget : ModuleWidget {
 	void step() override {
 		Fibb* fibbModule = dynamic_cast<Fibb*>(this->module);
 		if (!fibbModule) return;
-		if (fibbModule->contrast != fibbModule->global_contrast) {
-			fibbModule->use_global_contrast = false;
+		if (use_global_contrast[FIBB]) {
+			module_contrast[FIBB] = global_contrast;
 		}
-		if (fibbModule->contrast != panelBackground->contrast) {
-			panelBackground->contrast = fibbModule->contrast;
+		if (module_contrast[FIBB] != panelBackground->contrast) {
+			panelBackground->contrast = module_contrast[FIBB];
 			if (panelBackground->contrast < 0.4f) {
 				panelBackground->invert(true);
 				inverter->invert = true;
@@ -201,22 +186,21 @@ struct FibbWidget : ModuleWidget {
 
         menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
             Menu* contrastMenu = new Menu();
-            ContrastSlider *contrastSlider = new ContrastSlider(&(module->contrast));
+            ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[FIBB]));
             contrastSlider->box.size.x = 200.f;
             contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(module->use_global_contrast),
+                CHECKMARK(use_global_contrast[FIBB]),
                 [module]() { 
-                    module->use_global_contrast = !module->use_global_contrast;
-                    if (module->use_global_contrast) {
-                        module->load_global_contrast();
-                        module->contrast = module->global_contrast;
+					use_global_contrast[FIBB] = !use_global_contrast[FIBB];
+                    if (use_global_contrast[FIBB]) {
+						module_contrast[FIBB] = global_contrast;
                     }
                 }));
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
-                    module->save_global_contrast(module->contrast);
+					global_contrast = module_contrast[FIBB];
                 }));
             menu->addChild(contrastMenu);
         }));
