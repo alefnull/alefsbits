@@ -325,8 +325,8 @@ struct TurntWidget : ModuleWidget {
 
             Turnt* turntModule = dynamic_cast<Turnt*>(this->module);
             if (!turntModule) return;
-            if (use_global_contrast[TURNT]) {
-                module_contrast[TURNT] = global_contrast;
+            if (module_contrast[TURNT] != global_contrast) {
+                use_global_contrast[TURNT] = false;
             }
             if (module_contrast[TURNT] != panelBackground->contrast) {
                 panelBackground->contrast = module_contrast[TURNT];

@@ -123,8 +123,8 @@ struct LogicWidget : ModuleWidget {
 	void step() override {
 		Logic* logicModule = dynamic_cast<Logic*>(this->module);
 		if (!logicModule) return;
-		if (use_global_contrast[LOGIC]) {
-			module_contrast[LOGIC] = global_contrast;
+		if (module_contrast[LOGIC] != global_contrast) {
+			use_global_contrast[LOGIC] = false;
 		}
 		if (module_contrast[LOGIC] != panelBackground->contrast) {
 			panelBackground->contrast = module_contrast[LOGIC];

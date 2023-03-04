@@ -166,8 +166,8 @@ struct ProbablynotWidget : ModuleWidget {
 	void step() override {
 		Probablynot* notModule = dynamic_cast<Probablynot*>(this->module);
 		if (!notModule) return;
-		if (use_global_contrast[PROBABLYNOT]) {
-			module_contrast[PROBABLYNOT] = global_contrast;
+		if (module_contrast[PROBABLYNOT] != global_contrast) {
+			use_global_contrast[PROBABLYNOT] = false;
 		}
 		if (module_contrast[PROBABLYNOT] != panelBackground->contrast) {
 			panelBackground->contrast = module_contrast[PROBABLYNOT];

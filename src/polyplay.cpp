@@ -290,8 +290,8 @@ struct PolyplayWidget : ModuleWidget {
 	void step() override {
 		Polyplay* playModule = dynamic_cast<Polyplay*>(this->module);
 		if (!playModule) return;
-		if (use_global_contrast[POLYPLAY]) {
-			module_contrast[POLYPLAY] = global_contrast;
+		if (module_contrast[POLYPLAY] != global_contrast) {
+			use_global_contrast[POLYPLAY] = false;
 		}
 		if (module_contrast[POLYPLAY] != panelBackground->contrast) {
 			panelBackground->contrast = module_contrast[POLYPLAY];

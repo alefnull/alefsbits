@@ -74,8 +74,8 @@ struct NoizeWidget : ModuleWidget {
 	void step() override {
 		Noize* noizeModule = dynamic_cast<Noize*>(this->module);
 		if (!noizeModule) return;
-		if (use_global_contrast[NOIZE]) {
-			module_contrast[NOIZE] = global_contrast;
+		if (module_contrast[NOIZE] != global_contrast) {
+			use_global_contrast[NOIZE] = false;
 		}
 		if (module_contrast[NOIZE] != panelBackground->contrast) {
 			panelBackground->contrast = module_contrast[NOIZE];
