@@ -94,8 +94,8 @@ struct SimplexandholdWidget : ModuleWidget {
 	void step() override {
 		Simplexandhold* simplexModule = dynamic_cast<Simplexandhold*>(this->module);
 		if (!simplexModule) return;
-		if (module_contrast[SIMPLEXANDHOLD] != global_contrast) {
-			use_global_contrast[SIMPLEXANDHOLD] = false;
+		if (use_global_contrast[SIMPLEXANDHOLD]) {
+			module_contrast[SIMPLEXANDHOLD] = global_contrast;
 		}
 		if (module_contrast[SIMPLEXANDHOLD] != panelBackground->contrast) {
 			panelBackground->contrast = module_contrast[SIMPLEXANDHOLD];

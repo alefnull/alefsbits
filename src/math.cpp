@@ -91,8 +91,8 @@ struct MathWidget : ModuleWidget {
 	void step() override {
 		Math* mathModule = dynamic_cast<Math*>(this->module);
 		if (!mathModule) return;
-		if (module_contrast[MATH] != global_contrast) {
-			use_global_contrast[MATH] = false;
+		if (use_global_contrast[MATH]) {
+			module_contrast[MATH] = global_contrast;
 		}
 		if (module_contrast[MATH] != panelBackground->contrast) {
 			panelBackground->contrast = module_contrast[MATH];

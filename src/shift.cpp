@@ -211,8 +211,8 @@ struct ShiftWidget : ModuleWidget {
 	void step() override {
 		Shift* shiftModule = dynamic_cast<Shift*>(this->module);
 		if (!shiftModule) return;
-		if (module_contrast[SHIFT] != global_contrast) {
-			use_global_contrast[SHIFT] = false;
+		if (use_global_contrast[SHIFT]) {
+			module_contrast[SHIFT] = global_contrast;
 		}
 		if (module_contrast[SHIFT] != panelBackground->contrast) {
 			panelBackground->contrast = module_contrast[SHIFT];

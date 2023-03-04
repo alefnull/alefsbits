@@ -565,8 +565,8 @@ struct SlipsWidget : ModuleWidget {
 	void step() override {
 		Slips* slipsModule = dynamic_cast<Slips*>(this->module);
 		if (!slipsModule) return;
-		if (module_contrast[SLIPS] != global_contrast) {
-			use_global_contrast[SLIPS] = false;
+		if (use_global_contrast[SLIPS]) {
+			module_contrast[SLIPS] = global_contrast;
 		}
 		if (module_contrast[SLIPS] != panelBackground->contrast) {
 			panelBackground->contrast = module_contrast[SLIPS];

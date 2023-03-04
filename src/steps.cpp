@@ -163,8 +163,8 @@ struct StepsWidget : ModuleWidget {
 	void step() override {
 		Steps* stepsModule = dynamic_cast<Steps*>(this->module);
 		if (!stepsModule) return;
-		if (module_contrast[STEPS] != global_contrast) {
-			use_global_contrast[STEPS] = false;
+		if (use_global_contrast[STEPS]) {
+			module_contrast[STEPS] = global_contrast;
 		}
 		if (module_contrast[STEPS] != panelBackground->contrast) {
 			panelBackground->contrast = module_contrast[STEPS];

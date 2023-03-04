@@ -79,8 +79,8 @@ struct OctsclrWidget : ModuleWidget {
 	void step() override {
 		Octsclr* octModule = dynamic_cast<Octsclr*>(this->module);
 		if (!octModule) return;
-		if (module_contrast[OCTSCLR] != global_contrast) {
-			use_global_contrast[OCTSCLR] = false;
+		if (use_global_contrast[OCTSCLR]) {
+			module_contrast[OCTSCLR] = global_contrast;
 		}
 		if (module_contrast[OCTSCLR] != panelBackground->contrast) {
 			panelBackground->contrast = module_contrast[OCTSCLR];

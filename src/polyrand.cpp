@@ -91,8 +91,8 @@ struct PolyrandWidget : ModuleWidget {
 	void step() override {
 		Polyrand* randModule = dynamic_cast<Polyrand*>(this->module);
 		if (!randModule) return;
-		if (module_contrast[POLYRAND] != global_contrast) {
-			use_global_contrast[POLYRAND] = false;
+		if (use_global_contrast[POLYRAND]) {
+			module_contrast[POLYRAND] = global_contrast;
 		}
 		if (module_contrast[POLYRAND] != panelBackground->contrast) {
 			panelBackground->contrast = module_contrast[POLYRAND];

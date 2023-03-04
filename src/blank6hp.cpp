@@ -54,11 +54,8 @@ struct Blank6hpWidget : ModuleWidget {
 	void step() override {
 		Blank6hp* blankModule = dynamic_cast<Blank6hp*>(this->module);
 		if (!blankModule) return;
-        // if (use_global_contrast[BLANK6HP]) {
-        //     module_contrast[BLANK6HP] = global_contrast;
-        // }
-        if (module_contrast[BLANK6HP] != global_contrast) {
-            use_global_contrast[BLANK6HP] = false;
+        if (use_global_contrast[BLANK6HP]) {
+            module_contrast[BLANK6HP] = global_contrast;
         }
 		if (module_contrast[BLANK6HP] != panelBackground->contrast) {
 			panelBackground->contrast = module_contrast[BLANK6HP];

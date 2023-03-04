@@ -108,8 +108,8 @@ struct MltWidget : ModuleWidget {
 	void step() override {
 		Mlt* mltModule = dynamic_cast<Mlt*>(this->module);
 		if (!mltModule) return;
-		if (module_contrast[MLT] != global_contrast) {
-			use_global_contrast[MLT] = false;
+		if (use_global_contrast[MLT]) {
+			module_contrast[MLT] = global_contrast;
 		}
 		if (module_contrast[MLT] != panelBackground->contrast) {
 			panelBackground->contrast = module_contrast[MLT];

@@ -119,8 +119,8 @@ struct LightsWidget : ModuleWidget {
 	void step() override {
 		Lights* lightsModule = dynamic_cast<Lights*>(this->module);
 		if (!lightsModule) return;
-		if (module_contrast[LIGHTS] != global_contrast) {
-			use_global_contrast[LIGHTS] = false;
+		if (use_global_contrast[LIGHTS]) {
+			module_contrast[LIGHTS] = global_contrast;
 		}
 		if (module_contrast[LIGHTS] != panelBackground->contrast) {
 			panelBackground->contrast = module_contrast[LIGHTS];

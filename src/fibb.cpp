@@ -160,8 +160,8 @@ struct FibbWidget : ModuleWidget {
 	void step() override {
 		Fibb* fibbModule = dynamic_cast<Fibb*>(this->module);
 		if (!fibbModule) return;
-		if (module_contrast[FIBB] != global_contrast) {
-			use_global_contrast[FIBB] = false;
+		if (use_global_contrast[FIBB]) {
+			module_contrast[FIBB] = global_contrast;
 		}
 		if (module_contrast[FIBB] != panelBackground->contrast) {
 			panelBackground->contrast = module_contrast[FIBB];
