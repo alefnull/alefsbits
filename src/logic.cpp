@@ -151,14 +151,8 @@ struct LogicWidget : ModuleWidget {
             Menu* contrastMenu = new Menu();
             ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[LOGIC]));
             contrastSlider->box.size.x = 200.f;
-            contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(use_global_contrast[LOGIC]),
-                [module]() { 
-                    use_global_contrast[LOGIC] = !use_global_contrast[LOGIC];
-                    if (use_global_contrast[LOGIC]) {
-						module_contrast[LOGIC] = global_contrast;
-                    }
-                }));
+            GlobalOption *globalOption = new GlobalOption(&(use_global_contrast[LOGIC]));
+			contrastMenu->addChild(globalOption);
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",

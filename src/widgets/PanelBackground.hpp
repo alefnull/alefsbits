@@ -2,11 +2,14 @@
 
 #include <rack.hpp>
 
+#define CONTRAST_MIN 0.1f
+#define CONTRAST_MAX 0.9f
+
 using namespace rack;
 
 
 struct PanelBackground : TransparentWidget {
-    float contrast = 0.9f;
+    float contrast = CONTRAST_MAX;
     bool inverted = false;
     NVGcolor color = nvgRGB(0xff * contrast, 0xff * contrast, 0xff * contrast);
     

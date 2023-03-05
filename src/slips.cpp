@@ -592,14 +592,8 @@ struct SlipsWidget : ModuleWidget {
             Menu* contrastMenu = new Menu();
             ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[SLIPS]));
             contrastSlider->box.size.x = 200.f;
-            contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(use_global_contrast[SLIPS]),
-                [module]() { 
-                    use_global_contrast[SLIPS] = !use_global_contrast[SLIPS];
-                    if (use_global_contrast[SLIPS]) {
-						module_contrast[SLIPS] = global_contrast;
-                    }
-                }));
+            GlobalOption *globalOption = new GlobalOption(&(use_global_contrast[SLIPS]));
+			contrastMenu->addChild(globalOption);
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",

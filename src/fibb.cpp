@@ -188,14 +188,8 @@ struct FibbWidget : ModuleWidget {
             Menu* contrastMenu = new Menu();
             ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[FIBB]));
             contrastSlider->box.size.x = 200.f;
-            contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(use_global_contrast[FIBB]),
-                [module]() { 
-					use_global_contrast[FIBB] = !use_global_contrast[FIBB];
-                    if (use_global_contrast[FIBB]) {
-						module_contrast[FIBB] = global_contrast;
-                    }
-                }));
+            GlobalOption *globalOption = new GlobalOption(&(use_global_contrast[FIBB]));
+			contrastMenu->addChild(globalOption);
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",

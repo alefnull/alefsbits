@@ -107,14 +107,8 @@ struct OctsclrWidget : ModuleWidget {
             Menu* contrastMenu = new Menu();
             ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[OCTSCLR]));
             contrastSlider->box.size.x = 200.f;
-            contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(use_global_contrast[OCTSCLR]),
-                [module]() { 
-                    use_global_contrast[OCTSCLR] = !use_global_contrast[OCTSCLR];
-                    if (use_global_contrast[OCTSCLR]) {
-						module_contrast[OCTSCLR] = global_contrast;
-                    }
-                }));
+            GlobalOption *globalOption = new GlobalOption(&(use_global_contrast[OCTSCLR]));
+			contrastMenu->addChild(globalOption);
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",

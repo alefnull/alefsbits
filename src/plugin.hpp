@@ -97,3 +97,20 @@ struct ContrastSlider : ui::Slider {
         delete quantity;
     }
 };
+
+struct GlobalOption : ui::MenuItem {
+    bool* global;
+    GlobalOption(bool* global) {
+        this->global = global;
+        this->text = "use global contrast";
+        this->rightText = CHECKMARK(*global);
+    }
+    void onAction(const ActionEvent& e) override {
+        *global = !(*global);
+        e.unconsume();
+    }
+    void step() override {
+        rightText = CHECKMARK(*global);
+        MenuItem::step();
+    }
+};

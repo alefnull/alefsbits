@@ -147,14 +147,8 @@ struct LightsWidget : ModuleWidget {
             Menu* contrastMenu = new Menu();
             ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[LIGHTS]));
             contrastSlider->box.size.x = 200.f;
-            contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(use_global_contrast[LIGHTS]),
-                [module]() { 
-                    use_global_contrast[LIGHTS] = !use_global_contrast[LIGHTS];
-                    if (use_global_contrast[LIGHTS]) {
-						module_contrast[LIGHTS] = global_contrast;
-                    }
-                }));
+			GlobalOption *globalOption = new GlobalOption(&(use_global_contrast[LIGHTS]));
+			contrastMenu->addChild(globalOption);
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",

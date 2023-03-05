@@ -119,14 +119,8 @@ struct PolyrandWidget : ModuleWidget {
             Menu* contrastMenu = new Menu();
             ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[POLYRAND]));
             contrastSlider->box.size.x = 200.f;
-            contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(use_global_contrast[POLYRAND]),
-                [module]() { 
-                    use_global_contrast[POLYRAND] = !use_global_contrast[POLYRAND];
-                    if (use_global_contrast[POLYRAND]) {
-                        module_contrast[POLYRAND] = global_contrast;
-                    }
-                }));
+            GlobalOption *globalOption = new GlobalOption(&(use_global_contrast[POLYRAND]));
+			contrastMenu->addChild(globalOption);
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",

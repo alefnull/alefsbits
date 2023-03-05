@@ -318,14 +318,8 @@ struct PolyplayWidget : ModuleWidget {
             Menu* contrastMenu = new Menu();
             ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[POLYPLAY]));
             contrastSlider->box.size.x = 200.f;
-            contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(use_global_contrast[POLYPLAY]),
-                [module]() { 
-                    use_global_contrast[POLYPLAY] = !use_global_contrast[POLYPLAY];
-                    if (use_global_contrast[POLYPLAY]) {
-						module_contrast[POLYPLAY] = global_contrast;
-                    }
-                }));
+            GlobalOption *globalOption = new GlobalOption(&(use_global_contrast[POLYPLAY]));
+			contrastMenu->addChild(globalOption);
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",

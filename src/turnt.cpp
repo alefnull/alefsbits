@@ -363,14 +363,8 @@ struct TurntWidget : ModuleWidget {
             Menu* contrastMenu = new Menu();
             ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[TURNT]));
             contrastSlider->box.size.x = 200.f;
-            contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(use_global_contrast[TURNT]),
-                [module]() { 
-                    use_global_contrast[TURNT] = !use_global_contrast[TURNT];
-                    if (use_global_contrast[TURNT]) {
-                        module_contrast[TURNT] = global_contrast;
-                    }
-                }));
+            GlobalOption *globalOption = new GlobalOption(&(use_global_contrast[TURNT]));
+            contrastMenu->addChild(globalOption);
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",

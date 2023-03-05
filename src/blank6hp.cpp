@@ -82,14 +82,8 @@ struct Blank6hpWidget : ModuleWidget {
             Menu* contrastMenu = new Menu();
             ContrastSlider *contrastSlider = new ContrastSlider(&(module_contrast[BLANK6HP]));
             contrastSlider->box.size.x = 200.f;
-            contrastMenu->addChild(createMenuItem("use global contrast",
-                CHECKMARK(use_global_contrast[BLANK6HP]),
-                [module]() { 
-                    use_global_contrast[BLANK6HP] = !use_global_contrast[BLANK6HP];
-                    if (use_global_contrast[BLANK6HP]) {
-                        module_contrast[BLANK6HP] = global_contrast;
-                    }
-                }));
+            GlobalOption *globalOption = new GlobalOption(&(use_global_contrast[BLANK6HP]));
+            contrastMenu->addChild(globalOption);
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
