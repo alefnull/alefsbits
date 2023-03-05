@@ -277,7 +277,8 @@ struct Slips : Module, Quantizer {
 				// get the root input voltage
 				float root_note_input = inputs[ROOT_CV_INPUT].getVoltage();
 				// strip out the octave and convert to a note number between 0 and 11
-				root_note = (int) (root_note_input * 12) % 12;
+				root_note_input = quantize(root_note_input, NoteName::C, ScaleName::CHROMATIC);
+				root_note = (int) root_note_input % 12;
 			}
 		}
 
