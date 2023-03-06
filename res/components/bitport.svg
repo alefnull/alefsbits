@@ -208,7 +208,7 @@
    fit-margin-top="0"
    id="base"
    inkscape:current-layer="svg15246"
-   inkscape:cx="6.8413077"
+   inkscape:cx="3.8378068"
    inkscape:cy="12.252377"
    inkscape:document-units="mm"
    inkscape:pageopacity="0.0"
@@ -296,11 +296,7 @@
    cy="11.938456"
    r="9.378479"
    id="circle154"
-   style="display:inline;stroke-width:0.898024" /><path
-   fill="url(#SVGID_18_)"
-   d="M 2.574633,10.682956 2.18877,11.057297 c -0.3950677,0.519929 -0.3922389,1.240234 0.0069,1.757047 l 0.3576651,0.331802 18.5891069,0.0268 0.361401,-0.345102 c 0.412993,-0.514442 0.415992,-1.245927 0.0072,-1.763737 l -0.368585,-0.360116 z"
-   id="path161"
-   style="display:none;fill:url(#SVGID_18_);stroke-width:0.898024" /><circle
+   style="display:inline;stroke-width:0.898024" /><circle
    fill="url(#SVGID_19_)"
    cx="11.850135"
    cy="11.927914"
