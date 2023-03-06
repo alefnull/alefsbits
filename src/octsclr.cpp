@@ -1,7 +1,6 @@
 #include "plugin.hpp"
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
-#include "widgets/BitPort.hpp"
 
 #define MAX_POLY 16
 
@@ -68,8 +67,8 @@ struct OctsclrWidget : ModuleWidget {
         inverter->box.size = Vec(box.size.x, box.size.y);
         addChild(inverter);
 
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.62, 28.443)), module, Octsclr::SCALER_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.62, 48.843)), module, Octsclr::OFFSET_PARAM));
+		addParam(createParamCentered<BitKnob>(mm2px(Vec(7.62, 28.443)), module, Octsclr::SCALER_PARAM));
+		addParam(createParamCentered<BitKnob>(mm2px(Vec(7.62, 48.843)), module, Octsclr::OFFSET_PARAM));
 
 		addInput(createInputCentered<BitPort>(mm2px(Vec(7.62, 91.678)), module, Octsclr::SOURCE_INPUT));
 

@@ -1,7 +1,6 @@
 #include "plugin.hpp"
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
-#include "widgets/BitPort.hpp"
 #include "inc/SimplexNoise.cpp"
 #include "inc/cvRange.hpp"
 

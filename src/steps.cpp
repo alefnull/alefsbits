@@ -2,7 +2,6 @@
 #include "inc/cvRange.hpp"
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
-#include "widgets/BitPort.hpp"
 
 
 void Steps::process(const ProcessArgs& args) {
@@ -122,15 +121,15 @@ struct StepsWidget : ModuleWidget {
         inverter->box.size = Vec(box.size.x, box.size.y);
         addChild(inverter);
 
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(8.083, 35.226)), module, Steps::STEPS_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 23.545)), module, Steps::STEP1_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 35.069)), module, Steps::STEP2_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 46.593)), module, Steps::STEP3_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 58.117)), module, Steps::STEP4_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 69.641)), module, Steps::STEP5_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 81.165)), module, Steps::STEP6_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 92.689)), module, Steps::STEP7_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(21.099, 104.213)), module, Steps::STEP8_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(8.083, 35.226)), module, Steps::STEPS_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(21.099, 23.545)), module, Steps::STEP1_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(21.099, 35.069)), module, Steps::STEP2_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(21.099, 46.593)), module, Steps::STEP3_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(21.099, 58.117)), module, Steps::STEP4_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(21.099, 69.641)), module, Steps::STEP5_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(21.099, 81.165)), module, Steps::STEP6_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(21.099, 92.689)), module, Steps::STEP7_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(21.099, 104.213)), module, Steps::STEP8_PARAM));
 
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(28, 23.545)), module, Steps::STEP1_LIGHT));
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(28, 35.069)), module, Steps::STEP2_LIGHT));
@@ -147,17 +146,17 @@ struct StepsWidget : ModuleWidget {
 
 		addParam(createParamCentered<TL1105>(mm2px(Vec(8.336, 64.000)), module, Steps::RAND_PARAM));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(37, 23.545)), module, Steps::STEP1_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(37, 35.069)), module, Steps::STEP2_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(37, 46.593)), module, Steps::STEP3_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(37, 58.117)), module, Steps::STEP4_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(37, 69.641)), module, Steps::STEP5_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(37, 81.165)), module, Steps::STEP6_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(37, 92.689)), module, Steps::STEP7_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(37, 104.213)), module, Steps::STEP8_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(37, 23.545)), module, Steps::STEP1_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(37, 35.069)), module, Steps::STEP2_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(37, 46.593)), module, Steps::STEP3_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(37, 58.117)), module, Steps::STEP4_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(37, 69.641)), module, Steps::STEP5_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(37, 81.165)), module, Steps::STEP6_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(37, 92.689)), module, Steps::STEP7_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(37, 104.213)), module, Steps::STEP8_OUTPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.336, 89.08)), module, Steps::EOC_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.336, 102.875)), module, Steps::CV_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(8.336, 89.08)), module, Steps::EOC_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(8.336, 102.875)), module, Steps::CV_OUTPUT));
 	}
 	
 	void step() override {

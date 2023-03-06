@@ -114,3 +114,31 @@ struct GlobalOption : ui::MenuItem {
         MenuItem::step();
     }
 };
+
+struct BitKnob : RoundBlackKnob {
+	BitKnob() {
+		setSvg(Svg::load(asset::plugin(pluginInstance, "res/components/bitknob_fg.svg")));
+		bg->setSvg(Svg::load(asset::plugin(pluginInstance, "res/components/bitknob_bg.svg")));
+	}
+};
+
+struct LargeBitKnob : RoundLargeBlackKnob {
+    LargeBitKnob() {
+        setSvg(Svg::load(asset::plugin(pluginInstance, "res/components/largebitknob_fg.svg")));
+        bg->setSvg(Svg::load(asset::plugin(pluginInstance, "res/components/largebitknob_bg.svg")));
+    }
+};
+
+struct SmallBitKnob : RoundSmallBlackKnob {
+    SmallBitKnob() {
+        setSvg(Svg::load(asset::plugin(pluginInstance, "res/components/smallbitknob_fg.svg")));
+        bg->setSvg(Svg::load(asset::plugin(pluginInstance, "res/components/smallbitknob_bg.svg")));
+    }
+};
+
+struct BitPort : SvgPort {
+    BitPort() {
+        setSvg(APP->window->loadSvg(rack::asset::plugin(pluginInstance, "res/components/bitport.svg")));
+        this->shadow->opacity = 0.f;
+    }
+};

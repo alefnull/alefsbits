@@ -1,7 +1,6 @@
 #include "plugin.hpp"
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
-#include "widgets/BitPort.hpp"
 
 
 struct Noize : Module {
@@ -64,7 +63,7 @@ struct NoizeWidget : ModuleWidget {
         inverter->box.size = Vec(box.size.x, box.size.y);
         addChild(inverter);
 
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(10.16, 26.056)), module, Noize::DURATION_PARAM));
+		addParam(createParamCentered<BitKnob>(mm2px(Vec(10.16, 26.056)), module, Noize::DURATION_PARAM));
 
 		addInput(createInputCentered<BitPort>(mm2px(Vec(10.16, 42.056)), module, Noize::DURATION_INPUT));
 

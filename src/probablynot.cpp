@@ -1,7 +1,6 @@
 #include "plugin.hpp"
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
-#include "widgets/BitPort.hpp"
 
 
 #define MAX_POLY 16
@@ -120,7 +119,7 @@ struct ProbablynotWidget : ModuleWidget {
         inverter->box.size = Vec(box.size.x, box.size.y);
         addChild(inverter);
 
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.62, 57.765)), module, Probablynot::PROBABILITY_PARAM));
+		addParam(createParamCentered<BitKnob>(mm2px(Vec(7.62, 57.765)), module, Probablynot::PROBABILITY_PARAM));
 
 		addInput(createInputCentered<BitPort>(mm2px(Vec(7.62, 27.196)), module, Probablynot::SIGNAL_INPUT));
 		addInput(createInputCentered<BitPort>(mm2px(Vec(7.62, 42.164)), module, Probablynot::TRIGGER_INPUT));

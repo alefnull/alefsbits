@@ -1,7 +1,6 @@
 #include "plugin.hpp"
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
-#include "widgets/BitPort.hpp"
 
 
 struct Shift : Module {
@@ -178,14 +177,14 @@ struct ShiftWidget : ModuleWidget {
         inverter->box.size = Vec(box.size.x, box.size.y);
         addChild(inverter);
 
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(14.588, 41.655)), module, Shift::REGISTER_1_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(14.588, 50.764)), module, Shift::REGISTER_2_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(14.588, 59.874)), module, Shift::REGISTER_3_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(14.588, 68.983)), module, Shift::REGISTER_4_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(14.588, 78.092)), module, Shift::REGISTER_5_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(14.588, 87.202)), module, Shift::REGISTER_6_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(14.588, 96.311)), module, Shift::REGISTER_7_PARAM));
-		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(14.588, 105.42)), module, Shift::REGISTER_8_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(14.588, 41.655)), module, Shift::REGISTER_1_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(14.588, 50.764)), module, Shift::REGISTER_2_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(14.588, 59.874)), module, Shift::REGISTER_3_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(14.588, 68.983)), module, Shift::REGISTER_4_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(14.588, 78.092)), module, Shift::REGISTER_5_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(14.588, 87.202)), module, Shift::REGISTER_6_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(14.588, 96.311)), module, Shift::REGISTER_7_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(14.588, 105.42)), module, Shift::REGISTER_8_PARAM));
 
 		addInput(createInputCentered<BitPort>(mm2px(Vec(12.871, 21.057)), module, Shift::SIGNAL_INPUT));
 		addInput(createInputCentered<BitPort>(mm2px(Vec(22.689, 21.057)), module, Shift::TRIGGER_INPUT));

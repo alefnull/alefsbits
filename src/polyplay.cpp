@@ -6,7 +6,6 @@
 #include "inc/AudioFile.h"
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
-#include "widgets/BitPort.hpp"
 
 #define MAX_POLY 16
 
@@ -274,7 +273,7 @@ struct PolyplayWidget : ModuleWidget {
 		float x = x_start;
 		float y = y_start;
 
-		addParam(createParamCentered<RoundBlackKnob>(Vec(x, y), module, Polyplay::POLY_PARAM));
+		addParam(createParamCentered<BitKnob>(Vec(x, y), module, Polyplay::POLY_PARAM));
 		y += dy * 2 - RACK_GRID_WIDTH;
 		addParam(createParamCentered<TL1105>(Vec(x, y), module, Polyplay::TRIGGER_PARAM));
 		y += dy - RACK_GRID_WIDTH / 2;

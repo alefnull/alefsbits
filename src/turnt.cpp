@@ -5,7 +5,6 @@
 #include "widgets/TabDisplay.cpp"
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
-#include "widgets/BitPort.hpp"
 
 #define MAX_POLY 16
 
@@ -236,14 +235,14 @@ struct TurntWidget : ModuleWidget {
         addInput(createInputCentered<BitPort>(Vec(x - dy * 1.25, y + dy / 2), module,
                                                  Turnt::ZERO_INPUT));
         y += dy * 2;
-        addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x + dy / 2, y - dy - dy / 2), module,
+        addParam(createParamCentered<SmallBitKnob>(Vec(x + dy / 2, y - dy - dy / 2), module,
                                                      Turnt::ZERO_PARAM));
         y -= dy * 2;
         x += RACK_GRID_WIDTH * 3;
         addInput(createInputCentered<BitPort>(Vec(x + dy * 1.25, y + dy / 2), module,
                                                  Turnt::PROB_INPUT));
         y += dy * 2;
-        addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x - dy / 2, y - dy - dy / 2), module,
+        addParam(createParamCentered<SmallBitKnob>(Vec(x - dy / 2, y - dy - dy / 2), module,
                                                      Turnt::PROB_PARAM));
         y += dy * 2;
         x -= RACK_GRID_WIDTH * 1.5;

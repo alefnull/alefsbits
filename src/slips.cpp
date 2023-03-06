@@ -3,7 +3,6 @@
 #include "inc/cvRange.hpp"
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
-#include "widgets/BitPort.hpp"
 
 #define MAX_POLY 16
 #define MAX_STEPS 64
@@ -508,14 +507,14 @@ struct SlipsWidget : ModuleWidget {
         inverter->box.size = Vec(box.size.x, box.size.y);
         addChild(inverter);
 
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(30.279, 24.08)), module, Slips::ROOT_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(51.782, 24.08)), module, Slips::STEPS_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(30.279, 41.974)), module, Slips::SCALE_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(51.782, 41.974)), module, Slips::START_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(30.279, 24.08)), module, Slips::ROOT_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(51.782, 24.08)), module, Slips::STEPS_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(30.279, 41.974)), module, Slips::SCALE_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(51.782, 41.974)), module, Slips::START_PARAM));
 		addParam(createParamCentered<LEDButton>(mm2px(Vec(18.254, 59.869)), module, Slips::GENERATE_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(51.782, 59.869)), module, Slips::PROB_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(51.782, 77.763)), module, Slips::SLIPS_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(51.782, 95.657)), module, Slips::SLIP_RANGE_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(51.782, 59.869)), module, Slips::PROB_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(51.782, 77.763)), module, Slips::SLIPS_PARAM));
+		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(51.782, 95.657)), module, Slips::SLIP_RANGE_PARAM));
 
 		addInput(createInputCentered<BitPort>(mm2px(Vec(8.854, 24.08)), module, Slips::CLOCK_INPUT));
 		addInput(createInputCentered<BitPort>(mm2px(Vec(21.082, 24.08)), module, Slips::ROOT_CV_INPUT));
