@@ -1,6 +1,7 @@
 #include "plugin.hpp"
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
+#include "inc/cvRange.hpp"
 
 
 struct Shift : Module {
@@ -80,7 +81,7 @@ struct Shift : Module {
 	float last_sample[8] = {0.f};
 	bool unipolar = false;
 	bool scrambled = false;
-	float range = 1.f;
+	CVRange cv_range;
 
 	void process(const ProcessArgs& args) override {
 		float signal = 0.f;
@@ -88,12 +89,7 @@ struct Shift : Module {
 			signal = inputs[SIGNAL_INPUT].getVoltage();
 		}
 		else {
-			if (unipolar) {
-				signal = random::uniform() * range;
-			}
-			else {
-				signal = random::uniform() * range - range / 2.f;
-			}
+			signal = cv_range.map(random::uniform());
 		}
 		float out = 0.f;
 		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
@@ -141,7 +137,7 @@ struct Shift : Module {
 		json_t* rootJ = json_object();
 		json_object_set_new(rootJ, "unipolar", json_boolean(unipolar));
 		json_object_set_new(rootJ, "scrambled", json_boolean(scrambled));
-		json_object_set_new(rootJ, "range", json_real(range));
+		json_object_set_new(rootJ, "cv_range", cv_range.dataToJson());
 		return rootJ;
 	}
 
@@ -154,9 +150,9 @@ struct Shift : Module {
 		if (scrambledJ) {
 			scrambled = json_boolean_value(scrambledJ);
 		}
-		json_t* rangeJ = json_object_get(rootJ, "range");
-		if (rangeJ) {
-			range = json_real_value(rangeJ);
+		json_t* cv_rangeJ = json_object_get(rootJ, "cv_range");
+		if (cv_rangeJ) {
+			cv_range.dataFromJson(cv_rangeJ);
 		}
 	}
 };
@@ -249,18 +245,7 @@ struct ShiftWidget : ModuleWidget {
         }));
 
 		menu->addChild(new MenuSeparator());
-		// add a submenu to choose the range, between
-		// +/- 1V, +/- 3V, +/- 5V, +/- 10V
-		menu->addChild(createSubmenuItem("Range", "", [=](Menu* menu) {
-			Menu* rangeMenu = new Menu();
-			rangeMenu->addChild(createMenuItem("-/+ 1v", CHECKMARK(module->range == 1), [module]() { module->range = 1; }));
-			rangeMenu->addChild(createMenuItem("-/+ 2v", CHECKMARK(module->range == 2), [module]() { module->range = 2; }));
-			rangeMenu->addChild(createMenuItem("-/+ 3v", CHECKMARK(module->range == 3), [module]() { module->range = 3; }));
-			rangeMenu->addChild(createMenuItem("-/+ 5v", CHECKMARK(module->range == 5), [module]() { module->range = 5; }));
-			rangeMenu->addChild(createMenuItem("-/+ 10v", CHECKMARK(module->range == 10), [module]() { module->range = 10; }));
-			menu->addChild(rangeMenu);
-		}));
-		menu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar), [module]() { module->unipolar = !module->unipolar; }));
+		module->cv_range.addMenu(module, menu);
 		menu->addChild(new MenuSeparator());
 		menu->addChild(createMenuItem("Scrambled Eggs!", CHECKMARK(module->scrambled), [module]() { module->scrambled = !module->scrambled; }));
 	}
