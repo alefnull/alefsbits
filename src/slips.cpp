@@ -65,17 +65,16 @@ void Slips::get_custom_scale() {
 	Slipspander *slipspander = dynamic_cast<Slipspander*>(rightExpander.module);
 	if (slipspander) {
 		custom_scale_len = slipspander->selected_notes.size();
-		custom_scale = new int[custom_scale_len];
-		for (int i = 0; i < custom_scale_len; i++) {
-			custom_scale[i] = slipspander->selected_notes[i];
+		if (custom_scale_len > 0) {
+			custom_scale = new int[custom_scale_len];
+			for (int i = 0; i < custom_scale_len; i++) {
+				custom_scale[i] = slipspander->selected_notes[i];
+			}
 		}
-		// create a string of the custom scale for debug
-		std::string custom_scale_string = "";
-		for (int i = 0; i < custom_scale_len; i++) {
-			custom_scale_string += std::to_string(custom_scale[i]) + " ";
+		else {
+			custom_scale_len = 0;
+			custom_scale = NULL;
 		}
-		// debug
-		DEBUG("custom scale: %s", custom_scale_string.c_str());
 	}
 	else {
 		custom_scale_len = 0;
@@ -365,11 +364,10 @@ void Slips::process(const ProcessArgs& args) {
 		// check if the sequence output is connected
 		if (outputs[SEQUENCE_OUTPUT].isConnected()) {
 			// set the output voltage
-			// outputs[SEQUENCE_OUTPUT].setVoltage(quantize(out, root_note, current_scale));
-			if (!expanded) {
-				outputs[SEQUENCE_OUTPUT].setVoltage(quantize(out, root_note, current_scale));
-			} else {
+			if (expanded && custom_scale != NULL && custom_scale_len > 0) {
 				outputs[SEQUENCE_OUTPUT].setVoltage(quantize(out, root_note, custom_scale, custom_scale_len));
+			} else {
+				outputs[SEQUENCE_OUTPUT].setVoltage(quantize(out, root_note, current_scale));
 			}
 		}
 		// check if the gate output is connected
@@ -397,11 +395,10 @@ void Slips::process(const ProcessArgs& args) {
 			// get the input voltage
 			float in = inputs[QUANTIZE_INPUT].getVoltage(ch);
 			// quantize the input voltage
-			// float out = quantize(in, root_note, current_scale);
-			if (!expanded) {
-				out = quantize(in, root_note, current_scale);
-			} else {
+			if (expanded && custom_scale != NULL && custom_scale_len > 0) {
 				out = quantize(in, root_note, custom_scale, custom_scale_len);
+			} else {
+				out = quantize(in, root_note, current_scale);
 			}
 			// set the output voltage
 			outputs[QUANTIZE_OUTPUT].setVoltage(out, ch);
