@@ -152,6 +152,14 @@
       "tags": [
         "Utility"
       ]
+    },
+    {
+      "slug": "slipspander",
+      "name": "slipspander",
+      "description": "expander for slips to enter custom scale",
+      "tags": [
+        "Expander"
+      ]
     }
   ]
 }

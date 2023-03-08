@@ -130,4 +130,42 @@ struct Quantizer {
         // return the closest value plus the octave
         return closest_value + octave;
     }
+
+    float quantize(float input, int root, int scale[], int length) {
+        // the current scale, initialized to the chromatic scale
+        int curr_scale[length];
+        for (int i = 0; i < length; i++) {
+            curr_scale[i] = scale[i];
+        }
+        // the closest value to the input
+        float closest_value = 0.0f;
+        // the closest distance to the input
+        float closest_distance = 100.0f;
+        // the scale note in volts
+        float note_in_volts = 0.0f;
+        // the distance between the input and the scale note
+        float distance = 0.0f;
+        // the octave of the input
+        int octave = int(floorf(input));
+        // the volts minus the octave
+        float volts_minus_octave = input - octave;
+
+        // iterate through the scale
+        for (int i = 0; i < length; i++) {
+            // calculate the scale note in volts
+            note_in_volts = (curr_scale[i] + root) % 12 / 12.0f;
+            // calculate the distance between the input and the scale note
+            distance = fabsf(volts_minus_octave - note_in_volts);
+            // if the distance is less than the closest distance
+            if (distance < closest_distance) {
+                // set the closest distance to the distance
+                closest_distance = distance;
+                // set the closest value to the scale note in volts
+                closest_value = note_in_volts;
+            }
+        }
+
+        // return the closest value plus the octave
+        return closest_value + octave;
+    }
 };

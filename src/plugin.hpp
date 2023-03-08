@@ -26,6 +26,7 @@ extern Model* modelPolyplay;
 extern Model* modelLights;
 extern Model* modelSlips;
 extern Model* modelTurnt;
+extern Model* modelSlipspander;
 
 enum ModuleNames {
     SIMPLEXANDHOLD,
@@ -47,10 +48,13 @@ enum ModuleNames {
     MODULES_LEN
 };
 
+struct SpanderMessage {
+    std::vector<int> custom_scale;
+};
+
 extern bool use_global_contrast[MODULES_LEN];
 extern float module_contrast[MODULES_LEN];
 
-// global contrast
 extern float global_contrast;
 
 struct ContrastQuantity : Quantity {
