@@ -177,8 +177,14 @@ void Slips::process(const ProcessArgs& args) {
 		else {
 			// get the root input voltage
 			float root_note_input = inputs[ROOT_CV_INPUT].getVoltage();
-			// strip out the octave and convert to a note number between 0 and 11
-			root_note = (int) (root_note_input * 12) % 12;
+			// add 10 to the root input voltage to keep it positive
+			root_note_input += 10;
+			// get the octave
+			float octave = floor(root_note_input);
+			// strip out the octave
+			float note = root_note_input - octave;
+			// set the root note (0 to 11)
+			root_note = (int)floor(note * 12) % 12;
 		}
 	}
 
