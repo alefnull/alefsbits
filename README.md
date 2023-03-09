@@ -36,7 +36,7 @@ applies various math operations on two inputs, clamped to +/-10V
 
 ## mlt
 
-two 1:3 polyphonic multiples
+two 1:5 polyphonic multiples
 
 ## shift
 
