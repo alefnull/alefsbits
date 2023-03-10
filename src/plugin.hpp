@@ -57,6 +57,11 @@ extern float module_contrast[MODULES_LEN];
 
 extern float global_contrast;
 
+extern void settings_save();
+extern void settings_load();
+extern json_t* settingsToJson();
+extern void settingsFromJson(json_t* rootJ);
+
 struct ContrastQuantity : Quantity {
     float* contrast;
 
