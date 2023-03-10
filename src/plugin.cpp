@@ -92,6 +92,10 @@ void settings_load() {
 json_t* settingsToJson() {
 	json_t* rootJ = json_object();
 	json_object_set_new(rootJ, "global_contrast", json_real(global_contrast));
+	json_t* use_global_contrastJ = json_array();
+	for (int i = 0; i < MODULES_LEN; i++) {
+		json_array_insert_new(use_global_contrastJ, i, json_boolean(use_global_contrast[i]));
+	}
 	json_t* module_contrastJ = json_array();
 	for (int i = 0; i < MODULES_LEN; i++) {
 		json_array_insert_new(module_contrastJ, i, json_real(module_contrast[i]));
@@ -104,6 +108,15 @@ void settingsFromJson(json_t* rootJ) {
 	json_t* global_contrastJ = json_object_get(rootJ, "global_contrast");
 	if (global_contrastJ) {
 		global_contrast = json_number_value(global_contrastJ);
+	}
+	json_t* use_global_contrastJ = json_object_get(rootJ, "use_global_contrast");
+	if (use_global_contrastJ) {
+		for (int i = 0; i < MODULES_LEN; i++) {
+			json_t* use_global_contrastJ_i = json_array_get(use_global_contrastJ, i);
+			if (use_global_contrastJ_i) {
+				use_global_contrast[i] = json_boolean_value(use_global_contrastJ_i);
+			}
+		}
 	}
 	json_t* module_contrastJ = json_object_get(rootJ, "module_contrast");
 	if (module_contrastJ) {
