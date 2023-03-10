@@ -13,6 +13,7 @@ struct Simplexandhold : Module {
 	};
 	enum InputId {
 		TRIGGER_INPUT,
+		SPEED_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
@@ -32,7 +33,9 @@ struct Simplexandhold : Module {
 
 	Simplexandhold() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configParam(SPEED_PARAM, 0.05f, 5.f, 0.05f, "speed", "%", 0.f, 20.f);
+		configParam(SPEED_PARAM, 0.05f, 5.f, 5.f, "speed", "%", 0.f, 20.f);
+		configInput(SPEED_INPUT, "speed");
+		getInputInfo(SPEED_INPUT)->description = "expects 0-10V cv signal";
 		configInput(TRIGGER_INPUT, "trigger");
 		configOutput(SAMPLE_OUTPUT, "sample");
 		noise.init();
@@ -45,6 +48,9 @@ struct Simplexandhold : Module {
 		int chans = std::max(1, inputs[TRIGGER_INPUT].getChannels());
 		outputs[SAMPLE_OUTPUT].setChannels(chans);
 		float speed = params[SPEED_PARAM].getValue();
+		if (inputs[SPEED_INPUT].isConnected()) {
+			speed *= clamp(inputs[SPEED_INPUT].getVoltage() / 10.0, 0.0, 1.0);
+		}
 		for (int c = 0; c < chans; c++) {
 			if (trigger[c].process(inputs[TRIGGER_INPUT].getVoltage(c))) {
 				last_sample[c] = ((noise.noise(x[c], 0.0) + 1.0) / 2.0);
@@ -89,7 +95,8 @@ struct SimplexandholdWidget : ModuleWidget {
         addChild(inverter);
 
 		addInput(createInputCentered<BitPort>(mm2px(Vec(10.16, 35.937)), module, Simplexandhold::TRIGGER_INPUT));
-		addParam(createParamCentered<BitKnob>(mm2px(Vec(10.16, 54.937)), module, Simplexandhold::SPEED_PARAM));
+		addParam(createParamCentered<BitKnob>(mm2px(Vec(10.16, 57.937)), module, Simplexandhold::SPEED_PARAM));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(10.16, 75.937)), module, Simplexandhold::SPEED_INPUT));
 
 		addOutput(createOutputCentered<BitPort>(mm2px(Vec(10.16, 100.446)), module, Simplexandhold::SAMPLE_OUTPUT));
 	}

@@ -25,7 +25,7 @@
      showgrid="false"
      borderlayer="true"
      inkscape:zoom="1.8116735"
-     inkscape:cx="-37.25837"
+     inkscape:cx="-36.982381"
      inkscape:cy="239.00554"
      inkscape:current-layer="layer1"
      inkscape:showpageshadow="0"
@@ -203,7 +203,8 @@
     <g
        aria-label="speed"
        id="text830"
-       style="font-size:5.64444px;line-height:1.25;font-family:'Agency FB';-inkscape-font-specification:'Agency FB';fill:#1a1a1a;stroke-width:0.264583">
+       style="font-size:5.64444px;line-height:1.25;font-family:'Agency FB';-inkscape-font-specification:'Agency FB';fill:#1a1a1a;stroke-width:0.264583"
+       transform="translate(0,3.2129594)">
       <path
          d="m 6.6694279,65.700275 q 0,0.311436 -0.3114364,0.311436 H 5.5173888 q -0.3114364,0 -0.3114364,-0.311436 v -0.609093 h 0.3610457 v 0.603581 h 0.741384 V 65.160084 L 5.3492683,64.374603 Q 5.2114645,64.26436 5.2114645,64.087971 v -0.446484 q 0,-0.311436 0.3114364,-0.311436 h 0.8295784 q 0.3114364,0 0.3114364,0.311436 v 0.534679 H 6.3083821 v -0.529167 h -0.741384 v 0.468533 l 0.9673821,0.785481 q 0.1350477,0.107487 0.1350477,0.292144 z"
          id="path940" />
