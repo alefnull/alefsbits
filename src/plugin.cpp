@@ -96,6 +96,7 @@ json_t* settingsToJson() {
 	for (int i = 0; i < MODULES_LEN; i++) {
 		json_array_insert_new(use_global_contrastJ, i, json_boolean(use_global_contrast[i]));
 	}
+	json_object_set_new(rootJ, "use_global_contrast", use_global_contrastJ);
 	json_t* module_contrastJ = json_array();
 	for (int i = 0; i < MODULES_LEN; i++) {
 		json_array_insert_new(module_contrastJ, i, json_real(module_contrast[i]));
