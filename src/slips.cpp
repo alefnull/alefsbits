@@ -64,7 +64,7 @@ void Slips::dataFromJson(json_t* rootJ) {
 void Slips::get_custom_scale() {
 	Slipspander *slipspander = dynamic_cast<Slipspander*>(rightExpander.module);
 	if (slipspander) {
-		custom_scale_len = slipspander->selected_notes.size();
+		custom_scale_len = (int)slipspander->selected_notes.size();
 		if (custom_scale_len > 0) {
 			custom_scale = new int[custom_scale_len];
 			for (int i = 0; i < custom_scale_len; i++) {
@@ -203,6 +203,7 @@ void Slips::process(const ProcessArgs& args) {
 
 	if (rightExpander.module && rightExpander.module->model == modelSlipspander) {
 		expanded = true;
+		if (!was_expanded) get_custom_scale();
 	}
 	else {
 		expanded = false;
@@ -415,6 +416,9 @@ void Slips::process(const ProcessArgs& args) {
 	for (int i = 0; i < MAX_STEPS; i++) {
 		lights[SEGMENT_LIGHTS + i].setBrightness(i == current_step ? 1.f : 0.f);
 	}
+
+	// set the was_expanded flag
+	was_expanded = expanded;
 }
 
 	

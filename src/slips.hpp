@@ -123,6 +123,8 @@ struct Slips : Module, Quantizer {
 	bool skip_step = false;
 	// a bool to track if slipspander is connected
 	bool expanded = false;
+	// a bool to track if slipspander was connected last cycle
+	bool was_expanded = false;
 	// a custom scale array in case slipspander is connected
 	int *custom_scale = NULL;
 	// the length of the custom scale
