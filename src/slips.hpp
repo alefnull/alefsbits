@@ -98,9 +98,11 @@ struct Slips : Module, Quantizer {
 	}
 
 	// the sequence
-	float the_sequence[64] = {0.0f};
+	// float the_sequence[64] = {0.0f};
+	std::vector<float> the_sequence = std::vector<float>(MAX_STEPS, 0.0f);
 	// the slips
-	float the_slips[64] = {0.0f};
+	// float the_slips[64] = {0.0f};
+	std::vector<float> the_slips = std::vector<float>(MAX_STEPS, 0.0f);
 	// the number of steps gone through in this cycle
 	int steps_gone_through = 0;
 	// the current step

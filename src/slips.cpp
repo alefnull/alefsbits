@@ -85,12 +85,14 @@ void Slips::get_custom_scale() {
 // function to generate a new sequence,
 // given the number of steps, root note, and scale
 void Slips::generate_sequence() {
+	// clear the sequence
+	the_sequence.clear();
 	// generate the sequence
 	for (int i = 0; i < MAX_STEPS; i++) {
 		// generate a random value between 0 and 1
 		float random_value = random::uniform();
 		// add the value to the sequence
-		the_sequence[i] = random_value;
+		the_sequence.push_back(random_value);
 	}
 }
 
@@ -98,8 +100,10 @@ void Slips::generate_sequence() {
 // given the slip amount (0 to 1) and slip range (0 to 1)
 void Slips::generate_slips(float slip_amount, float slip_range) {
 	// clear the slips
+	the_slips.clear();
+	// generate the slip vector
 	for (int i = 0; i < MAX_STEPS; i++) {
-		the_slips[i] = 0.0;
+		the_slips.push_back(0.0);
 	}
 	// convert the slip amount to a number of steps to slip
 	int num_slips =	(int) (MAX_STEPS * slip_amount);
