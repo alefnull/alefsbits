@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utils/ResizableRingBuffer.hpp"
+#include "../inc/ResizableRingBuffer.hpp"
 
 #define MAX_POLY 16
 

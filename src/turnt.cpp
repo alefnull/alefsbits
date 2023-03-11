@@ -1,5 +1,5 @@
 #include "plugin.hpp"
-#include "utils/ResizableRingBuffer.hpp"
+#include "inc/ResizableRingBuffer.hpp"
 #include "widgets/Scope.hpp"
 #include "widgets/ScopeData.hpp"
 #include "widgets/TabDisplay.cpp"

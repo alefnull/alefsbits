@@ -4,7 +4,7 @@
 
 using namespace rack;
 
-#include "../utils/ResizableRingBuffer.hpp"
+#include "../inc/ResizableRingBuffer.hpp"
 #include "FancyWidget.hpp"
 #include "ScopeData.hpp"
 

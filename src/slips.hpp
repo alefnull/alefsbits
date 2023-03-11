@@ -1,7 +1,7 @@
 #pragma once
 
 #include "plugin.hpp"
-#include "quantizer.hpp"
+#include "inc/Quantizer.hpp"
 #include "inc/cvRange.hpp"
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
