@@ -27,16 +27,21 @@ void Slipspander::process(const ProcessArgs& args) {
 
 	// set the lights
 	for (int i = 0; i < 12; i++) {
-		lights[i].setBrightness(notes_on[i] ? 1.f : 0.f);
+		lights[C_LIGHT + i].setBrightness(notes_on[i] ? 1.f : 0.f);
 	}
 
+	// set the previous notes
 	selected_notes_prev = selected_notes;
 }
 
 json_t* Slipspander::dataToJson() {
 	json_t* rootJ = json_object();
-	json_object_set_new(rootJ, "notes_on", json_pack("[b, b, b, b, b, b, b, b, b, b, b, b]",
-		notes_on[0], notes_on[1], notes_on[2], notes_on[3], notes_on[4], notes_on[5], notes_on[6], notes_on[7], notes_on[8], notes_on[9], notes_on[10], notes_on[11]));
+	json_t* notes_onJ = json_array();
+	for (int i = 0; i < 12; i++) {
+		json_t* note_onJ = json_boolean(notes_on[i]);
+		json_array_append_new(notes_onJ, note_onJ);
+	}
+	json_object_set_new(rootJ, "notes_on", notes_onJ);
 	return rootJ;
 }
 
