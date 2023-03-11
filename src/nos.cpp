@@ -125,7 +125,6 @@ struct Nos : Module {
 
 	Nos() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		// configParam(FREQ_PARAM, 32.7f, 523.3f, dsp::FREQ_C4, "frequency", " hz");
 		// configure the frequency param to go from C1 to C6
 		configParam(FREQ_PARAM, 32.7f, 1046.5f, dsp::FREQ_C4, "frequency", " hz");
 		configButton(INJECT_PARAM, "inject");
@@ -159,7 +158,11 @@ struct Nos : Module {
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
 		json_object_set_new(rootJ, "tableSize", json_integer(osc.tableSize));
-		json_object_set_new(rootJ, "table", json_pack("[F*]", osc.tableSize, &osc.table[0]));
+		json_t* tableJ = json_array();
+		for (int i = 0; i < osc.tableSize; i++) {
+			json_array_append_new(tableJ, json_real(osc.table[i]));
+		}
+		json_object_set_new(rootJ, "table", tableJ);
 		json_object_set_new(rootJ, "simplexMode", json_boolean(simplex));
 		json_object_set_new(rootJ, "simplexSpeed", json_real(osc.xInc));
 		return rootJ;
