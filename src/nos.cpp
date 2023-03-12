@@ -422,9 +422,13 @@ struct NosWidget : ModuleWidget {
 
 		menu->addChild(new MenuSeparator());
 
-		SizeSlider* sizeSlider = new SizeSlider(&(module->tableSize));
-		sizeSlider->box.size.x = 200.f;
-		menu->addChild(sizeSlider);
+		SimplexOption* simplexOption = new SimplexOption(&(module->simplex));
+		menu->addChild(simplexOption);
+		SpeedSlider* speedSlider = new SpeedSlider(&(module->osc.xInc));
+		speedSlider->box.size.x = 200.f;
+		menu->addChild(speedSlider);
+
+		menu->addChild(new MenuSeparator());
 
 		menu->addChild(createMenuItem("inject", "",
 			[module]() {
@@ -437,14 +441,9 @@ struct NosWidget : ModuleWidget {
 				}
 			}));
 
-		menu->addChild(new MenuSeparator());
-
-		SimplexOption* simplexOption = new SimplexOption(&(module->simplex));
-		menu->addChild(simplexOption);
-
-		SpeedSlider* speedSlider = new SpeedSlider(&(module->osc.xInc));
-		speedSlider->box.size.x = 200.f;
-		menu->addChild(speedSlider);
+		SizeSlider* sizeSlider = new SizeSlider(&(module->tableSize));
+		sizeSlider->box.size.x = 200.f;
+		menu->addChild(sizeSlider);
 	}
 };
 
