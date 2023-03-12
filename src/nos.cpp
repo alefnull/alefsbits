@@ -9,12 +9,10 @@
 
 
 struct NoiseOSC {
-	// construct a noise oscillator using a lookup table
 	float phase = 0.f;
 	float freq = dsp::FREQ_C4 * 0.5f;
 	float sampleRate = 44100.f;
 	int tableSize = DEFAULT_TABLE_SIZE;
-	// float *table = new float[tableSize];
 	std::vector<float> table;
 	SimplexNoise simplexNoise;
 	float xInc = 0.01;
@@ -27,7 +25,7 @@ struct NoiseOSC {
 
 	// get min value
 	float get_min() {
-		float min = 1000.f;
+		float min = 10.f;
 		for (int i = 0; i < tableSize; i++) {
 			if (table[i] < min) {
 				min = table[i];
@@ -38,7 +36,7 @@ struct NoiseOSC {
 
 	// get max value
 	float get_max() {
-		float max = -1000.f;
+		float max = -10.f;
 		for (int i = 0; i < tableSize; i++) {
 			if (table[i] > max) {
 				max = table[i];
@@ -122,6 +120,7 @@ struct Nos : Module {
 	dsp::SchmittTrigger injectTrigger;
 	dsp::BooleanTrigger injectButton;
 	bool simplex = false;
+	int tableSize = DEFAULT_TABLE_SIZE;
 
 	Nos() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -176,14 +175,11 @@ struct Nos : Module {
 		}
 		json_t* tableJ = json_object_get(rootJ, "table");
 		if (tableJ) {
-			json_t* tableArrayJ = json_array_get(tableJ, 0);
-			if (tableArrayJ) {
-				osc.table.clear();
-				for (int i = 0; i < osc.tableSize; i++) {
-					json_t* tableValueJ = json_array_get(tableArrayJ, i);
-					if (tableValueJ) {
-						osc.table.push_back(json_real_value(tableValueJ));
-					}
+			osc.table.clear();
+			for (int i = 0; i < osc.tableSize; i++) {
+				json_t* tableValueJ = json_array_get(tableJ, i);
+				if (tableValueJ) {
+					osc.table.push_back(json_real_value(tableValueJ));
 				}
 			}
 		}
@@ -194,12 +190,6 @@ struct Nos : Module {
 		json_t* simplexSpeedJ = json_object_get(rootJ, "simplexSpeed");
 		if (simplexSpeedJ) {
 			osc.xInc = clamp(json_real_value(simplexSpeedJ), 0.01f, 0.1f);
-		}
-		if (simplex) {
-			osc.simplex_regen();
-		}
-		else {
-			osc.rand_regen();
 		}
 	}
 
@@ -285,24 +275,6 @@ struct NosWidget : ModuleWidget {
 		Nos* module = dynamic_cast<Nos*>(this->module);
 		assert(module);
 
-		struct TableSizeItem : MenuItem {
-			Nos* module;
-			int tableSize;
-			void onAction(const event::Action& e) override {
-				module->osc.tableSize = tableSize;
-				if (module->simplex) {
-					module->osc.simplex_regen();
-				}
-				else {
-					module->osc.rand_regen();
-				}
-			}
-			void step() override {
-				rightText = (module->osc.tableSize == tableSize) ? "✔" : "";
-				MenuItem::step();
-			}
-		};
-
 		struct SpeedQuantity : Quantity {
 			Nos* module;
 			float* speed;
@@ -357,6 +329,81 @@ struct NosWidget : ModuleWidget {
 			}
 		};
 
+		struct SizeQuantity : Quantity {
+			Nos* module;
+			int* size;
+
+			SizeQuantity(int* size) {
+				this->size = size;
+			}
+
+			void setValue(float value) override {
+				*size = clamp((int)value, MIN_TABLE_SIZE, MAX_TABLE_SIZE);
+			}
+
+			float getValue() override {
+				return (float)*size;
+			}
+
+			float getDefaultValue() override {
+				return 64.f;
+			}
+
+			float getDisplayValue() override {
+				return *size;
+			}
+
+			void setDisplayValue(float displayValue) override {
+				*size = displayValue;
+			}
+
+			std::string getLabel() override {
+				return "table size";
+			}
+
+			int getDisplayPrecision() override {
+				return 4;
+			}
+
+			float getMinValue() override {
+				return 64.f;
+			}
+
+			float getMaxValue() override {
+				return 1024.f;
+			}
+
+			std::string getUnit() override {
+				return " samples";
+			}
+		};
+
+		struct SizeSlider : ui::Slider {
+			SizeSlider(int* size) {
+				quantity = new SizeQuantity(size);
+			}
+			~SizeSlider() {
+				delete quantity;
+			}
+		};
+
+		struct SimplexOption : ui::MenuItem {
+			bool* simplex;
+			SimplexOption(bool* simplex) {
+				this->simplex = simplex;
+				this->text = "simplex mode";
+				this->rightText = CHECKMARK(*simplex);
+			}
+			void onAction(const ActionEvent& e) override {
+				*simplex = !(*simplex);
+				e.unconsume();
+			}
+			void step() override {
+				rightText = CHECKMARK(*simplex);
+				MenuItem::step();
+			}
+		};
+
 		menu->addChild(new MenuSeparator());
         menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
             Menu* contrastMenu = new Menu();
@@ -375,37 +422,29 @@ struct NosWidget : ModuleWidget {
 
 		menu->addChild(new MenuSeparator());
 
-		menu->addChild(createMenuItem("enable simplex mode", CHECKMARK(module->simplex), [module]() {
-			module->simplex = !module->simplex;
-			if (module->simplex) {
-				module->osc.simplex_regen();
-			}
-			else {
-				module->osc.rand_regen();
-			}
-		}));
+		SizeSlider* sizeSlider = new SizeSlider(&(module->tableSize));
+		sizeSlider->box.size.x = 200.f;
+		menu->addChild(sizeSlider);
 
-		menu->addChild(createMenuItem("inject simplex", "",
+		menu->addChild(createMenuItem("inject", "",
 			[module]() {
-				module->simplex = true;
-				module->osc.simplex_regen();
+				module->osc.tableSize = module->tableSize;
+				if (module->simplex) {
+					module->osc.simplex_regen();
+				}
+				else {
+					module->osc.rand_regen();
+				}
 			}));
+
+		menu->addChild(new MenuSeparator());
+
+		SimplexOption* simplexOption = new SimplexOption(&(module->simplex));
+		menu->addChild(simplexOption);
 
 		SpeedSlider* speedSlider = new SpeedSlider(&(module->osc.xInc));
 		speedSlider->box.size.x = 200.f;
 		menu->addChild(speedSlider);
-
-		menu->addChild(new MenuSeparator());
-
-		MenuLabel* tableSizeLabel = new MenuLabel();
-		tableSizeLabel->text = "table size";
-		menu->addChild(tableSizeLabel);
-		for (int tableSize = MIN_TABLE_SIZE; tableSize <= MAX_TABLE_SIZE; tableSize *= 2) {
-			TableSizeItem* tableSizeItem = createMenuItem<TableSizeItem>(std::to_string(tableSize), CHECKMARK(tableSize == module->osc.tableSize));
-			tableSizeItem->module = module;
-			tableSizeItem->tableSize = tableSize;
-			menu->addChild(tableSizeItem);
-		}
 	}
 };
 
