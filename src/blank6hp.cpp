@@ -2,12 +2,17 @@
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
 
+#ifndef M_PI
+	#define M_PI 3.14159265358979323846
+#endif
+
 
 struct Blank6hp : Module {
 	enum ParamId {
 		PARAMS_LEN
 	};
 	enum InputId {
+		HIDDEN_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
@@ -19,26 +24,75 @@ struct Blank6hp : Module {
 
 	Blank6hp() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
+		configInput(HIDDEN_INPUT, "secret");
         if (use_global_contrast[BLANK6HP]) {
             module_contrast[BLANK6HP] = global_contrast;
         }
 	}
 
-	void process(const ProcessArgs& args) override {}
+	float angle = 0.f;
+
+	void process(const ProcessArgs& args) override {
+		if (inputs[HIDDEN_INPUT].isConnected()) {
+			// get the angle from the input (0-10V)
+			float in = inputs[HIDDEN_INPUT].getVoltage();
+			angle = in * 36.f;
+		}
+		else {
+			angle = 0.f;
+		}
+	}
 };
 
 
 struct Blank6hpWidget : ModuleWidget {
+
+	struct LogoWidget : SvgWidget {
+		Module* module = NULL;
+		float angle = 0.f;
+		LogoWidget() {
+			setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/logo.svg")));
+			if (module) {
+				Blank6hp *blankModule = dynamic_cast<Blank6hp*>(module);
+				if (blankModule) {
+					angle = blankModule->angle;
+				}
+			}
+		}
+		void step() override {
+			if (module) {
+				Blank6hp *blankModule = dynamic_cast<Blank6hp*>(module);
+				if (blankModule) {
+					angle = blankModule->angle;
+				}
+			}
+			SvgWidget::step();
+		}
+		void draw(const DrawArgs& args) override {
+			nvgSave(args.vg);
+			nvgTranslate(args.vg, box.size.x / 2.f, box.size.y / 2.f);
+			nvgRotate(args.vg, angle * M_PI / 180.f);
+			nvgTranslate(args.vg, -box.size.x / 2.f, -box.size.y / 2.f);
+			SvgWidget::draw(args);
+			nvgRestore(args.vg);
+		}
+	};
+
     PanelBackground *panelBackground = new PanelBackground();
     SvgPanel *svgPanel;
     Inverter *inverter = new Inverter();
+	LogoWidget* svgLogoWidget = new LogoWidget();
 	Blank6hpWidget(Blank6hp* module) {
 		setModule(module);
         svgPanel = createPanel(asset::plugin(pluginInstance, "res/blank6hp.svg"));
 		setPanel(svgPanel);
 
+		Blank6hp* blankModule = dynamic_cast<Blank6hp*>(module);
+		if (blankModule) {
+			svgLogoWidget->module = module;
+		}
+
         std::shared_ptr<Svg> svgLogo = APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/logo.svg"));
-        SvgWidget* svgLogoWidget = new SvgWidget();
         svgLogoWidget->setSvg(svgLogo);
         svgLogoWidget->box.pos = Vec(box.size.x / 2.f - svgLogoWidget->box.size.x / 2.f,
                                     box.size.y / 2.f - svgLogoWidget->box.size.y / 2.f);
@@ -49,6 +103,7 @@ struct Blank6hpWidget : ModuleWidget {
         inverter->box.size = Vec(box.size.x, box.size.y);
         addChild(inverter);
         addChild(svgLogoWidget);
+		addChild(createInputCentered<EmptyPort>(Vec(box.size.x / 2.f, box.size.y - 25.f), module, Blank6hp::HIDDEN_INPUT));
 	}
 	
 	void step() override {

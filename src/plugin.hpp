@@ -50,10 +50,6 @@ enum ModuleNames {
     MODULES_LEN
 };
 
-struct SpanderMessage {
-    std::vector<int> custom_scale;
-};
-
 extern bool use_global_contrast[MODULES_LEN];
 extern float module_contrast[MODULES_LEN];
 
@@ -151,5 +147,15 @@ struct BitPort : SvgPort {
     BitPort() {
         setSvg(APP->window->loadSvg(rack::asset::plugin(pluginInstance, "res/components/bitport.svg")));
         this->shadow->opacity = 0.f;
+    }
+};
+
+struct EmptyPort : SvgPort {
+    EmptyPort() {
+        setSvg(APP->window->loadSvg(rack::asset::plugin(pluginInstance, "res/components/empty.svg")));
+        this->shadow->opacity = 0.f;
+    }
+    void onHover(const event::Hover& e) override {
+        this->destroyTooltip();
     }
 };
