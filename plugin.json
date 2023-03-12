@@ -167,7 +167,8 @@
       "description": "a weird noise-based oscillator thing",
       "tags": [
         "Oscillator"
-      ]
+      ],
+      "hidden": true
     }
   ]
 }
