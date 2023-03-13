@@ -1,4 +1,5 @@
 #include "plugin.hpp"
+#include "inc/PerlinNoise.hpp"
 #include "inc/SimplexNoise.hpp"
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
@@ -9,13 +10,22 @@
 
 
 struct NoiseOSC {
+	enum Mode {
+		RAND,
+		PERLIN,
+		SIMPLEX,
+		WORLEY,
+		MODES_LEN
+	};
+	std::vector<std::string> modeNames = {"rand", "perlin", "simplex", "worley"};
+	siv::PerlinNoise perlinNoise;
+	SimplexNoise simplexNoise;
+	float xInc = 0.01;
 	float phase = 0.f;
 	float freq = dsp::FREQ_C4 * 0.5f;
 	float sampleRate = 44100.f;
 	int tableSize = DEFAULT_TABLE_SIZE;
 	std::vector<float> table;
-	SimplexNoise simplexNoise;
-	float xInc = 0.01;
 
 	struct WPoint {
 		float x;
@@ -26,6 +36,7 @@ struct NoiseOSC {
 	NoiseOSC() {
 		rand_regen();
 		simplexNoise.init();
+		perlinNoise.reseed(random::u32());
 	}
 
 	// get min value
@@ -88,6 +99,18 @@ struct NoiseOSC {
 	}
 
 	// regenerate the lookup table
+	// using perlin noise
+	void perlin_regen() {
+		table.clear();
+		float x = random::u32() % 10000;
+		for (int i = 0; i < tableSize; i++) {
+			x += xInc;
+			table.push_back(perlinNoise.noise1D(x));
+		}
+		rescale();
+	}
+
+	// regenerate the lookup table
 	// using simplex noise
 	void simplex_regen() {
 		table.clear();
@@ -130,15 +153,22 @@ struct NoiseOSC {
 	void inject(int mode, int tableSize) {
 		this->tableSize = tableSize;
 		switch (mode) {
-			case 0:
+			case RAND: {
 				rand_regen();
 				break;
-			case 1:
+			}
+			case PERLIN: {
+				perlin_regen();
+				break;
+			}
+			case SIMPLEX: {
 				simplex_regen();
 				break;
-			case 2:
+			}
+			case WORLEY: {
 				worley_regen();
 				break;
+			}
 		}
 	}
 
@@ -183,19 +213,11 @@ struct Nos : Module {
 		LIGHTS_LEN
 	};
 
-	enum Mode {
-		RAND,
-		SIMPLEX,
-		WORLEY,
-		MODES_LEN
-	};
-	std::vector<std::string> modeNames = {"rand", "simplex", "worley"};
-
-	Mode mode = RAND;
 	NoiseOSC osc;
 	dsp::SchmittTrigger injectTrigger;
 	dsp::BooleanTrigger injectButton;
 	int tableSize = DEFAULT_TABLE_SIZE;
+	int mode = NoiseOSC::RAND;
 
 	Nos() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -216,7 +238,7 @@ struct Nos : Module {
 	}
 
 	void onReset() override {
-		mode = RAND;
+		mode = NoiseOSC::RAND;
 		osc.inject((int)mode, tableSize);
 	}
 
@@ -255,7 +277,7 @@ struct Nos : Module {
 		}
 		json_t* modeJ = json_object_get(rootJ, "mode");
 		if (modeJ) {
-			mode = (Mode) json_integer_value(modeJ);
+			mode = (NoiseOSC::Mode) json_integer_value(modeJ);
 		}
 		json_t* simplexSpeedJ = json_object_get(rootJ, "simplexSpeed");
 		if (simplexSpeedJ) {
@@ -364,7 +386,7 @@ struct NosWidget : ModuleWidget {
 			}
 
 			std::string getLabel() override {
-				return "simplex speed";
+				return "noise speed";
 			}
 
 			int getDisplayPrecision() override {
@@ -460,11 +482,11 @@ struct NosWidget : ModuleWidget {
 			ModeMenuItem(Nos* module, int mode) {
 				this->module = module;
 				this->mode = mode;
-				this->text = this->module->modeNames[mode];
+				this->text = this->module->osc.modeNames[mode];
 				this->rightText = CHECKMARK(module->mode == mode);
 			}
 			void onAction(const ActionEvent& e) override {
-				module->mode = (Nos::Mode) mode;
+				module->mode = (NoiseOSC::Mode) mode;
 				e.unconsume();
 			}
 			void step() override {
@@ -499,7 +521,7 @@ struct NosWidget : ModuleWidget {
 		MenuLabel* modeLabel = new MenuLabel();
 		modeLabel->text = "mode";
 		menu->addChild(modeLabel);
-		for (int i = 0; i < Nos::MODES_LEN; i++) {
+		for (int i = 0; i < NoiseOSC::MODES_LEN; i++) {
 			menu->addChild(new ModeMenuItem(module, i));
 		}
 		
