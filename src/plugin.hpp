@@ -28,6 +28,7 @@ extern Model* modelSlips;
 extern Model* modelTurnt;
 extern Model* modelSlipspander;
 extern Model* modelNos;
+extern Model* modelLucc;
 
 enum ModuleNames {
     SIMPLEXANDHOLD,
@@ -47,6 +48,7 @@ enum ModuleNames {
     SLIPS,
     TURNT,
     NOS,
+    LUCC,
     MODULES_LEN
 };
 

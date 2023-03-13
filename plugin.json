@@ -169,6 +169,14 @@
         "Oscillator"
       ],
       "hidden": true
+    },
+    {
+      "slug": "lucc",
+      "name": "lucc",
+      "description": "a clock divider based on the lucas sequence",
+      "tags": [
+        "Clock modulator"
+      ]
     }
   ]
 }
