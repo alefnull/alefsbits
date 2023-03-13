@@ -463,6 +463,7 @@ void SlipsWidget::appendContextMenu(Menu* menu) {
 		contrastMenu->addChild(createMenuItem("set global contrast", "",
 			[module]() {
 				global_contrast = module_contrast[SLIPS];
+				use_global_contrast[SLIPS] = true;
 			}));
 		menu->addChild(contrastMenu);
 	}));

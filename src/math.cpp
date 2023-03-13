@@ -125,6 +125,7 @@ struct MathWidget : ModuleWidget {
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
 					global_contrast = module_contrast[MATH];
+					use_global_contrast[MATH] = true;
                 }));
             menu->addChild(contrastMenu);
         }));

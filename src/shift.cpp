@@ -240,6 +240,7 @@ struct ShiftWidget : ModuleWidget {
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
 					global_contrast = module_contrast[SHIFT];
+					use_global_contrast[SHIFT] = true;
                 }));
             menu->addChild(contrastMenu);
         }));

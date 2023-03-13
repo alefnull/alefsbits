@@ -139,6 +139,7 @@ struct SimplexandholdWidget : ModuleWidget {
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
 					global_contrast = module_contrast[SIMPLEXANDHOLD];
+					use_global_contrast[SIMPLEXANDHOLD] = true;
                 }));
             menu->addChild(contrastMenu);
         }));

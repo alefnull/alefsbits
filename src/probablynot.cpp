@@ -199,6 +199,7 @@ struct ProbablynotWidget : ModuleWidget {
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
 					global_contrast = module_contrast[PROBABLYNOT];
+					use_global_contrast[PROBABLYNOT] = true;
                 }));
             menu->addChild(contrastMenu);
         }));

@@ -369,6 +369,7 @@ struct TurntWidget : ModuleWidget {
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
                     global_contrast = module_contrast[TURNT];
+                    use_global_contrast[TURNT] = true;
                 }));
             menu->addChild(contrastMenu);
         }));

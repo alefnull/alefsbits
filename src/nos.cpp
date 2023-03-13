@@ -416,6 +416,7 @@ struct NosWidget : ModuleWidget {
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
                     global_contrast = module_contrast[NOS];
+					use_global_contrast[NOS] = true;
                 }));
             menu->addChild(contrastMenu);
         }));

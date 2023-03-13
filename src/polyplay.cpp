@@ -324,6 +324,7 @@ struct PolyplayWidget : ModuleWidget {
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
 					global_contrast = module_contrast[POLYPLAY];
+					use_global_contrast[POLYPLAY] = true;
                 }));
             menu->addChild(contrastMenu);
         }));

@@ -157,6 +157,7 @@ struct LogicWidget : ModuleWidget {
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
 					global_contrast = module_contrast[LOGIC];
+					use_global_contrast[LOGIC] = true;
                 }));
             menu->addChild(contrastMenu);
         }));

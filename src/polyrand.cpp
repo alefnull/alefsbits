@@ -125,6 +125,7 @@ struct PolyrandWidget : ModuleWidget {
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
 					global_contrast = module_contrast[POLYRAND];
+					use_global_contrast[POLYRAND] = true;
                 }));
             menu->addChild(contrastMenu);
         }));

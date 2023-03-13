@@ -108,6 +108,7 @@ struct NoizeWidget : ModuleWidget {
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
 					global_contrast = module_contrast[NOIZE];
+					use_global_contrast[NOIZE] = true;
                 }));
             menu->addChild(contrastMenu);
         }));

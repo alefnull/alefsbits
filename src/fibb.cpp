@@ -52,11 +52,6 @@ struct Fibb : Module {
 		configOutput(FIBB5_OUTPUT, "clock / 5");
 		configOutput(FIBB8_OUTPUT, "clock / 8");
 		configOutput(FIBB13_OUTPUT, "clock / 13");
-		configLight(FIBB2_LIGHT, "clock / 2");
-		configLight(FIBB3_LIGHT, "clock / 3");
-		configLight(FIBB5_LIGHT, "clock / 5");
-		configLight(FIBB8_LIGHT, "clock / 8");
-		configLight(FIBB13_LIGHT, "clock / 13");
 		div_2.setDivision(2);
 		div_3.setDivision(3);
 		div_5.setDivision(5);
@@ -194,6 +189,7 @@ struct FibbWidget : ModuleWidget {
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
 					global_contrast = module_contrast[FIBB];
+					use_global_contrast[FIBB] = true;
                 }));
             menu->addChild(contrastMenu);
         }));

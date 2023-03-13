@@ -142,6 +142,7 @@ struct MltWidget : ModuleWidget {
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
 					global_contrast = module_contrast[MLT];
+					use_global_contrast[MLT] = true;
                 }));
             menu->addChild(contrastMenu);
         }));

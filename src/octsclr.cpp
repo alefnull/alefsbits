@@ -113,6 +113,7 @@ struct OctsclrWidget : ModuleWidget {
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
 					global_contrast = module_contrast[OCTSCLR];
+					use_global_contrast[OCTSCLR] = true;
                 }));
             menu->addChild(contrastMenu);
         }));

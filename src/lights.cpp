@@ -153,6 +153,7 @@ struct LightsWidget : ModuleWidget {
             contrastMenu->addChild(createMenuItem("set global contrast", "",
                 [module]() {
 					global_contrast = module_contrast[LIGHTS];
+					use_global_contrast[LIGHTS] = true;
                 }));
             menu->addChild(contrastMenu);
         }));
