@@ -7,7 +7,7 @@
    viewBox="0 0 20.32 128.5"
    version="1.1"
    id="svg5"
-   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
    sodipodi:docname="fibb.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -24,9 +24,9 @@
      inkscape:document-units="mm"
      showgrid="false"
      borderlayer="true"
-     inkscape:zoom="1.2810466"
-     inkscape:cx="133.48461"
-     inkscape:cy="252.13759"
+     inkscape:zoom="5.1241864"
+     inkscape:cx="46.251245"
+     inkscape:cy="122.16574"
      inkscape:current-layer="layer1"
      inkscape:showpageshadow="0"
      inkscape:deskcolor="#505050" />
@@ -135,14 +135,16 @@
     <g
        aria-label="clk"
        id="text3054"
-       style="font-size:4.23333px;line-height:1.25;font-family:'Agency FB';-inkscape-font-specification:'Agency FB';stroke-width:0.264583"
+       style="font-size:4.23333px;line-height:1.25;font-family:'Agency FB';-inkscape-font-specification:'Agency FB';stroke-width:0.264583;fill:#1a1a1a;fill-opacity:1"
        transform="translate(0.51634213)">
       <path
          d="m 3.8199612,17.735129 q 0,0.233577 -0.2315102,0.233577 H 2.9352615 q -0.2315103,0 -0.2315103,-0.233577 v -1.544091 q 0,-0.233577 0.2315103,-0.233577 H 3.588451 q 0.2315102,0 0.2315102,0.233577 v 0.401009 H 3.549177 v -0.39274 H 2.9786696 v 1.527554 H 3.549177 V 17.27831 h 0.2707842 z"
-         id="path9219" />
+         id="path9219"
+         style="fill:#1a1a1a;fill-opacity:1" />
       <path
          d="M 4.5537659,17.968706 H 4.2829816 v -3.234942 h 0.2707843 z"
-         id="path9221" />
+         id="path9221"
+         style="fill:#1a1a1a;fill-opacity:1" />
       <path
          d="M 6.1495328,17.968706 H 5.8498097 L 5.2958388,16.943447 v 1.025259 H 5.0209204 v -3.234942 h 0.2749184 v 2.054653 l 0.5167639,-0.830956 h 0.295589 v 0.0083 l -0.5849768,0.888834 z"
          id="path9223"
