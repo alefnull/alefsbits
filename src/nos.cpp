@@ -45,6 +45,23 @@ struct NoiseOSC {
 		return max;
 	}
 
+	// get average value
+	float get_avg() {
+		float avg = 0.f;
+		for (int i = 0; i < tableSize; i++) {
+			avg += table[i];
+		}
+		return avg / tableSize;
+	}
+
+	// apply offset
+	void apply_offset() {
+		float avg = get_avg();
+		for (int i = 0; i < tableSize; i++) {
+			table[i] -= avg;
+		}
+	}
+
 	// rescale the lookup table to -1 to 1
 	void rescale() {
 		float min = get_min();
@@ -53,6 +70,7 @@ struct NoiseOSC {
 		for (int i = 0; i < tableSize; i++) {
 			table[i] = (table[i] - min) / range * 2.f - 1.f;
 		}
+		apply_offset();
 	}
 
 	// regenerate the lookup table
@@ -61,6 +79,7 @@ struct NoiseOSC {
 		for (int i = 0; i < tableSize; i++) {
 			table.push_back(random::uniform() * 2.f - 1.f);
 		}
+		rescale();
 	}
 
 	// regenerate the lookup table
