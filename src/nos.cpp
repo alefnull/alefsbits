@@ -127,24 +127,21 @@ struct NoiseOSC {
 	void worley_regen() {
 		table.clear();
 		std::vector<WPoint> points;
-		for (int i = 0; i < (int) (tableSize * (xInc * 100.f)); i++) {
+		for (int i = 0; i < (int) (tableSize * (xInc * 5.f)); i++) {
 			WPoint p;
 			p.x = random::uniform();
 			p.y = random::uniform();
 			points.push_back(p);
 		}
 		for (int i = 0; i < tableSize; i++) {
-			float x = (float) i / tableSize;
-			float y = 0.f;
-			float min_dist = 10.f;
+			float minDist = 10.f;
 			for (int j = 0; j < (int) points.size(); j++) {
-				float dist = std::sqrt(std::pow(x - points[j].x, 2) + std::pow(0.f - points[j].y, 2));
-				if (dist < min_dist) {
-					min_dist = dist;
-					y = points[j].y;
+				float dist = std::sqrt(std::pow(points[j].x - (float) i / tableSize, 2) + std::pow(points[j].y - 0.5f, 2));
+				if (dist < minDist) {
+					minDist = dist;
 				}
 			}
-			table.push_back(y);
+			table.push_back(minDist);
 		}
 		rescale();
 	}
