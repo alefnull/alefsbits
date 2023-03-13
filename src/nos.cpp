@@ -17,6 +17,11 @@ struct NoiseOSC {
 	SimplexNoise simplexNoise;
 	float xInc = 0.01;
 
+	struct WPoint {
+		float x;
+		float y;
+	};
+
 	// constructor
 	NoiseOSC() {
 		rand_regen();
@@ -94,6 +99,49 @@ struct NoiseOSC {
 		rescale();
 	}
 
+	// regenerate the lookup table
+	// using worley noise
+	void worley_regen() {
+		table.clear();
+		std::vector<WPoint> points;
+		for (int i = 0; i < (int) (tableSize * 0.1f); i++) {
+			WPoint p;
+			p.x = random::uniform();
+			p.y = random::uniform();
+			points.push_back(p);
+		}
+		for (int i = 0; i < tableSize; i++) {
+			float x = (float) i / tableSize;
+			float y = 0.f;
+			float min_dist = 10.f;
+			for (int j = 0; j < (int) points.size(); j++) {
+				float dist = std::abs(x - points[j].x);
+				if (dist < min_dist) {
+					min_dist = dist;
+					y = points[j].y;
+				}
+			}
+			table.push_back(y);
+		}
+		rescale();
+	}
+
+	// inject a new sequence
+	void inject(int mode, int tableSize) {
+		this->tableSize = tableSize;
+		switch (mode) {
+			case 0:
+				rand_regen();
+				break;
+			case 1:
+				simplex_regen();
+				break;
+			case 2:
+				worley_regen();
+				break;
+		}
+	}
+
 	// set the frequency
 	void setFreq(float freq) {
 		this->freq = freq;
@@ -135,10 +183,18 @@ struct Nos : Module {
 		LIGHTS_LEN
 	};
 
+	enum Mode {
+		RAND,
+		SIMPLEX,
+		WORLEY,
+		MODES_LEN
+	};
+	std::vector<std::string> modeNames = {"rand", "simplex", "worley"};
+
+	Mode mode = RAND;
 	NoiseOSC osc;
 	dsp::SchmittTrigger injectTrigger;
 	dsp::BooleanTrigger injectButton;
-	bool simplex = false;
 	int tableSize = DEFAULT_TABLE_SIZE;
 
 	Nos() {
@@ -160,17 +216,12 @@ struct Nos : Module {
 	}
 
 	void onReset() override {
-		simplex = false;
-		osc.rand_regen();
+		mode = RAND;
+		osc.inject((int)mode, tableSize);
 	}
 
 	void onRandomize() override {
-		if (simplex) {
-			osc.simplex_regen();
-		}
-		else {
-			osc.rand_regen();
-		}
+		osc.inject((int)mode, tableSize);
 	}
 
 	json_t* dataToJson() override {
@@ -181,7 +232,7 @@ struct Nos : Module {
 			json_array_append_new(tableJ, json_real(osc.table[i]));
 		}
 		json_object_set_new(rootJ, "table", tableJ);
-		json_object_set_new(rootJ, "simplexMode", json_boolean(simplex));
+		json_object_set_new(rootJ, "mode", json_integer(mode));
 		json_object_set_new(rootJ, "simplexSpeed", json_real(osc.xInc));
 		return rootJ;
 	}
@@ -202,9 +253,9 @@ struct Nos : Module {
 				}
 			}
 		}
-		json_t* simplexJ = json_object_get(rootJ, "simplexMode");
-		if (simplexJ) {
-			simplex = json_boolean_value(simplexJ);
+		json_t* modeJ = json_object_get(rootJ, "mode");
+		if (modeJ) {
+			mode = (Mode) json_integer_value(modeJ);
 		}
 		json_t* simplexSpeedJ = json_object_get(rootJ, "simplexSpeed");
 		if (simplexSpeedJ) {
@@ -217,20 +268,10 @@ struct Nos : Module {
 		float voct = inputs[PITCH_INPUT].getVoltage();
 		osc.setFreq(freq * std::pow(2.f, voct));
 		if (injectTrigger.process(inputs[INJECT_INPUT].getVoltage())) {
-			if (simplex) {
-				osc.simplex_regen();
-			}
-			else {
-				osc.rand_regen();
-			}
+			osc.inject((int)mode, tableSize);
 		}
 		if (injectButton.process(params[INJECT_PARAM].getValue())) {
-			if (simplex) {
-				osc.simplex_regen();
-			}
-			else {
-				osc.rand_regen();
-			}
+			osc.inject((int)mode, tableSize);
 		}
 		lights[INJECT_LIGHT].setBrightness((injectTrigger.isHigh() || injectButton.state) ? 1.f : 0.f);
 		outputs[SIGNAL_OUTPUT].setVoltage(clamp(osc.next() * 5, -5.f, 5.f));
@@ -398,27 +439,36 @@ struct NosWidget : ModuleWidget {
 		};
 
 		struct SizeSlider : ui::Slider {
-			SizeSlider(int* size) {
+			Nos* module;
+			SizeSlider(Nos* module, int* size) {
+				this->module = dynamic_cast<Nos*>(module);
+				assert(this->module);
 				quantity = new SizeQuantity(size);
 			}
 			~SizeSlider() {
 				delete quantity;
 			}
+			void onDragStart(const event::DragStart& e) override {
+				Slider::onDragStart(e);
+				module->tableSize = (int)quantity->getValue();
+			}
 		};
 
-		struct SimplexOption : ui::MenuItem {
-			bool* simplex;
-			SimplexOption(bool* simplex) {
-				this->simplex = simplex;
-				this->text = "simplex mode";
-				this->rightText = CHECKMARK(*simplex);
+		struct ModeMenuItem : ui::MenuItem {
+			Nos* module;
+			int mode;
+			ModeMenuItem(Nos* module, int mode) {
+				this->module = module;
+				this->mode = mode;
+				this->text = this->module->modeNames[mode];
+				this->rightText = CHECKMARK(module->mode == mode);
 			}
 			void onAction(const ActionEvent& e) override {
-				*simplex = !(*simplex);
+				module->mode = (Nos::Mode) mode;
 				e.unconsume();
 			}
 			void step() override {
-				rightText = CHECKMARK(*simplex);
+				rightText = CHECKMARK(module->mode == mode);
 				MenuItem::step();
 			}
 		};
@@ -442,28 +492,20 @@ struct NosWidget : ModuleWidget {
 
 		menu->addChild(new MenuSeparator());
 
-		SimplexOption* simplexOption = new SimplexOption(&(module->simplex));
-		menu->addChild(simplexOption);
+		SizeSlider* sizeSlider = new SizeSlider(module, &(module->tableSize));
+		sizeSlider->box.size.x = 200.f;
+		menu->addChild(sizeSlider);
+
+		MenuLabel* modeLabel = new MenuLabel();
+		modeLabel->text = "mode";
+		menu->addChild(modeLabel);
+		for (int i = 0; i < Nos::MODES_LEN; i++) {
+			menu->addChild(new ModeMenuItem(module, i));
+		}
+		
 		SpeedSlider* speedSlider = new SpeedSlider(&(module->osc.xInc));
 		speedSlider->box.size.x = 200.f;
 		menu->addChild(speedSlider);
-
-		menu->addChild(new MenuSeparator());
-
-		menu->addChild(createMenuItem("inject", "",
-			[module]() {
-				module->osc.tableSize = module->tableSize;
-				if (module->simplex) {
-					module->osc.simplex_regen();
-				}
-				else {
-					module->osc.rand_regen();
-				}
-			}));
-
-		SizeSlider* sizeSlider = new SizeSlider(&(module->tableSize));
-		sizeSlider->box.size.x = 200.f;
-		menu->addChild(sizeSlider);
 	}
 };
 
