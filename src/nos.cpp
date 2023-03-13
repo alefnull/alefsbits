@@ -127,7 +127,7 @@ struct NoiseOSC {
 	void worley_regen() {
 		table.clear();
 		std::vector<WPoint> points;
-		for (int i = 0; i < (int) (tableSize * 0.1f); i++) {
+		for (int i = 0; i < (int) (tableSize * (xInc * 10.f)); i++) {
 			WPoint p;
 			p.x = random::uniform();
 			p.y = random::uniform();
@@ -386,7 +386,7 @@ struct NosWidget : ModuleWidget {
 			}
 
 			std::string getLabel() override {
-				return "noise speed";
+				return "noise increment";
 			}
 
 			int getDisplayPrecision() override {
