@@ -106,7 +106,7 @@ struct Slips : Module, Quantizer {
 	// the number of steps gone through in this cycle
 	int steps_gone_through = 0;
 	// the current step
-	int current_step = -1;
+	int current_step = 0;
 	// the last value
 	float last_value = 0.0f;
 	// schmitt trigger for clock input
