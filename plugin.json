@@ -168,7 +168,7 @@
       "tags": [
         "Oscillator"
       ],
-      "hidden": true
+      "hidden": false
     },
     {
       "slug": "lucc",
