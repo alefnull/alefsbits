@@ -272,6 +272,8 @@ void Slips::process(const ProcessArgs& args) {
 			current_step = starting_step;
 			// reset the steps gone through counter
 			steps_gone_through = 0;
+			// generate an eoc pulse
+			eoc_pulse.trigger(0.05);
 		}
 
 		// check if the current step is higher than the number of steps
@@ -397,6 +399,11 @@ void Slips::process(const ProcessArgs& args) {
 		// set the slip gate light
 		lights[SLIP_GATE_LIGHT].setBrightness(is_slip ? inputs[CLOCK_INPUT].getVoltage() / 10 : 0);
 	}
+
+	// set the eoc output
+	outputs[EOC_OUTPUT].setVoltage(eoc_pulse.process(args.sampleTime) ? 10.f : 0.f);
+	// set the eoc light
+	lights[EOC_LIGHT].setBrightness(eoc_pulse.process(args.sampleTime) ? 1.f : 0.f);
 
 	// get the input voltage to be quantized
 	if (inputs[QUANTIZE_INPUT].isConnected() && outputs[QUANTIZE_OUTPUT].isConnected()) {

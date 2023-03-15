@@ -7,7 +7,7 @@
    viewBox="0 0 60.96 128.5"
    version="1.1"
    id="svg5"
-   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
    sodipodi:docname="slips.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -24,9 +24,9 @@
      inkscape:deskcolor="#505050"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="1.2550228"
-     inkscape:cx="-70.915045"
-     inkscape:cy="239.03948"
+     inkscape:zoom="1.7748703"
+     inkscape:cx="150.71524"
+     inkscape:cy="257.48361"
      inkscape:current-layer="layer1" />
   <defs
      id="defs2" />
@@ -439,6 +439,29 @@
          id="path802"
          style="fill:#1a1a1a;fill-opacity:1" />
     </g>
+    <g
+       aria-label="eoc"
+       id="text404"
+       style="font-size:4.93889px;line-height:1.25;font-family:'Agency FB';-inkscape-font-specification:'Agency FB';fill:#1a1a1a;stroke-width:0.264583">
+      <path
+         d="m 29.082486,52.492076 q 0,0.272508 -0.270096,0.272508 h -0.771701 q -0.270096,0 -0.270096,-0.272508 v -1.80144 q 0,-0.272507 0.270096,-0.272507 h 0.771701 q 0.270096,0 0.270096,0.272507 v 0.844048 l -0.108521,0.113344 h -0.89228 V 52.4969 h 0.689709 v -0.429259 h 0.311092 z m -0.311092,-1.099674 v -0.706589 h -0.689709 v 0.706589 z"
+         id="path1016" />
+      <path
+         d="m 30.961097,52.492076 q 0,0.272508 -0.272507,0.272508 h -0.805464 q -0.270095,0 -0.270095,-0.272508 v -1.80144 q 0,-0.272507 0.270095,-0.272507 h 0.805464 q 0.272507,0 0.272507,0.272507 z m -0.320739,-0.0096 v -1.782148 h -0.706589 v 1.782148 z"
+         id="path1018" />
+      <path
+         d="m 32.786653,52.492076 q 0,0.272508 -0.270095,0.272508 h -0.762055 q -0.270096,0 -0.270096,-0.272508 v -1.80144 q 0,-0.272507 0.270096,-0.272507 h 0.762055 q 0.270095,0 0.270095,0.272507 v 0.467844 h -0.315915 v -0.458198 h -0.665593 v 1.782148 h 0.665593 v -0.52331 h 0.315915 z"
+         id="path1020" />
+    </g>
+    <rect
+       style="fill:#1a1a1a;fill-opacity:1;stroke-width:1.04542"
+       id="rect1014"
+       width="10.962616"
+       height="10.962616"
+       x="24.847494"
+       y="54.243999"
+       rx="3"
+       ry="3" />
   </g>
   <g
      inkscape:groupmode="layer"

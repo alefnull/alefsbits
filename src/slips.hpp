@@ -42,12 +42,14 @@ struct Slips : Module, Quantizer {
 		SEQUENCE_OUTPUT,
 		GATE_OUTPUT,
 		SLIP_GATE_OUTPUT,
+		EOC_OUTPUT,
 		OUTPUTS_LEN
 	};
 	enum LightId {
 		GATE_LIGHT,
 		SLIP_GATE_LIGHT,
 		ENUMS(SEGMENT_LIGHTS, 64),
+		EOC_LIGHT,
 		LIGHTS_LEN
 	};
 
@@ -92,6 +94,7 @@ struct Slips : Module, Quantizer {
 		getInputInfo(START_CV_INPUT)->description = "0V to 10V";
 		configInput(PROB_CV_INPUT, "step probability cv");
 		getInputInfo(PROB_CV_INPUT)->description = "0V to 10V";
+		configOutput(EOC_OUTPUT, "end of cycle");
 		if (use_global_contrast[SLIPS]) {
 			module_contrast[SLIPS] = global_contrast;
 		}
@@ -117,6 +120,8 @@ struct Slips : Module, Quantizer {
 	dsp::SchmittTrigger generate_trigger;
 	// schmitt trigger for generatee manual button
 	dsp::SchmittTrigger generate_button_trigger;
+	// pulse generator for end of cycle output
+	dsp::PulseGenerator eoc_pulse;
 	// a bool to check if slips have already been generated for this cycle
 	bool slips_generated = false;
 	// a bool to check if root note input expects 0-10V or a v/oct value
@@ -167,6 +172,9 @@ struct SlipsWidget : ModuleWidget {
 		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(51.782, 59.869)), module, Slips::PROB_PARAM));
 		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(51.782, 77.763)), module, Slips::SLIPS_PARAM));
 		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(51.782, 95.657)), module, Slips::SLIP_RANGE_PARAM));
+
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(30.279, 59.869)), module, Slips::EOC_OUTPUT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(34.279, 56.869)), module, Slips::EOC_LIGHT));
 
 		addInput(createInputCentered<BitPort>(mm2px(Vec(8.854, 24.08)), module, Slips::CLOCK_INPUT));
 		addInput(createInputCentered<BitPort>(mm2px(Vec(21.082, 24.08)), module, Slips::ROOT_CV_INPUT));
