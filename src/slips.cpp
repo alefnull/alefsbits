@@ -428,6 +428,9 @@ void Slips::process(const ProcessArgs& args) {
 		lights[SEGMENT_LIGHTS + i].setBrightness(i == current_step ? 1.f : 0.f);
 	}
 
+	// set the expanded light
+	lights[EXPANDED_LIGHT].setBrightness(expanded ? 1.f : 0.f);
+
 	// set the was_expanded flag
 	was_expanded = expanded;
 }

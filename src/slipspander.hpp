@@ -40,9 +40,11 @@ struct Slipspander : Module {
 		A_LIGHT,
 		A_SHARP_LIGHT,
 		B_LIGHT,
+		EXPANDING_LIGHT,
 		LIGHTS_LEN
 	};
 
+	bool expanding = false;
 	bool notes_on[12] = {false};
 	std::vector<int> selected_notes;
 	std::vector<int> selected_notes_prev;
@@ -97,6 +99,9 @@ struct SlipspanderWidget : ModuleWidget {
 		addParam(createLightParamCentered<VCVLightLatch<LargeSimpleLight<RedLight>>>(mm2px(Vec(20.827, 89.408)), module, Slipspander::D_PARAM, Slipspander::D_LIGHT));
 		addParam(createLightParamCentered<VCVLightLatch<LargeSimpleLight<RedLight>>>(mm2px(Vec(9.653, 94.608)), module, Slipspander::C_SHARP_PARAM, Slipspander::C_SHARP_LIGHT));
 		addParam(createLightParamCentered<VCVLightLatch<LargeSimpleLight<RedLight>>>(mm2px(Vec(20.827, 101.987)), module, Slipspander::C_PARAM, Slipspander::C_LIGHT));
+
+		// place the 'expanding' light at the bottom left corner of the module
+		addChild(createLightCentered<SmallLight<RedLight>>(Vec(RACK_GRID_WIDTH / 2, RACK_GRID_HEIGHT - RACK_GRID_WIDTH / 2), module, Slipspander::EXPANDING_LIGHT));
 	}
     void step() override;
     void appendContextMenu(Menu *menu) override;

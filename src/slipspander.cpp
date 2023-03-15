@@ -17,6 +17,7 @@ void Slipspander::process(const ProcessArgs& args) {
 	}
 
 	if (leftExpander.module && leftExpander.module->model == modelSlips) {
+		expanding = true;
 		if (selected_notes != selected_notes_prev) {
 			Slips* slipsModule = dynamic_cast<Slips*>(leftExpander.module);
 			if (slipsModule) {
@@ -24,11 +25,15 @@ void Slipspander::process(const ProcessArgs& args) {
 			}
 		}
 	}
+	else {
+		expanding = false;
+	}
 
 	// set the lights
 	for (int i = 0; i < 12; i++) {
 		lights[C_LIGHT + i].setBrightness(notes_on[i] ? 1.f : 0.f);
 	}
+	lights[EXPANDING_LIGHT].setBrightness(expanding ? 1.f : 0.f);
 
 	// set the previous notes
 	selected_notes_prev = selected_notes;

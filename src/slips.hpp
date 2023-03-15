@@ -50,6 +50,7 @@ struct Slips : Module, Quantizer {
 		SLIP_GATE_LIGHT,
 		ENUMS(SEGMENT_LIGHTS, 64),
 		EOC_LIGHT,
+		EXPANDED_LIGHT,
 		LIGHTS_LEN
 	};
 
@@ -220,6 +221,9 @@ struct SlipsWidget : ModuleWidget {
 		fourth_segment_display->box.size = Vec(RACK_GRID_WIDTH * 9, RACK_GRID_WIDTH / 2);
 		fourth_segment_display->setLights<RedLight>(module, Slips::SEGMENT_LIGHTS + 48, 16);
 		addChild(fourth_segment_display);
+
+		// place the 'expanded' light at the bottom right corner of the module
+		addChild(createLightCentered<SmallLight<RedLight>>(Vec(box.size.x - RACK_GRID_WIDTH / 2, box.size.y - RACK_GRID_WIDTH / 2), module, Slips::EXPANDED_LIGHT));
 	}
     void step() override;
     void appendContextMenu(Menu* menu) override;
