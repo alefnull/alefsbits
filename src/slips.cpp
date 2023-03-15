@@ -454,6 +454,19 @@ void SlipsWidget::step() {
 	ModuleWidget::step();
 }
 
+void SlipsWidget::addExpander() {
+	Model* model = pluginInstance->getModel("slipspander");
+	Module* module = model->createModule();
+	APP->engine->addModule(module);
+	ModuleWidget* modWidget = modelSlipspander->createModuleWidget(module);
+	APP->scene->rack->setModulePosForce(modWidget, Vec(box.pos.x + box.size.x, box.pos.y));
+	APP->scene->rack->addModule(modWidget);
+	history::ModuleAdd* h = new history::ModuleAdd;
+	h->name = "create slipspander";
+	h->setModule(modWidget);
+	APP->history->push(h);
+}
+
 void SlipsWidget::appendContextMenu(Menu* menu) {
 	Slips* module = dynamic_cast<Slips*>(this->module);
 	assert(module);
@@ -477,6 +490,16 @@ void SlipsWidget::appendContextMenu(Menu* menu) {
 	menu->addChild(new MenuSeparator());
 	menu->addChild(createMenuItem("root input v/oct", CHECKMARK(module->root_input_voct), [module]() { module->root_input_voct = !module->root_input_voct; }));
 	module->cv_range.addMenu(module, menu);
+	menu->addChild(new MenuSeparator());
+	if (module->rightExpander.module && module->rightExpander.module->model == modelSlipspander) {
+		menu->addChild(createMenuLabel("slipspander connected"));
+	}
+	else {
+		menu->addChild(createMenuItem("add slipspander", "",
+			[module, this]() {
+				addExpander();
+			}));
+	}
 }
 
 Model* modelSlips = createModel<Slips, SlipsWidget>("slips");

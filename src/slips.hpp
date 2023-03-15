@@ -223,4 +223,5 @@ struct SlipsWidget : ModuleWidget {
 	}
     void step() override;
     void appendContextMenu(Menu* menu) override;
+	void addExpander();
 };
