@@ -273,7 +273,7 @@ void Slips::process(const ProcessArgs& args) {
 			// reset the steps gone through counter
 			steps_gone_through = 0;
 			// generate an eoc pulse
-			eoc_pulse.trigger(0.05);
+			eoc_pulse.trigger(0.1);
 		}
 
 		// check if the current step is higher than the number of steps
