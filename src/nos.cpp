@@ -4,9 +4,12 @@
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
 
+#define MAX_POLY 16
 #define MIN_TABLE_SIZE 64
 #define MAX_TABLE_SIZE 1024
 #define DEFAULT_TABLE_SIZE 64
+
+using simd::float_4;
 
 
 struct NoiseOSC {
@@ -20,9 +23,10 @@ struct NoiseOSC {
 	std::vector<std::string> modeNames = {"rand", "perlin", "simplex", "worley"};
 	siv::PerlinNoise perlinNoise;
 	SimplexNoise simplexNoise;
-	float xInc = 0.01;
-	float phase = 0.f;
-	float freq = dsp::FREQ_C4 * 0.5f;
+	float xInc = 0.01f;
+	float_4 phase = float_4(0.f);
+	float_4 freq = float_4(dsp::FREQ_C4 * 0.5f);
+
 	float sampleRate = 44100.f;
 	int tableSize = DEFAULT_TABLE_SIZE;
 	std::vector<float> table;
@@ -174,18 +178,29 @@ struct NoiseOSC {
 		this->freq = freq;
 	}
 
+	// set the frequency simd
+	void setFreqSimd(float_4 freq) {
+		this->freq = freq;
+	}
+
 	// set the sample rate
 	void setSampleRate(float sampleRate) {
 		this->sampleRate = sampleRate;
 	}
 
-	// get the next sample
-	float next() {
+	// get the next sample simd
+	float_4 next() {
 		phase += freq / sampleRate;
-		if (phase >= 1.f) {
-			phase -= 1.f;
+		for (int i = 0; i < 4; i++) {
+			if (phase[i] >= 1.f) {
+				phase[i] -= 1.f;
+			}
 		}
-		return table[(int) (phase * tableSize)];
+		float_4 out;
+		for (int i = 0; i < 4; i++) {
+			out[i] = table[(int) (phase[i] * tableSize)];
+		}
+		return out;
 	}
 };
 
@@ -283,9 +298,9 @@ struct Nos : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
+		int channels = inputs[PITCH_INPUT].getChannels();
+		outputs[SIGNAL_OUTPUT].setChannels(channels);
 		float freq = params[FREQ_PARAM].getValue();
-		float voct = inputs[PITCH_INPUT].getVoltage();
-		osc.setFreq(freq * std::pow(2.f, voct));
 		if (injectTrigger.process(inputs[INJECT_INPUT].getVoltage())) {
 			osc.inject((int)mode, tableSize);
 		}
@@ -293,7 +308,14 @@ struct Nos : Module {
 			osc.inject((int)mode, tableSize);
 		}
 		lights[INJECT_LIGHT].setBrightness((injectTrigger.isHigh() || injectButton.state) ? 1.f : 0.f);
-		outputs[SIGNAL_OUTPUT].setVoltage(clamp(osc.next() * 5, -5.f, 5.f));
+		for (int c = 0; c < channels; c += 4) {
+			float_4 pows;
+			for (int i = 0; i < 4; i++) {
+				pows[i] = std::pow(2.f, inputs[PITCH_INPUT].getVoltage(c + i));
+			}
+			osc.setFreqSimd(freq * pows);
+			outputs[SIGNAL_OUTPUT].setVoltageSimd<float_4>(clamp(osc.next() * 5, -5.f, 5.f), c);
+		}
 	}
 };
 
