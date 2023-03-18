@@ -1,10 +1,19 @@
 # alef's bits
 
-![plugin screenshot](/screenshot.png "plugin screenshot (light)")
+![light screenshot](/bits-light.png "plugin screenshot (light)")
+![dark screenshot](/bits-dark.png "plugin screenshot (dark)")
 
 a small collection of my VCV Rack modules in a single plugin. [click here](https://github.com/alefnull/alefsbits/releases) for the latest pre-release build.
 
 - **NEW** - added a 'contrast' slider to all modules' menus, to adjust the 'contrast' of the module. once the contrast goes above or below 0.5, the module's foreground will invert to remain legible. set the 'global contrast' from any module, and every module with 'use global contrast' enabled will use that value.
+
+## lucc
+
+a simple clock divider based on the Lucas sequence of numbers.
+
+## nos
+
+a noise-based experimental "oscillator" that generates waveforms from different random noise sources (random, perlin, simplex, and worley).
 
 ## turnt
 
