@@ -25,7 +25,7 @@ struct NoiseOSC {
 	SimplexNoise simplexNoise;
 	float xInc = 0.01f;
 	float_4 phase = float_4(0.f);
-	float_4 freq = float_4(dsp::FREQ_C4 * 0.5f);
+	float_4 freq = float_4(dsp::FREQ_C4);
 
 	float sampleRate = 44100.f;
 	int tableSize = DEFAULT_TABLE_SIZE;
@@ -173,11 +173,6 @@ struct NoiseOSC {
 		}
 	}
 
-	// set the frequency
-	void setFreq(float freq) {
-		this->freq = freq;
-	}
-
 	// set the frequency simd
 	void setFreqSimd(float_4 freq) {
 		this->freq = freq;
@@ -189,7 +184,7 @@ struct NoiseOSC {
 	}
 
 	// get the next sample simd
-	float_4 next() {
+	float_4 next4() {
 		phase += freq / sampleRate;
 		for (int i = 0; i < 4; i++) {
 			if (phase[i] >= 1.f) {
@@ -299,8 +294,19 @@ struct Nos : Module {
 
 	void process(const ProcessArgs& args) override {
 		int channels = inputs[PITCH_INPUT].getChannels();
+		if (channels == 0) channels = 1;
+		if (channels > MAX_POLY) channels = MAX_POLY;
 		outputs[SIGNAL_OUTPUT].setChannels(channels);
+		
 		float freq = params[FREQ_PARAM].getValue();
+		
+		for (int c = 0; c < channels; c += 4) {
+			float_4 pitch = inputs[PITCH_INPUT].getVoltageSimd<float_4>(c);
+			osc.setFreqSimd(freq * simd::pow(2.f, pitch));
+			float_4 out = osc.next4() * 5.f;
+			outputs[SIGNAL_OUTPUT].setVoltageSimd(clamp(out, -5.f, 5.f), c);
+		}
+
 		if (injectTrigger.process(inputs[INJECT_INPUT].getVoltage())) {
 			osc.inject((int)mode, tableSize);
 		}
@@ -308,14 +314,6 @@ struct Nos : Module {
 			osc.inject((int)mode, tableSize);
 		}
 		lights[INJECT_LIGHT].setBrightness((injectTrigger.isHigh() || injectButton.state) ? 1.f : 0.f);
-		for (int c = 0; c < channels; c += 4) {
-			float_4 pows;
-			for (int i = 0; i < 4; i++) {
-				pows[i] = std::pow(2.f, inputs[PITCH_INPUT].getVoltage(c + i));
-			}
-			osc.setFreqSimd(freq * pows);
-			outputs[SIGNAL_OUTPUT].setVoltageSimd<float_4>(clamp(osc.next() * 5, -5.f, 5.f), c);
-		}
 	}
 };
 
