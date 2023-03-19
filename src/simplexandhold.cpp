@@ -26,8 +26,8 @@ struct Simplexandhold : Module {
 
 	SimplexNoise noise;
 	dsp::SchmittTrigger trigger[MAX_POLY];
-	bool unipolar = false;
 	float last_sample[MAX_POLY] = {0.0};
+	double startx[MAX_POLY] = {0.0};
 	double x[MAX_POLY] = {0.0};
 	CVRange cv_range;
 
@@ -38,6 +38,9 @@ struct Simplexandhold : Module {
 		getInputInfo(SPEED_INPUT)->description = "expects 0-10V cv signal";
 		configInput(TRIGGER_INPUT, "trigger");
 		configOutput(SAMPLE_OUTPUT, "sample");
+		for (int i = 0; i < MAX_POLY; i++) {
+			startx[i] = random::uniform() * 1000.0;
+		}
 		noise.init();
 		if (use_global_contrast[SIMPLEXANDHOLD]) {
 			module_contrast[SIMPLEXANDHOLD] = global_contrast;
@@ -53,7 +56,7 @@ struct Simplexandhold : Module {
 		}
 		for (int c = 0; c < chans; c++) {
 			if (trigger[c].process(inputs[TRIGGER_INPUT].getVoltage(c))) {
-				last_sample[c] = ((noise.noise(x[c], 0.0) + 1.0) / 2.0);
+				last_sample[c] = ((noise.noise(startx[c] + x[c], 0.0) + 1.0) / 2.0);
 				last_sample[c] = cv_range.map(last_sample[c]);
 			}
 			x[c] += speed * args.sampleTime;
@@ -63,15 +66,11 @@ struct Simplexandhold : Module {
 
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
-		json_object_set_new(rootJ, "unipolar", json_boolean(unipolar));
 		json_object_set_new(rootJ, "cv_range", cv_range.dataToJson());
 		return rootJ;
 	}
 
 	void dataFromJson(json_t* rootJ) override {
-		json_t* unipolarJ = json_object_get(rootJ, "unipolar");
-		if (unipolarJ)
-			unipolar = json_boolean_value(unipolarJ);
 		json_t* cv_rangeJ = json_object_get(rootJ, "cv_range");
 		if (cv_rangeJ)
 			cv_range.dataFromJson(cv_rangeJ);
