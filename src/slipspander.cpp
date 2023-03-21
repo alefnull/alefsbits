@@ -99,7 +99,7 @@ void SlipspanderWidget::appendContextMenu(Menu* menu) {
 		contrastMenu->addChild(new MenuSeparator());
 		contrastMenu->addChild(contrastSlider);
 		contrastMenu->addChild(createMenuItem("set global contrast", "",
-			[module]() {
+			[]() {
 				global_contrast = module_contrast[SLIPS];
 				use_global_contrast[SLIPS] = true;
 			}));

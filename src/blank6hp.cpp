@@ -142,7 +142,7 @@ struct Blank6hpWidget : ModuleWidget {
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
-                [module]() {
+                []() {
                     global_contrast = module_contrast[BLANK6HP];
 					use_global_contrast[BLANK6HP] = true;
                 }));

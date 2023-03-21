@@ -195,7 +195,7 @@ struct StepsWidget : ModuleWidget {
             contrastMenu->addChild(new MenuSeparator());
             contrastMenu->addChild(contrastSlider);
             contrastMenu->addChild(createMenuItem("set global contrast", "",
-                [steps_module]() {
+                []() {
 					global_contrast = module_contrast[STEPS];
 					use_global_contrast[STEPS] = true;
                 }));
