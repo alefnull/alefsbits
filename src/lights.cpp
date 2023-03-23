@@ -41,7 +41,7 @@ struct Lights : Module {
 		}
 		else {
 			for (int i = 0; i < 8; i++) {
-				lights[GATE_LIGHT + i].setBrightness(inputs[GATE_INPUT + i].getVoltage() > 5.0f ? 1.0f : 0.0f);
+				lights[GATE_LIGHT + i].setBrightness(inputs[GATE_INPUT + i].getVoltage() / 10.f);
 			}
 		}
 	}
