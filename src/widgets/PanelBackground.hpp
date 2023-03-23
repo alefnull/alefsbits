@@ -12,7 +12,7 @@ struct PanelBackground : TransparentWidget {
     float contrast = CONTRAST_MAX;
     bool inverted = false;
     NVGcolor color = nvgRGB(0xff * contrast, 0xff * contrast, 0xff * contrast);
-    
+
     PanelBackground() {
         if (this->parent) {
             this->box.size.x = this->parent->box.size.x - 2;
@@ -21,9 +21,8 @@ struct PanelBackground : TransparentWidget {
             this->box.pos.y = 1;
         }
     }
-    
+
     void invert(bool invert);
-    void setColor(NVGcolor color);
     void drawPanel(const DrawArgs &args);
     void draw(const DrawArgs &args) override;
 };

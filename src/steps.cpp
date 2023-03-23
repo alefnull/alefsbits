@@ -14,9 +14,9 @@ void Steps::process(const ProcessArgs& args) {
 		} else {
 			step = 0;
 			advance_lights(1);
-		}	
+		}
 	}
-	
+
 	if (clock_trigger.process(inputs[CLOCK_INPUT].getVoltage())) {
 		if (reset_queued) {
 			step = 0;
@@ -158,7 +158,7 @@ struct StepsWidget : ModuleWidget {
 		addOutput(createOutputCentered<BitPort>(mm2px(Vec(8.336, 89.08)), module, Steps::EOC_OUTPUT));
 		addOutput(createOutputCentered<BitPort>(mm2px(Vec(8.336, 102.875)), module, Steps::CV_OUTPUT));
 	}
-	
+
 	void step() override {
 		Steps* stepsModule = dynamic_cast<Steps*>(this->module);
 		if (!stepsModule) return;

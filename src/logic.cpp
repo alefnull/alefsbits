@@ -94,7 +94,7 @@ struct LogicWidget : ModuleWidget {
 		setModule(module);
 		svgPanel = createPanel(asset::plugin(pluginInstance, "res/logic.svg"));
 		setPanel(svgPanel);
-		
+
         panelBackground->box.size = svgPanel->box.size;
         svgPanel->fb->addChildBottom(panelBackground);
         inverter->box.pos = Vec(0.f, 0.f);

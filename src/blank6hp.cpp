@@ -96,7 +96,7 @@ struct Blank6hpWidget : ModuleWidget {
         svgLogoWidget->setSvg(svgLogo);
         svgLogoWidget->box.pos = Vec(box.size.x / 2.f - svgLogoWidget->box.size.x / 2.f,
                                     box.size.y / 2.f - svgLogoWidget->box.size.y / 2.f);
-		
+
         panelBackground->box.size = svgPanel->box.size;
         svgPanel->fb->addChildBottom(panelBackground);
         inverter->box.pos = Vec(0.f, 0.f);
@@ -105,7 +105,7 @@ struct Blank6hpWidget : ModuleWidget {
         addChild(svgLogoWidget);
 		addChild(createInputCentered<EmptyPort>(Vec(box.size.x / 2.f, box.size.y - 25.f), module, Blank6hp::HIDDEN_INPUT));
 	}
-	
+
 	void step() override {
 		Blank6hp* blankModule = dynamic_cast<Blank6hp*>(this->module);
 		if (!blankModule) return;

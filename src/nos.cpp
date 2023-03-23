@@ -297,9 +297,9 @@ struct Nos : Module {
 		if (channels == 0) channels = 1;
 		if (channels > MAX_POLY) channels = MAX_POLY;
 		outputs[SIGNAL_OUTPUT].setChannels(channels);
-		
+
 		float freq = params[FREQ_PARAM].getValue();
-		
+
 		for (int c = 0; c < channels; c += 4) {
 			float_4 pitch = inputs[PITCH_INPUT].getVoltageSimd<float_4>(c);
 			osc.setFreqSimd(freq * simd::pow(2.f, pitch));
@@ -541,7 +541,7 @@ struct NosWidget : ModuleWidget {
 		for (int i = 0; i < NoiseOSC::MODES_LEN; i++) {
 			menu->addChild(new ModeMenuItem(module, i));
 		}
-		
+
 		SpeedSlider* speedSlider = new SpeedSlider(&(module->osc.xInc));
 		speedSlider->box.size.x = 200.f;
 		menu->addChild(speedSlider);

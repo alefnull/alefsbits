@@ -121,7 +121,7 @@ struct Turnt : Module {
                                 : false;
                         break;
                     case 1:  // through zero
-                        trig = 
+                        trig =
                             ((v1 > zero && v2 <= zero) || (v1 < zero && v2 >= zero))
                                 ? (r < prob)
                                 : false;
@@ -197,7 +197,7 @@ struct Turnt : Module {
 
     json_t* dataToJson() override {
         json_t* rootJ = json_object();
-        json_object_set_new(rootJ, "trigger mode", 
+        json_object_set_new(rootJ, "trigger mode",
                             json_integer(trigger_mode));
         json_object_set_new(rootJ, "freeze on disconnect",
                             json_boolean(freeze_when_idle));
@@ -375,7 +375,7 @@ struct TurntWidget : ModuleWidget {
         }));
 
         menu->addChild(createMenuItem("freeze when idle",
-            CHECKMARK(module->freeze_when_idle), 
+            CHECKMARK(module->freeze_when_idle),
             [module]() { module->freeze_when_idle = !module->freeze_when_idle; }));
 
         menu->addChild(createSubmenuItem("trigger mode", "", [=](Menu* menu) {

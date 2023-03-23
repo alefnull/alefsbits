@@ -142,7 +142,7 @@ struct ProbablynotWidget : ModuleWidget {
 		float getValue() override {
 			return *fade_duration;
 		}
-		
+
 		float getMinValue() override {return 0.005f;}
 		float getMaxValue() override {return 10.f;}
 		float getDefaultValue() override {return 0.005f;}

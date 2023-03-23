@@ -103,7 +103,7 @@ struct MltWidget : ModuleWidget {
 		addOutput(createOutputCentered<BitPort>(mm2px(Vec(5.08, 102.363)), module, Mlt::B4_OUTPUT));
 		addOutput(createOutputCentered<BitPort>(mm2px(Vec(5.08, 110.682)), module, Mlt::B5_OUTPUT));
 	}
-	
+
 	void step() override {
 		Mlt* mltModule = dynamic_cast<Mlt*>(this->module);
 		if (!mltModule) return;

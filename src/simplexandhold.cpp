@@ -99,7 +99,7 @@ struct SimplexandholdWidget : ModuleWidget {
 
 		addOutput(createOutputCentered<BitPort>(mm2px(Vec(10.16, 100.446)), module, Simplexandhold::SAMPLE_OUTPUT));
 	}
-	
+
 	void step() override {
 		Simplexandhold* simplexModule = dynamic_cast<Simplexandhold*>(this->module);
 		if (!simplexModule) return;

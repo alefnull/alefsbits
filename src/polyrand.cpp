@@ -42,8 +42,8 @@ struct Polyrand : Module {
 		}
 		outputs[RANDOM_OUTPUT].setChannels(trig_channels);
 
-		if (inputs[TRIGGER_INPUT].isConnected() && 
-				inputs[POLY_INPUT].isConnected() && 
+		if (inputs[TRIGGER_INPUT].isConnected() &&
+				inputs[POLY_INPUT].isConnected() &&
 				outputs[RANDOM_OUTPUT].isConnected()) {
 
 			int poly_channels = inputs[POLY_INPUT].getChannels();
