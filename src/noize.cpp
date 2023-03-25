@@ -19,6 +19,10 @@ struct Noize : Module {
 	enum LightId {
 		LIGHTS_LEN
 	};
+	enum RandomMode {
+		UNIFORM,
+		GAUSSIAN
+	};
 
 	Noize() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -30,6 +34,7 @@ struct Noize : Module {
 		}
 	}
 
+	int randomMode = UNIFORM;
 	float last_value = 0.0f;
 	float time = 0.0f;
 
@@ -40,11 +45,17 @@ struct Noize : Module {
 			duration = clamp(duration + cv, 0.0f, 0.001f);
 		}
 		if (time > duration) {
-			last_value = random::uniform() * 2.0f - 1.0f;
+			// last_value = random::uniform() * 2.0f - 1.0f;
+			if (randomMode == UNIFORM) {
+				last_value = random::uniform() * 2.0f - 1.0f;
+			}
+			else if (randomMode == GAUSSIAN) {
+				last_value = random::normal() * 0.5f;
+			}
 			time = 0;
 		}
 		time += args.sampleTime;
-		outputs[NOISE_OUTPUT].setVoltage(last_value * 5.0f);
+		outputs[NOISE_OUTPUT].setVoltage(clamp(last_value * 5.0f, -5.0f, 5.0f));
 	}
 };
 
@@ -96,6 +107,14 @@ struct NoizeWidget : ModuleWidget {
         assert(module);
 
         menu->addChild(new MenuSeparator());
+
+		menu->addChild(createMenuLabel("random mode:"));
+		menu->addChild(createMenuItem("uniform", CHECKMARK(module->randomMode == Noize::UNIFORM),
+			[=]() { module->randomMode = Noize::UNIFORM; }));
+		menu->addChild(createMenuItem("gaussian", CHECKMARK(module->randomMode == Noize::GAUSSIAN),
+			[=]() { module->randomMode = Noize::GAUSSIAN; }));
+		
+		menu->addChild(new MenuSeparator());
 
         menu->addChild(createSubmenuItem("contrast", "", [=](Menu* menu) {
             Menu* contrastMenu = new Menu();
