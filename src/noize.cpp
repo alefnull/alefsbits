@@ -35,8 +35,34 @@ struct Noize : Module {
 	}
 
 	int randomMode = UNIFORM;
+	float deviation = 0.5f;
 	float last_value = 0.0f;
 	float time = 0.0f;
+
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
+		json_object_set_new(rootJ, "randomMode", json_integer(randomMode));
+		json_object_set_new(rootJ, "deviation", json_real(deviation));
+		return rootJ;
+	}
+
+	void dataFromJson(json_t* rootJ) override {
+		json_t* randomModeJ = json_object_get(rootJ, "randomMode");
+		if (randomModeJ) {
+			randomMode = json_integer_value(randomModeJ);
+		}
+		json_t* deviationJ = json_object_get(rootJ, "deviation");
+		if (deviationJ) {
+			deviation = json_real_value(deviationJ);
+		}
+	}
+
+	void onReset() override {
+		randomMode = UNIFORM;
+		deviation = 0.5f;
+		last_value = 0.0f;
+		time = 0.0f;
+	}
 
 	void process(const ProcessArgs& args) override {
 		float duration = params[DURATION_PARAM].getValue();
@@ -45,12 +71,11 @@ struct Noize : Module {
 			duration = clamp(duration + cv, 0.0f, 0.001f);
 		}
 		if (time > duration) {
-			// last_value = random::uniform() * 2.0f - 1.0f;
-			if (randomMode == UNIFORM) {
-				last_value = random::uniform() * 2.0f - 1.0f;
+			if (randomMode == GAUSSIAN) {
+				last_value = random::normal() * deviation;
 			}
-			else if (randomMode == GAUSSIAN) {
-				last_value = random::normal() * 0.5f;
+			else {
+				last_value = random::uniform() * 2.0f - 1.0f;
 			}
 			time = 0;
 		}
@@ -105,14 +130,6 @@ struct NoizeWidget : ModuleWidget {
 	void appendContextMenu(Menu* menu) override {
         Noize* module = dynamic_cast<Noize*>(this->module);
         assert(module);
-
-        menu->addChild(new MenuSeparator());
-
-		menu->addChild(createMenuLabel("random mode:"));
-		menu->addChild(createMenuItem("uniform", CHECKMARK(module->randomMode == Noize::UNIFORM),
-			[=]() { module->randomMode = Noize::UNIFORM; }));
-		menu->addChild(createMenuItem("gaussian", CHECKMARK(module->randomMode == Noize::GAUSSIAN),
-			[=]() { module->randomMode = Noize::GAUSSIAN; }));
 		
 		menu->addChild(new MenuSeparator());
 
@@ -131,6 +148,66 @@ struct NoizeWidget : ModuleWidget {
                 }));
             menu->addChild(contrastMenu);
         }));
+
+        menu->addChild(new MenuSeparator());
+
+		menu->addChild(createMenuLabel("random mode:"));
+		menu->addChild(createMenuItem("uniform", CHECKMARK(module->randomMode == Noize::UNIFORM),
+			[=]() { module->randomMode = Noize::UNIFORM; }));
+		menu->addChild(createMenuItem("gaussian", CHECKMARK(module->randomMode == Noize::GAUSSIAN),
+			[=]() { module->randomMode = Noize::GAUSSIAN; }));
+		
+		struct DeviationQuantity : Quantity {
+			float* deviation;
+			DeviationQuantity(float* deviation) {
+				this->deviation = deviation;
+			}
+			void setValue(float value) override {
+				*deviation = clamp(value, 0.1f, 0.9f);
+			}
+			float getValue() override {
+				return *deviation;
+			}
+			float getDefaultValue() override {
+				return 0.5f;
+			}
+			float getDisplayValue() override {
+				return getValue();
+			}
+			void setDisplayValue(float displayValue) override {
+				setValue(displayValue);
+			}
+			std::string getLabel() override {
+				return "gaussian deviation";
+			}
+			std::string getUnit() override {
+				return "";
+			}
+			int getDisplayPrecision() override {
+				return 2;
+			}
+			float getMinValue() override {
+				return 0.1f;
+			}
+			float getMaxValue() override {
+				return 0.9f;
+			}
+		};
+
+		struct DeviationSlider : ui::Slider {
+			DeviationSlider(float* value) {
+				quantity = new DeviationQuantity(value);
+			}
+			~DeviationSlider() {
+				delete quantity;
+			}
+		};
+
+		menu->addChild(new MenuSeparator());
+
+		DeviationSlider *deviationSlider = new DeviationSlider(&(module->deviation));
+		deviationSlider->box.size.x = 200.f;
+		menu->addChild(deviationSlider);
 	}
 };
 
