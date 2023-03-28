@@ -12,6 +12,7 @@ LDFLAGS +=
 
 CXXFLAGS += -Isrc/utils
 CXXFLAGS += -Isrc/widgets
+CXXFLAGS := $(filter-out -std=c++11, $(CXXFLAGS))
 
 
 # Add .cpp files to the build
