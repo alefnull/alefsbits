@@ -1,5 +1,4 @@
 #include "plugin.hpp"
-#include "inc/PerlinNoise.hpp"
 #include "inc/SimplexNoise.hpp"
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
@@ -15,13 +14,11 @@ using simd::float_4;
 struct NoiseOSC {
 	enum Mode {
 		RAND,
-		PERLIN,
 		SIMPLEX,
 		WORLEY,
 		MODES_LEN
 	};
-	std::vector<std::string> modeNames = {"rand", "perlin", "simplex", "worley"};
-	siv::PerlinNoise perlinNoise;
+	std::vector<std::string> modeNames = {"rand", "simplex", "worley"};
 	SimplexNoise simplexNoise;
 	float xInc = 0.01f;
 	float_4 phase = float_4(0.f);
@@ -40,7 +37,6 @@ struct NoiseOSC {
 	NoiseOSC() {
 		rand_regen();
 		simplexNoise.init();
-		perlinNoise.reseed(random::u32());
 	}
 
 	// get min value
@@ -103,18 +99,6 @@ struct NoiseOSC {
 	}
 
 	// regenerate the lookup table
-	// using perlin noise
-	void perlin_regen() {
-		table.clear();
-		float x = random::u32() % 10000;
-		for (int i = 0; i < tableSize; i++) {
-			x += xInc;
-			table.push_back(perlinNoise.noise1D(x));
-		}
-		rescale();
-	}
-
-	// regenerate the lookup table
 	// using simplex noise
 	void simplex_regen() {
 		table.clear();
@@ -156,10 +140,6 @@ struct NoiseOSC {
 		switch (mode) {
 			case RAND: {
 				rand_regen();
-				break;
-			}
-			case PERLIN: {
-				perlin_regen();
 				break;
 			}
 			case SIMPLEX: {
