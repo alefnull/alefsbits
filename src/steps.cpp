@@ -1,5 +1,4 @@
 #include "steps.hpp"
-#include "inc/cvRange.hpp"
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
 
@@ -39,8 +38,7 @@ void Steps::process(const ProcessArgs& args) {
 
 	if (inputs[CLOCK_INPUT].isConnected()) {
 		float cv_out = step == 0 ? params[STEP1_PARAM].getValue() : params[STEP1_PARAM + step - 1].getValue();
-		cv_out = cv_range.map(cv_out);
-		outputs[CV_OUTPUT].setVoltage(cv_out);
+		outputs[CV_OUTPUT].setVoltage(cv_range.map(cv_out));
 		outputs[EOC_OUTPUT].setVoltage(eoc_pulse.process(args.sampleTime) ? 10.f : 0.f);
 	} else {
 		outputs[CV_OUTPUT].setVoltage(0.f);
@@ -79,7 +77,7 @@ void Steps::dataFromJson(json_t* rootJ) {
 
 void Steps::randomize_steps() {
 	for (int i = 1; i <= PARAMS_LEN - 2; i++) {
-		params[STEP1_PARAM + i - 1].setValue(random::uniform() * 2.f - 1.f);
+		params[STEP1_PARAM + i - 1].setValue(random::uniform());
 	}
 }
 
