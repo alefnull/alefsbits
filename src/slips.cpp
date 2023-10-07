@@ -20,6 +20,8 @@ json_t* Slips::dataToJson() {
 	json_object_set_new(rootJ, "slips", slipsJ);
 	// the cv range
 	json_object_set_new(rootJ, "cv_range", cv_range.dataToJson());
+	// the slip range
+	json_object_set_new(rootJ, "slip_range", slip_range.dataToJson());
 	// root input voct
 	json_object_set_new(rootJ, "root_input_voct", json_boolean(root_input_voct));
 	return rootJ;
@@ -51,6 +53,11 @@ void Slips::dataFromJson(json_t* rootJ) {
 	json_t* cv_rangeJ = json_object_get(rootJ, "cv_range");
 	if (cv_rangeJ) {
 		cv_range.dataFromJson(cv_rangeJ);
+	}
+	// the slip range
+	json_t* slip_rangeJ = json_object_get(rootJ, "slip_range");
+	if (slip_rangeJ) {
+		slip_range.dataFromJson(slip_rangeJ);
 	}
 	// root input voct
 	json_t* root_input_voctJ = json_object_get(rootJ, "root_input_voct");
@@ -90,7 +97,7 @@ void Slips::generate_sequence() {
 	// generate the sequence
 	for (int i = 0; i < MAX_STEPS; i++) {
 		// generate a random value between 0 and 1
-		float random_value = random::uniform();
+		float random_value = cv_range.map(random::uniform());
 		// add the value to the sequence
 		the_sequence.push_back(random_value);
 	}
@@ -98,7 +105,7 @@ void Slips::generate_sequence() {
 
 // function to generate "slips" to apply to the sequence,
 // given the slip amount (0 to 1) and slip range (0 to 1)
-void Slips::generate_slips(float slip_amount, float slip_range) {
+void Slips::generate_slips(float slip_amount) {
 	// clear the slips
 	the_slips.clear();
 	// generate the slip vector
@@ -115,7 +122,8 @@ void Slips::generate_slips(float slip_amount, float slip_range) {
 			slip_step = random::u32() % MAX_STEPS;
 		}
 		// pick a random amount to slip by (-1 to 1)
-		float slip_value = random::uniform() * slip_range * 2.0 - slip_range;
+		// float slip_value = random::uniform() * slip_range * 2.0 - slip_range;
+		float slip_value = slip_range.map(random::uniform());
 		// add the slip to the slip vector at the slip step
 		the_slips[slip_step] = slip_value;
 	}
@@ -299,7 +307,7 @@ void Slips::process(const ProcessArgs& args) {
 		// if we haven't generated new slips for this cycle
 		if (!slips_generated) {
 			// generate new slips
-			generate_slips(slip_amount, slip_range);
+			generate_slips(slip_amount);
 			// set the slips generated flag
 			slips_generated = true;
 		}
@@ -316,7 +324,7 @@ void Slips::process(const ProcessArgs& args) {
 		steps_gone_through = 0;
 	}
 
-	// check if the generatee input is high
+	// check if the generate input is high
 	if (generate_trigger.process(inputs[GENERATE_TRIGGER_INPUT].getVoltage())) {
 		// reset the step
 		current_step = starting_step;
@@ -326,7 +334,7 @@ void Slips::process(const ProcessArgs& args) {
 		generate_sequence();
 	}
 
-	// check if the generatee button is pressed
+	// check if the generate button is pressed
 	if (generate_button_trigger.process(params[GENERATE_PARAM].getValue())) {
 		// reset the step
 		current_step = starting_step;
@@ -341,9 +349,6 @@ void Slips::process(const ProcessArgs& args) {
 
 	// get the voltage for the current step
 	float out = clamp(the_sequence[current_step], -10.f, 10.f);
-
-	// scale the voltage to the desired range
-	out = cv_range.map(out);
 
 	// if the step is a slip
 	if (is_slip) {
@@ -492,7 +497,8 @@ void SlipsWidget::appendContextMenu(Menu* menu) {
 	}));
 	menu->addChild(new MenuSeparator());
 	menu->addChild(createMenuItem("root input v/oct", CHECKMARK(module->root_input_voct), [module]() { module->root_input_voct = !module->root_input_voct; }));
-	module->cv_range.addMenu(module, menu);
+	module->cv_range.addMenu(module, menu, "sequence range");
+	module->slip_range.addMenu(module, menu, "slip range");
 	menu->addChild(new MenuSeparator());
 	if (module->rightExpander.module && module->rightExpander.module->model == modelSlipspander) {
 		menu->addChild(createMenuLabel("slipspander connected"));

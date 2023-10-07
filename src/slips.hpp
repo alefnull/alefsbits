@@ -140,12 +140,14 @@ struct Slips : Module, Quantizer {
 
 	// a cv range object to convert voltages with a range of 0V to 1V into a given range
 	CVRange cv_range;
+	// a cv range object to do the same for the slip range setting
+	CVRange slip_range;
 
     json_t* dataToJson() override;
     void dataFromJson(json_t* rootJ) override;
     void get_custom_scale();
     void generate_sequence();
-    void generate_slips(float slip_amount, float slip_range);
+    void generate_slips(float slip_amount);
     void process(const ProcessArgs& args) override;
 
 };
