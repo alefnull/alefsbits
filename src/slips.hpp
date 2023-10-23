@@ -20,7 +20,7 @@ struct Slips : Module, Quantizer {
 		GENERATE_PARAM,
 		PROB_PARAM,
 		SLIPS_PARAM,
-		SLIP_RANGE_PARAM,
+		MODGEN_PARAM,
 		PARAMS_LEN
 	};
 	enum InputId {
@@ -34,7 +34,7 @@ struct Slips : Module, Quantizer {
 		PROB_CV_INPUT,
 		QUANTIZE_INPUT,
 		SLIPS_CV_INPUT,
-		SLIP_RANGE_CV_INPUT,
+		MODGEN_TRIGGER_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
@@ -43,6 +43,7 @@ struct Slips : Module, Quantizer {
 		GATE_OUTPUT,
 		SLIP_GATE_OUTPUT,
 		EOC_OUTPUT,
+		MOD_SEQUENCE_OUTPUT,
 		OUTPUTS_LEN
 	};
 	enum LightId {
@@ -67,9 +68,9 @@ struct Slips : Module, Quantizer {
 			"dorian", "lydian", "mixolydian", "phrygian", "locrian", "blues"
 		});
 		getParamQuantity(SCALE_PARAM)->snapEnabled = true;
-		configParam(GENERATE_PARAM, 0, 1, 0, "generate");
+		configParam(GENERATE_PARAM, 0, 1, 0, "generate sequence");
 		configParam(SLIPS_PARAM, 0, 1, 0, "slips", " %", 0, 100);
-		configParam(SLIP_RANGE_PARAM, 0, 1, 0, "slip range", " +/- volts");
+		configParam(MODGEN_PARAM, 0, 1, 0, "generate mod sequence");
 		configInput(CLOCK_INPUT, "clock");
 		configInput(RESET_INPUT, "reset");
 		configInput(STEPS_CV_INPUT, "steps cv");
@@ -78,15 +79,12 @@ struct Slips : Module, Quantizer {
 		getInputInfo(ROOT_CV_INPUT)->description = "0V to 10V (v/oct if enabled)";
 		configInput(SCALE_CV_INPUT, "scale cv");
 		getInputInfo(SCALE_CV_INPUT)->description = "0V to 10V";
-		configInput(GENERATE_TRIGGER_INPUT, "generate");
-		configInput(QUANTIZE_INPUT, "unquantized");
+		configInput(GENERATE_TRIGGER_INPUT, "generate sequence");
 		configInput(SLIPS_CV_INPUT, "slips cv");
 		getInputInfo(SLIPS_CV_INPUT)->description = "0V to 10V";
-		configInput(SLIP_RANGE_CV_INPUT, "slip range cv");
-		getInputInfo(SLIP_RANGE_CV_INPUT)->description = "0V to 10V";
+		configInput(MODGEN_TRIGGER_INPUT, "generate mod sequence");
 		configOutput(SEQUENCE_OUTPUT, "sequence");
 		configOutput(GATE_OUTPUT, "gate");
-		configOutput(QUANTIZE_OUTPUT, "quantized");
 		configOutput(SLIP_GATE_OUTPUT, "slip gate");
 		configParam(START_PARAM, 1, 64, 1, "starting step");
 		getParamQuantity(START_PARAM)->snapEnabled = true;
@@ -96,6 +94,7 @@ struct Slips : Module, Quantizer {
 		configInput(PROB_CV_INPUT, "step probability cv");
 		getInputInfo(PROB_CV_INPUT)->description = "0V to 10V";
 		configOutput(EOC_OUTPUT, "end of cycle");
+		configOutput(MOD_SEQUENCE_OUTPUT, "mod sequence");
 		if (use_global_contrast[SLIPS]) {
 			module_contrast[SLIPS] = global_contrast;
 		}
@@ -104,6 +103,8 @@ struct Slips : Module, Quantizer {
 	// the sequence
 	// float the_sequence[64] = {0.0f};
 	std::vector<float> the_sequence = std::vector<float>(MAX_STEPS, 0.0f);
+	// mod sequence
+	std::vector<float> mod_sequence = std::vector<float>(MAX_STEPS, 0.0f);
 	// the slips
 	// float the_slips[64] = {0.0f};
 	std::vector<float> the_slips = std::vector<float>(MAX_STEPS, 0.0f);
@@ -121,6 +122,10 @@ struct Slips : Module, Quantizer {
 	dsp::SchmittTrigger generate_trigger;
 	// schmitt trigger for generatee manual button
 	dsp::SchmittTrigger generate_button_trigger;
+	// schmitt trigger for modgen input
+	dsp::SchmittTrigger modgen_trigger;
+	// schmitt trigger for modgen manual button
+	dsp::SchmittTrigger modgen_button_trigger;
 	// pulse generator for end of cycle output
 	dsp::PulseGenerator eoc_pulse;
 	// a bool to check if slips have already been generated for this cycle
@@ -140,16 +145,26 @@ struct Slips : Module, Quantizer {
 
 	// a cv range object to convert voltages with a range of 0V to 1V into a given range
 	CVRange cv_range;
+	// a cv range object to do the same for the mod sequence
+	CVRange mod_range;
 	// a cv range object to do the same for the slip range setting
 	CVRange slip_range;
+
+	// a bool to track if slips should be added to the mod sequence
+	bool mod_add_slips = false;
+	// a bool to track if step probability should be added to the mod sequence
+	bool mod_add_prob = false;
+	// a float to track the last mod sequence value
+	float last_mod_value = 0.0f;
 
     json_t* dataToJson() override;
     void dataFromJson(json_t* rootJ) override;
     void get_custom_scale();
     void generate_sequence();
+	void generate_mod_sequence();
     void generate_slips(float slip_amount);
     void process(const ProcessArgs& args) override;
-
+	void onReset(const ResetEvent & e) override;
 };
 
 struct SlipsWidget : ModuleWidget {
@@ -174,7 +189,7 @@ struct SlipsWidget : ModuleWidget {
 		addParam(createParamCentered<LEDButton>(mm2px(Vec(18.254, 59.869)), module, Slips::GENERATE_PARAM));
 		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(51.782, 59.869)), module, Slips::PROB_PARAM));
 		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(51.782, 77.763)), module, Slips::SLIPS_PARAM));
-		addParam(createParamCentered<SmallBitKnob>(mm2px(Vec(51.782, 95.657)), module, Slips::SLIP_RANGE_PARAM));
+		addParam(createParamCentered<LEDButton>(mm2px(Vec(18.245, 77.763)), module, Slips::MODGEN_PARAM));
 
 		addOutput(createOutputCentered<BitPort>(mm2px(Vec(30.279, 59.869)), module, Slips::EOC_OUTPUT));
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(34.279, 56.869)), module, Slips::EOC_LIGHT));
@@ -187,14 +202,13 @@ struct SlipsWidget : ModuleWidget {
 		addInput(createInputCentered<BitPort>(mm2px(Vec(42.586, 41.974)), module, Slips::START_CV_INPUT));
 		addInput(createInputCentered<BitPort>(mm2px(Vec(8.556, 59.869)), module, Slips::GENERATE_TRIGGER_INPUT));
 		addInput(createInputCentered<BitPort>(mm2px(Vec(42.586, 59.869)), module, Slips::PROB_CV_INPUT));
-		addInput(createInputCentered<BitPort>(mm2px(Vec(8.258, 77.763)), module, Slips::QUANTIZE_INPUT));
+		addInput(createInputCentered<BitPort>(mm2px(Vec(8.258, 77.763)), module, Slips::MODGEN_TRIGGER_INPUT));
 		addInput(createInputCentered<BitPort>(mm2px(Vec(42.586, 77.763)), module, Slips::SLIPS_CV_INPUT));
-		addInput(createInputCentered<BitPort>(mm2px(Vec(42.586, 95.657)), module, Slips::SLIP_RANGE_CV_INPUT));
 
-		addOutput(createOutputCentered<BitPort>(mm2px(Vec(19.745, 77.763)), module, Slips::QUANTIZE_OUTPUT));
 		addOutput(createOutputCentered<BitPort>(mm2px(Vec(8.854, 95.657)), module, Slips::SEQUENCE_OUTPUT));
 		addOutput(createOutputCentered<BitPort>(mm2px(Vec(18.763, 95.657)), module, Slips::GATE_OUTPUT));
 		addOutput(createOutputCentered<BitPort>(mm2px(Vec(28.882, 95.657)), module, Slips::SLIP_GATE_OUTPUT));
+		addOutput(createOutputCentered<BitPort>(mm2px(Vec(38.991, 95.657)), module, Slips::MOD_SEQUENCE_OUTPUT));
 
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(23.255, 92.872)), module, Slips::GATE_LIGHT));
 		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(33.541, 92.872)), module, Slips::SLIP_GATE_LIGHT));

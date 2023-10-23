@@ -11,6 +11,13 @@ json_t* Slips::dataToJson() {
 		json_array_append_new(sequenceJ, valueJ);
 	}
 	json_object_set_new(rootJ, "sequence", sequenceJ);
+	// mod sequence
+	json_t* mod_sequenceJ = json_array();
+	for (int i = 0; i < MAX_STEPS; i++) {
+		json_t* valueJ = json_real(mod_sequence[i]);
+		json_array_append_new(mod_sequenceJ, valueJ);
+	}
+	json_object_set_new(rootJ, "mod_sequence", mod_sequenceJ);
 	// the slips
 	json_t* slipsJ = json_array();
 	for (int i = 0; i < MAX_STEPS; i++) {
@@ -20,6 +27,8 @@ json_t* Slips::dataToJson() {
 	json_object_set_new(rootJ, "slips", slipsJ);
 	// the cv range
 	json_object_set_new(rootJ, "cv_range", cv_range.dataToJson());
+	// the mod range
+	json_object_set_new(rootJ, "mod_range", mod_range.dataToJson());
 	// the slip range
 	json_object_set_new(rootJ, "slip_range", slip_range.dataToJson());
 	// root input voct
@@ -39,6 +48,16 @@ void Slips::dataFromJson(json_t* rootJ) {
 			}
 		}
 	}
+	// mod sequence
+	json_t* mod_sequenceJ = json_object_get(rootJ, "mod_sequence");
+	if (mod_sequenceJ) {
+		for (int i = 0; i < (int) json_array_size(mod_sequenceJ); i++) {
+			json_t* valueJ = json_array_get(mod_sequenceJ, i);
+			if (valueJ) {
+				mod_sequence[i] = json_number_value(valueJ);
+			}
+		}
+	}
 	// the slips
 	json_t* slipsJ = json_object_get(rootJ, "slips");
 	if (slipsJ) {
@@ -53,6 +72,11 @@ void Slips::dataFromJson(json_t* rootJ) {
 	json_t* cv_rangeJ = json_object_get(rootJ, "cv_range");
 	if (cv_rangeJ) {
 		cv_range.dataFromJson(cv_rangeJ);
+	}
+	// the mod range
+	json_t* mod_rangeJ = json_object_get(rootJ, "mod_range");
+	if (mod_rangeJ) {
+		mod_range.dataFromJson(mod_rangeJ);
 	}
 	// the slip range
 	json_t* slip_rangeJ = json_object_get(rootJ, "slip_range");
@@ -103,6 +127,19 @@ void Slips::generate_sequence() {
 	}
 }
 
+// function to generate a new mod sequence
+void Slips::generate_mod_sequence() {
+	// clear the mod sequence
+	mod_sequence.clear();
+	// generate the mod sequence
+	for (int i = 0; i < MAX_STEPS; i++) {
+		// generate a random value between 0 and 1
+		float random_value = mod_range.map(random::uniform());
+		// add the value to the mod sequence
+		mod_sequence.push_back(random_value);
+	}
+}
+
 // function to generate "slips" to apply to the sequence,
 // given the slip amount (0 to 1) and slip range (0 to 1)
 void Slips::generate_slips(float slip_amount) {
@@ -129,6 +166,15 @@ void Slips::generate_slips(float slip_amount) {
 	}
 }
 
+void Slips::onReset(const ResetEvent & e) {
+	// reset the step
+	current_step = 0;
+	// reset the steps gone through counter
+	steps_gone_through = 0;
+	// call the base class reset
+	Module::onReset(e);
+}
+
 void Slips::process(const ProcessArgs& args) {
 	// get the starting step
 	int starting_step = params[START_PARAM].getValue() - 1;
@@ -140,8 +186,6 @@ void Slips::process(const ProcessArgs& args) {
 	int current_scale = params[SCALE_PARAM].getValue();
 	// get the slip amount
 	float slip_amount = params[SLIPS_PARAM].getValue();
-	// get the slip range
-	float slip_range = params[SLIP_RANGE_PARAM].getValue();
 	// get the step probability
 	float step_prob = params[PROB_PARAM].getValue();
 	
@@ -234,19 +278,6 @@ void Slips::process(const ProcessArgs& args) {
 		slip_amount = slip_amount_input / 10;
 	}
 
-	// check if the slip range input is connected
-	if (inputs[SLIP_RANGE_CV_INPUT].isConnected()) {
-		// get the slip range input voltage
-		float slip_range_input = inputs[SLIP_RANGE_CV_INPUT].getVoltage();
-		// check if the slip range input voltage is out of bounds
-		if (slip_range_input < 0 || slip_range_input > 10) {
-			// clamp the slip range input voltage
-			slip_range_input = clamp(slip_range_input, 0.0f, 10.0f);
-		}
-		// set the slip range
-		slip_range = slip_range_input / 10;
-	}
-
 	// check if the step probability input is connected
 	if (inputs[PROB_CV_INPUT].isConnected()) {
 		// get the step probability input voltage
@@ -332,6 +363,8 @@ void Slips::process(const ProcessArgs& args) {
 		steps_gone_through = 0;
 		// generate a new sequence
 		generate_sequence();
+		// generate a new mod sequence
+		generate_mod_sequence();
 	}
 
 	// check if the generate button is pressed
@@ -342,6 +375,18 @@ void Slips::process(const ProcessArgs& args) {
 		steps_gone_through = 0;
 		// generate a new sequence
 		generate_sequence();
+		// generate a new mod sequence
+		generate_mod_sequence();
+	}
+
+	// check if the mod generate input is high
+	if (modgen_trigger.process(inputs[MODGEN_TRIGGER_INPUT].getVoltage())) {
+		generate_mod_sequence();
+	}
+
+	// check if the mod generate button is pressed
+	if (modgen_button_trigger.process(params[MODGEN_PARAM].getValue())) {
+		generate_mod_sequence();
 	}
 
 	// check if this step is a slip (the_slips[current_step] != 0)
@@ -349,11 +394,15 @@ void Slips::process(const ProcessArgs& args) {
 
 	// get the voltage for the current step
 	float out = clamp(the_sequence[current_step], -10.f, 10.f);
+	float mod_out = clamp(mod_sequence[current_step], -10.f, 10.f);
 
 	// if the step is a slip
 	if (is_slip) {
 		// add the slip amount to the output
 		out = clamp(the_sequence[current_step] + the_slips[current_step], -10.f, 10.f);
+		if (mod_add_slips) {
+			mod_out = clamp(mod_sequence[current_step] + the_slips[current_step], -10.f, 10.f);
+		}
 	}
 
 	// if the step should be skipped
@@ -373,12 +422,22 @@ void Slips::process(const ProcessArgs& args) {
 			// set the gate output to 0
 			outputs[GATE_OUTPUT].setVoltage(0);
 		}
+		if (outputs[MOD_SEQUENCE_OUTPUT].isConnected()) {
+			// set the output voltage
+			if (mod_add_prob) {
+				outputs[MOD_SEQUENCE_OUTPUT].setVoltage(last_mod_value);
+			}
+			else {
+				outputs[MOD_SEQUENCE_OUTPUT].setVoltage(mod_out);
+			}
+		}
 		// set the gate light
 		lights[GATE_LIGHT].setBrightness(0);
 	}
 	else {
 		// set the last value
 		last_value = out;
+		last_mod_value = mod_out;
 		// check if the sequence output is connected
 		if (outputs[SEQUENCE_OUTPUT].isConnected()) {
 			// set the output voltage
@@ -398,6 +457,12 @@ void Slips::process(const ProcessArgs& args) {
 			// set the slip gate output to the incoming clock signal
 			outputs[SLIP_GATE_OUTPUT].setVoltage(is_slip ? inputs[CLOCK_INPUT].getVoltage() : 0);
 		}
+		// check if the mod sequence output is connected
+		if (outputs[MOD_SEQUENCE_OUTPUT].isConnected()) {
+			// set the output voltage
+			outputs[MOD_SEQUENCE_OUTPUT].setVoltage(mod_out);
+		}
+
 		// set the gate light
 		lights[GATE_LIGHT].setBrightness(inputs[CLOCK_INPUT].getVoltage() / 10);
 
@@ -409,24 +474,6 @@ void Slips::process(const ProcessArgs& args) {
 	outputs[EOC_OUTPUT].setVoltage(eoc_pulse.process(args.sampleTime) ? 10.f : 0.f);
 	// set the eoc light
 	lights[EOC_LIGHT].setBrightness(eoc_pulse.process(args.sampleTime) ? 1.f : 0.f);
-
-	// get the input voltage to be quantized
-	if (inputs[QUANTIZE_INPUT].isConnected() && outputs[QUANTIZE_OUTPUT].isConnected()) {
-		int q_chans = inputs[QUANTIZE_INPUT].getChannels();
-		outputs[QUANTIZE_OUTPUT].setChannels(q_chans);
-		for (int ch = 0; ch < q_chans; ch++) {
-			// get the input voltage
-			float in = inputs[QUANTIZE_INPUT].getVoltage(ch);
-			// quantize the input voltage
-			if (expanded && custom_scale != NULL && custom_scale_len > 0) {
-				out = quantize(in, root_note, custom_scale, custom_scale_len);
-			} else {
-				out = quantize(in, root_note, current_scale);
-			}
-			// set the output voltage
-			outputs[QUANTIZE_OUTPUT].setVoltage(out, ch);
-		}
-	}
 
 	// set the segment lights
 	for (int i = 0; i < MAX_STEPS; i++) {
@@ -499,6 +546,9 @@ void SlipsWidget::appendContextMenu(Menu* menu) {
 	menu->addChild(createMenuItem("root input v/oct", CHECKMARK(module->root_input_voct), [module]() { module->root_input_voct = !module->root_input_voct; }));
 	module->cv_range.addMenu(module, menu, "sequence range");
 	module->slip_range.addMenu(module, menu, "slip range");
+	module->mod_range.addMenu(module, menu, "mod sequence range");
+	menu->addChild(createMenuItem("apply slips to mod sequence", CHECKMARK(module->mod_add_slips), [module]() { module->mod_add_slips = !module->mod_add_slips; }));
+	menu->addChild(createMenuItem("apply step probability to mod sequence", CHECKMARK(module->mod_add_prob), [module]() { module->mod_add_prob = !module->mod_add_prob; }));
 	menu->addChild(new MenuSeparator());
 	if (module->rightExpander.module && module->rightExpander.module->model == modelSlipspander) {
 		menu->addChild(createMenuLabel("slipspander connected"));
