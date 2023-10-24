@@ -158,6 +158,7 @@ struct Polyplay : Module {
 					// 	outputs[PHASE_OUTPUT].setVoltage(phase_out, i);
 					// }
 					float phase_out = phase_range.map(phase[i]);
+					outputs[PHASE_OUTPUT].setVoltage(phase_out, i);
 				}
 				if (current_wav_sample[i] >= num_samples) {
 					playing[i] = false;
