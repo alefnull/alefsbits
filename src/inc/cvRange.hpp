@@ -32,7 +32,7 @@
 
 #pragma once
 
-#include "plugin.hpp"
+#include "../plugin.hpp"
 
 #define CV_MIN -10.f
 #define CV_MAX 10.f
