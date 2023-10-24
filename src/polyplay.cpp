@@ -4,6 +4,7 @@
 #include <osdialog.h>
 #include <samplerate.h>
 #include "inc/AudioFile.h"
+#include "inc/cvRange.hpp"
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
 
@@ -49,8 +50,9 @@ struct Polyplay : Module {
 	std::mutex lock_thread_mutex;
 	std::atomic<bool> process_audio{true};
 	float phase[MAX_POLY] = { 0.0f };
-	float phase_range = 10.0f;
-	bool phase_unipolar = true;
+	// float phase_range = 10.0f;
+	CVRange phase_range;
+	// bool phase_unipolar = true;
 
 	Polyplay() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -147,14 +149,15 @@ struct Polyplay : Module {
 			if (file_loaded && playing[i]) {
 				phase[i] = (float)current_wav_sample[i] / (float)num_samples;
 				if (outputs[PHASE_OUTPUT].isConnected()) {
-					if (phase_unipolar) {
-						float phase_out = phase[i] * phase_range;
-						outputs[PHASE_OUTPUT].setVoltage(phase_out, i);
-					}
-					else {
-						float phase_out = (phase[i] * 2 - 1) * phase_range;
-						outputs[PHASE_OUTPUT].setVoltage(phase_out, i);
-					}
+					// if (phase_unipolar) {
+					// 	float phase_out = phase[i] * phase_range;
+					// 	outputs[PHASE_OUTPUT].setVoltage(phase_out, i);
+					// }
+					// else {
+					// 	float phase_out = (phase[i] * 2 - 1) * phase_range;
+					// 	outputs[PHASE_OUTPUT].setVoltage(phase_out, i);
+					// }
+					float phase_out = phase_range.map(phase[i]);
 				}
 				if (current_wav_sample[i] >= num_samples) {
 					playing[i] = false;
@@ -214,8 +217,9 @@ struct Polyplay : Module {
 		json_t* rootJ = json_object();
 		json_object_set_new(rootJ, "loaded_file_name", json_string(loaded_file_name.c_str()));
 		json_object_set_new(rootJ, "file_loaded", json_boolean(file_loaded));
-		json_object_set_new(rootJ, "phase_range", json_real(phase_range));
-		json_object_set_new(rootJ, "phase_unipolar", json_boolean(phase_unipolar));
+		// json_object_set_new(rootJ, "phase_range", json_real(phase_range));
+		json_object_set_new(rootJ, "phase_range", phase_range.dataToJson());
+		// json_object_set_new(rootJ, "phase_unipolar", json_boolean(phase_unipolar));
 		return rootJ;
 	}
 
@@ -238,14 +242,18 @@ struct Polyplay : Module {
 			}
 			current_poly_channel = 0;
 		}
+		// json_t* phase_rangeJ = json_object_get(rootJ, "phase_range");
+		// if (phase_rangeJ) {
+		// 	phase_range = json_real_value(phase_rangeJ);
+		// }
 		json_t* phase_rangeJ = json_object_get(rootJ, "phase_range");
 		if (phase_rangeJ) {
-			phase_range = json_real_value(phase_rangeJ);
+			phase_range.dataFromJson(phase_rangeJ);
 		}
-		json_t* phase_unipolarJ = json_object_get(rootJ, "phase_unipolar");
-		if (phase_unipolarJ) {
-			phase_unipolar = json_boolean_value(phase_unipolarJ);
-		}
+		// json_t* phase_unipolarJ = json_object_get(rootJ, "phase_unipolar");
+		// if (phase_unipolarJ) {
+		// 	phase_unipolar = json_boolean_value(phase_unipolarJ);
+		// }
 	}
 };
 
@@ -330,17 +338,7 @@ struct PolyplayWidget : ModuleWidget {
         }));
 
 		menu->addChild(new MenuSeparator());
-		menu->addChild(createSubmenuItem("phase range", "", [=](Menu* menu) {
-			Menu* rangeMenu = new Menu();
-			rangeMenu->addChild(createMenuItem("-/+ 1v", CHECKMARK(module->phase_range == 1), [module]() { module->phase_range = 1; }));
-			rangeMenu->addChild(createMenuItem("-/+ 2v", CHECKMARK(module->phase_range == 2), [module]() { module->phase_range = 2; }));
-			rangeMenu->addChild(createMenuItem("-/+ 3v", CHECKMARK(module->phase_range == 3), [module]() { module->phase_range = 3; }));
-			rangeMenu->addChild(createMenuItem("-/+ 5v", CHECKMARK(module->phase_range == 5), [module]() { module->phase_range = 5; }));
-			rangeMenu->addChild(createMenuItem("-/+ 10v", CHECKMARK(module->phase_range == 10), [module]() { module->phase_range = 10; }));
-			rangeMenu->addChild(new MenuSeparator());
-			rangeMenu->addChild(createMenuItem("Unipolar", CHECKMARK(module->phase_unipolar), [module]() { module->phase_unipolar = !module->phase_unipolar; }));
-			menu->addChild(rangeMenu);
-		}));
+		module->phase_range.addMenu(module, menu, "phase range");
 
 		struct LoadWavItem : MenuItem {
 			Polyplay* module;
