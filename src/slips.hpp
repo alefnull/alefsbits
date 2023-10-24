@@ -150,6 +150,8 @@ struct Slips : Module, Quantizer {
 	// a cv range object to do the same for the slip range setting
 	CVRange slip_range;
 
+	// a bool to track whether to quantize the mod sequence
+	bool mod_quantize = false;
 	// a bool to track if slips should be added to the mod sequence
 	bool mod_add_slips = false;
 	// a bool to track if step probability should be added to the mod sequence

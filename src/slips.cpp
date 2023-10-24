@@ -33,6 +33,12 @@ json_t* Slips::dataToJson() {
 	json_object_set_new(rootJ, "slip_range", slip_range.dataToJson());
 	// root input voct
 	json_object_set_new(rootJ, "root_input_voct", json_boolean(root_input_voct));
+	// mod quantize bool
+	json_object_set_new(rootJ, "mod_quantize", json_boolean(mod_quantize));
+	// mod add slips bool
+	json_object_set_new(rootJ, "mod_add_slips", json_boolean(mod_add_slips));
+	// mod add prob bool
+	json_object_set_new(rootJ, "mod_add_prob", json_boolean(mod_add_prob));
 	return rootJ;
 }
 
@@ -87,6 +93,21 @@ void Slips::dataFromJson(json_t* rootJ) {
 	json_t* root_input_voctJ = json_object_get(rootJ, "root_input_voct");
 	if (root_input_voctJ) {
 		root_input_voct = json_boolean_value(root_input_voctJ);
+	}
+	// mod quantize bool
+	json_t* mod_quantizeJ = json_object_get(rootJ, "mod_quantize");
+	if (mod_quantizeJ) {
+		mod_quantize = json_boolean_value(mod_quantizeJ);
+	}
+	// mod add slips bool
+	json_t* mod_add_slipsJ = json_object_get(rootJ, "mod_add_slips");
+	if (mod_add_slipsJ) {
+		mod_add_slips = json_boolean_value(mod_add_slipsJ);
+	}
+	// mod add prob bool
+	json_t* mod_add_probJ = json_object_get(rootJ, "mod_add_prob");
+	if (mod_add_probJ) {
+		mod_add_prob = json_boolean_value(mod_add_probJ);
 	}
 }
 
@@ -411,10 +432,10 @@ void Slips::process(const ProcessArgs& args) {
 		if (outputs[SEQUENCE_OUTPUT].isConnected()) {
 			// set the output voltage to the last value
 			// outputs[SEQUENCE_OUTPUT].setVoltage(quantize(last_value, root_note, current_scale));
-			if (!expanded) {
-				outputs[SEQUENCE_OUTPUT].setVoltage(quantize(last_value, root_note, current_scale));
-			} else {
+			if (expanded && custom_scale != NULL && custom_scale_len > 0) {
 				outputs[SEQUENCE_OUTPUT].setVoltage(quantize(last_value, root_note, custom_scale, custom_scale_len));
+			} else {
+				outputs[SEQUENCE_OUTPUT].setVoltage(quantize(last_value, root_note, current_scale));
 			}
 		}
 		// check if the gate output is connected
@@ -423,11 +444,16 @@ void Slips::process(const ProcessArgs& args) {
 			outputs[GATE_OUTPUT].setVoltage(0);
 		}
 		if (outputs[MOD_SEQUENCE_OUTPUT].isConnected()) {
-			// set the output voltage
 			if (mod_add_prob) {
-				outputs[MOD_SEQUENCE_OUTPUT].setVoltage(last_mod_value);
+				mod_out = last_mod_value;
 			}
-			else {
+			if (mod_quantize) {
+				if (expanded && custom_scale != NULL && custom_scale_len > 0) {
+					outputs[MOD_SEQUENCE_OUTPUT].setVoltage(quantize(mod_out, root_note, custom_scale, custom_scale_len));
+				} else {
+					outputs[MOD_SEQUENCE_OUTPUT].setVoltage(quantize(mod_out, root_note, current_scale));
+				}
+			} else {
 				outputs[MOD_SEQUENCE_OUTPUT].setVoltage(mod_out);
 			}
 		}
@@ -459,8 +485,15 @@ void Slips::process(const ProcessArgs& args) {
 		}
 		// check if the mod sequence output is connected
 		if (outputs[MOD_SEQUENCE_OUTPUT].isConnected()) {
-			// set the output voltage
-			outputs[MOD_SEQUENCE_OUTPUT].setVoltage(mod_out);
+			if (mod_quantize) {
+				if (expanded && custom_scale != NULL && custom_scale_len > 0) {
+					outputs[MOD_SEQUENCE_OUTPUT].setVoltage(quantize(mod_out, root_note, custom_scale, custom_scale_len));
+				} else {
+					outputs[MOD_SEQUENCE_OUTPUT].setVoltage(quantize(mod_out, root_note, current_scale));
+				}
+			} else {
+				outputs[MOD_SEQUENCE_OUTPUT].setVoltage(mod_out);
+			}
 		}
 
 		// set the gate light
