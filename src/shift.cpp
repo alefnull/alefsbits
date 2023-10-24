@@ -248,7 +248,9 @@ struct ShiftWidget : ModuleWidget {
 		menu->addChild(new MenuSeparator());
 		module->cv_range.addMenu(module, menu);
 		menu->addChild(new MenuSeparator());
-		menu->addChild(createMenuItem("Scrambled Eggs!", CHECKMARK(module->scrambled), [module]() { module->scrambled = !module->scrambled; }));
+		menu->addChild(createCheckMenuItem("scrambled eggs!", "",
+			[=]() { return module->scrambled; },
+			[=]() { module->scrambled = !module->scrambled; }));
 	}
 };
 

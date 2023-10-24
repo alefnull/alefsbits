@@ -404,15 +404,15 @@ struct TurntWidget : ModuleWidget {
         // create ui slider for timer division
         menu->addChild(createSubmenuItem("time scale", "", [=](Menu* menu) {
             Menu* divMenu = new Menu();
-            divMenu->addChild(createMenuItem(
-                "Low", CHECKMARK(module->scope_data.buffer[module->scope_data.activeChannel].size == 64),
-                [module]() { module->scope_data.buffer[module->scope_data.activeChannel].resize(64); }));
-            divMenu->addChild(createMenuItem(
-                "Medium", CHECKMARK(module->scope_data.buffer[module->scope_data.activeChannel].size == 256),
-                [module]() { module->scope_data.buffer[module->scope_data.activeChannel].resize(256); }));
-            divMenu->addChild(createMenuItem(
-                "High", CHECKMARK(module->scope_data.buffer[module->scope_data.activeChannel].size == 2048),
-                [module]() { module->scope_data.buffer[module->scope_data.activeChannel].resize(2048); }));
+            divMenu->addChild(createCheckMenuItem("low", "",
+                [=]() { return module->scope_data.buffer[module->scope_data.activeChannel].size == 64; },
+                [=]() { module->scope_data.buffer[module->scope_data.activeChannel].resize(64); }));
+            divMenu->addChild(createCheckMenuItem("medium", "",
+                [=]() { return module->scope_data.buffer[module->scope_data.activeChannel].size == 256; },
+                [=]() { module->scope_data.buffer[module->scope_data.activeChannel].resize(256); }));
+            divMenu->addChild(createCheckMenuItem("high", "",
+                [=]() { return module->scope_data.buffer[module->scope_data.activeChannel].size == 2048; },
+                [=]() { module->scope_data.buffer[module->scope_data.activeChannel].resize(2048); }));
             menu->addChild(divMenu);
         }));
     }

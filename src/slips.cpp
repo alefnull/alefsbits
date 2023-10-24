@@ -543,12 +543,13 @@ void SlipsWidget::appendContextMenu(Menu* menu) {
 		menu->addChild(contrastMenu);
 	}));
 	menu->addChild(new MenuSeparator());
-	menu->addChild(createMenuItem("root input v/oct", CHECKMARK(module->root_input_voct), [module]() { module->root_input_voct = !module->root_input_voct; }));
+	menu->addChild(createBoolPtrMenuItem("root input v/oct", "", &module->root_input_voct));
 	module->cv_range.addMenu(module, menu, "sequence range");
 	module->slip_range.addMenu(module, menu, "slip range");
 	module->mod_range.addMenu(module, menu, "mod sequence range");
-	menu->addChild(createMenuItem("apply slips to mod sequence", CHECKMARK(module->mod_add_slips), [module]() { module->mod_add_slips = !module->mod_add_slips; }));
-	menu->addChild(createMenuItem("apply step probability to mod sequence", CHECKMARK(module->mod_add_prob), [module]() { module->mod_add_prob = !module->mod_add_prob; }));
+	menu->addChild(createBoolPtrMenuItem("quantize mod sequence", "", &module->mod_quantize));
+	menu->addChild(createBoolPtrMenuItem("apply slips to mod sequence", "", &module->mod_add_slips));
+	menu->addChild(createBoolPtrMenuItem("apply step probability to mod sequence", "", &module->mod_add_prob));
 	menu->addChild(new MenuSeparator());
 	if (module->rightExpander.module && module->rightExpander.module->model == modelSlipspander) {
 		menu->addChild(createMenuLabel("slipspander connected"));

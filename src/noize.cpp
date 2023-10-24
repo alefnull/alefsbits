@@ -152,9 +152,11 @@ struct NoizeWidget : ModuleWidget {
         menu->addChild(new MenuSeparator());
 
 		menu->addChild(createMenuLabel("random mode:"));
-		menu->addChild(createMenuItem("uniform", CHECKMARK(module->randomMode == Noize::UNIFORM),
+		menu->addChild(createCheckMenuItem("uniform", "",
+			[=]() { return module->randomMode == Noize::UNIFORM; },
 			[=]() { module->randomMode = Noize::UNIFORM; }));
-		menu->addChild(createMenuItem("gaussian", CHECKMARK(module->randomMode == Noize::GAUSSIAN),
+		menu->addChild(createCheckMenuItem("gaussian", "",
+			[=]() { return module->randomMode == Noize::GAUSSIAN; },
 			[=]() { module->randomMode = Noize::GAUSSIAN; }));
 		
 		struct DeviationQuantity : Quantity {

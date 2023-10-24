@@ -205,7 +205,9 @@ struct ProbablynotWidget : ModuleWidget {
         }));
 
 		menu->addChild(new MenuSeparator());
-		menu->addChild(createMenuItem("Fade in/out", CHECKMARK(module->fade), [module]() { module->fade = !module->fade; }));
+		menu->addChild(createCheckMenuItem("fade in/out", "",
+			[=]() { return module->fade; },
+			[=]() { module->fade = !module->fade; }));
 		FadeDurationSlider *fade_slider = new FadeDurationSlider(&(module->fade_dur));
 		fade_slider->box.size.x = 200.f;
 		menu->addChild(fade_slider);

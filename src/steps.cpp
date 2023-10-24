@@ -201,7 +201,9 @@ struct StepsWidget : ModuleWidget {
         }));
 
 		menu->addChild(new MenuSeparator());
-		menu->addChild(createMenuItem("latch", CHECKMARK(steps_module->latch), [steps_module]() { steps_module->latch = !steps_module->latch; }));
+		menu->addChild(createCheckMenuItem("latch", "",
+			[=]() { return steps_module->latch; },
+			[=]() { steps_module->latch = !steps_module->latch; }));
 		steps_module->cv_range.addMenu(steps_module, menu);
 	}
 };

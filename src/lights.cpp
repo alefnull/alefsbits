@@ -158,9 +158,7 @@ struct LightsWidget : ModuleWidget {
             menu->addChild(contrastMenu);
         }));
 		menu->addChild(new MenuSeparator());
-		menu->addChild(createMenuItem("Latch", CHECKMARK(module->latch), [module]() {
-			module->latch = !module->latch;
-		}));
+		menu->addChild(createBoolPtrMenuItem("latch", "", &module->latch));
 	}
 };
 
