@@ -185,6 +185,16 @@
       "tags": [
         "Clock modulator"
       ]
+    },
+    {
+      "slug": "polyshuffle",
+      "name": "polyshuffle",
+      "description": "shuffle the channels of a polyphonic signal, with various modes",
+      "tags": [
+        "polyphonic",
+        "random",
+        "utility"
+      ]
     }
   ]
 }
