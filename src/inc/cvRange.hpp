@@ -293,12 +293,21 @@ struct CVRange {
 				};
 
 				for(int pi = 0; pi < PRESET_COUNT; pi ++){
-					bool checkmark = (min == preset[pi].min) && ((min + range) == preset[pi].max);
-					menu->addChild(createMenuItem(preset[pi].label, CHECKMARK(checkmark), [=]() { 
-						cv_a = preset[pi].min;
-						cv_b = preset[pi].max;
-						updateInternal();
-					}));
+					// bool checkmark = (min == preset[pi].min) && ((min + range) == preset[pi].max);
+					// menu->addChild(createMenuItem(preset[pi].label, CHECKMARK(checkmark), [=]() { 
+					// 	cv_a = preset[pi].min;
+					// 	cv_b = preset[pi].max;
+					// 	updateInternal();
+					// }));
+					menu->addChild(createCheckMenuItem(preset[pi].label, "",
+						[=]() {
+							return (min == preset[pi].min) && ((min + range) == preset[pi].max);
+						},
+						[=]() {
+							cv_a = preset[pi].min;
+							cv_b = preset[pi].max;
+							updateInternal();
+						}));
 				}
 			}
 		));
