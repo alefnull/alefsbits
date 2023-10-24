@@ -374,30 +374,34 @@ struct TurntWidget : ModuleWidget {
             menu->addChild(contrastMenu);
         }));
 
-        menu->addChild(createMenuItem("freeze when idle",
-            CHECKMARK(module->freeze_when_idle),
-            [module]() { module->freeze_when_idle = !module->freeze_when_idle; }));
+        menu->addChild(createCheckMenuItem("freeze when idle", "",
+            [=]() { return module->freeze_when_idle; },
+            [=]() { module->freeze_when_idle = !module->freeze_when_idle; }));
 
         menu->addChild(createSubmenuItem("trigger mode", "", [=](Menu* menu) {
             Menu* trigMenu = new Menu();
-            trigMenu->addChild(
-                createMenuItem("trigger", CHECKMARK(module->trigger_mode == 0),
-                               [module]() { module->trigger_mode = 0; }));
-            trigMenu->addChild(
-                createMenuItem("latch", CHECKMARK(module->trigger_mode == 1),
-                               [module]() { module->trigger_mode = 1; }));
+            trigMenu->addChild(createCheckMenuItem(
+                    "trigger", "",
+                    [=]() { return module->trigger_mode == 0; },
+                    [=]() { module->trigger_mode = 0; }));
+            trigMenu->addChild(createCheckMenuItem(
+                    "latch", "",
+                    [=]() { return module->trigger_mode == 1; },
+                    [=]() { module->trigger_mode = 1; }));
             menu->addChild(trigMenu);
         }));
 
         // create menu for unipolar / bipolar scope
         menu->addChild(createSubmenuItem("scope mode", "", [=](Menu* menu) {
             Menu* scopeMenu = new Menu();
-            scopeMenu->addChild(createMenuItem(
-                "bipolar", CHECKMARK(module->scope_data.scopeMode[module->scope_data.activeChannel] == 0),
-                [module]() { module->scope_data.scopeMode[module->scope_data.activeChannel] = 0; }));
-            scopeMenu->addChild(createMenuItem(
-                "unipolar", CHECKMARK(module->scope_data.scopeMode[module->scope_data.activeChannel] == 1),
-                [module]() { module->scope_data.scopeMode[module->scope_data.activeChannel] = 1; }));
+            scopeMenu->addChild(createCheckMenuItem(
+                    "bipolar", "",
+                    [=]() { return module->scope_data.scopeMode[module->scope_data.activeChannel] == 0; },
+                    [=]() { module->scope_data.scopeMode[module->scope_data.activeChannel] = 0; }));
+            scopeMenu->addChild(createCheckMenuItem(
+                    "unipolar", "",
+                    [=]() { return module->scope_data.scopeMode[module->scope_data.activeChannel] == 1; },
+                    [=]() { module->scope_data.scopeMode[module->scope_data.activeChannel] = 1; }));
             menu->addChild(scopeMenu);
         }));
 
