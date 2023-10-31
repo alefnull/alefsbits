@@ -142,6 +142,10 @@ struct Slips : Module, Quantizer {
 	int *custom_scale = NULL;
 	// the length of the custom scale
 	int custom_scale_len = 0;
+	// the starting step
+	int starting_step = 0;
+	// the last frame's starting step
+	int last_starting_step = 0;
 
 	// a cv range object to convert voltages with a range of 0V to 1V into a given range
 	CVRange cv_range;

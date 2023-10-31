@@ -189,7 +189,7 @@ void Slips::generate_slips(float slip_amount) {
 
 void Slips::onReset(const ResetEvent & e) {
 	// reset the step
-	current_step = 0;
+	current_step = starting_step;
 	// reset the steps gone through counter
 	steps_gone_through = 0;
 	// call the base class reset
@@ -198,7 +198,7 @@ void Slips::onReset(const ResetEvent & e) {
 
 void Slips::process(const ProcessArgs& args) {
 	// get the starting step
-	int starting_step = params[START_PARAM].getValue() - 1;
+	starting_step = params[START_PARAM].getValue() - 1;
 	// get the number of steps
 	int num_steps = params[STEPS_PARAM].getValue();
 	// get the root note
@@ -221,6 +221,11 @@ void Slips::process(const ProcessArgs& args) {
 		}
 		// set the starting step
 		starting_step = (int) ((starting_step_input / 10) * 64);
+
+		if (starting_step != last_starting_step) {
+			current_step = starting_step + steps_gone_through;
+		}
+		last_starting_step = starting_step;
 	}
 
 	// check if the steps input is connected
@@ -314,9 +319,6 @@ void Slips::process(const ProcessArgs& args) {
 
 	// check if the clock input is high
 	if (clock_trigger.process(inputs[CLOCK_INPUT].getVoltage())) {
-		// reset the skip flag
-		skip_step = false;
-		
 		// increment the step
 		current_step++;
 
@@ -325,7 +327,7 @@ void Slips::process(const ProcessArgs& args) {
 		
 		// get the number of steps left in the sequence
 		int steps_left = num_steps - steps_gone_through;
-		
+
 		// if there are no steps left in the sequence
 		if (steps_left <= 0) {
 			// reset the step
@@ -337,11 +339,13 @@ void Slips::process(const ProcessArgs& args) {
 		}
 
 		// check if the current step is higher than the number of steps
-		if (current_step > MAX_STEPS) {
+		if (current_step >= MAX_STEPS) {
 			// loop back around to the beginning
 			current_step = 0;
 		}
 
+		// reset the skip flag
+		skip_step = false;
 		// determine if the step should be skipped
 		if (step_prob < 1) {
 			// get a random number between 0 and 1
