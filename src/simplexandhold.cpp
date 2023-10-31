@@ -47,6 +47,34 @@ struct Simplexandhold : Module {
 		}
 	}
 
+    json_t* dataToJson() override {
+		json_t* rootJ = json_object();
+		json_object_set_new(rootJ, "cv_range", cv_range.dataToJson());
+		json_t* last_sampleJ = json_array();
+		for (int i = 0; i < MAX_POLY; i++) {
+			json_t* valueJ = json_real(last_sample[i]);
+			json_array_append_new(last_sampleJ, valueJ);
+		}
+		json_object_set_new(rootJ, "last_sample", last_sampleJ);
+		return rootJ;
+	}
+
+    void dataFromJson(json_t* rootJ) override {
+		json_t* cv_rangeJ = json_object_get(rootJ, "cv_range");
+		if (cv_rangeJ) {
+			cv_range.dataFromJson(cv_rangeJ);
+		}
+		json_t* last_sampleJ = json_object_get(rootJ, "last_sample");
+		if (last_sampleJ) {
+			for (int i = 0; i < MAX_POLY; i++) {
+				json_t* valueJ = json_array_get(last_sampleJ, i);
+				if (valueJ) {
+					last_sample[i] = json_number_value(valueJ);
+				}
+			}
+		}
+	}
+
 	void process(const ProcessArgs& args) override {
 		int chans = std::max(1, inputs[TRIGGER_INPUT].getChannels());
 		outputs[SAMPLE_OUTPUT].setChannels(chans);
@@ -62,18 +90,6 @@ struct Simplexandhold : Module {
 			x[c] += speed * args.sampleTime;
 			outputs[SAMPLE_OUTPUT].setVoltage(last_sample[c], c);
 		}
-	}
-
-	json_t* dataToJson() override {
-		json_t* rootJ = json_object();
-		json_object_set_new(rootJ, "cv_range", cv_range.dataToJson());
-		return rootJ;
-	}
-
-	void dataFromJson(json_t* rootJ) override {
-		json_t* cv_rangeJ = json_object_get(rootJ, "cv_range");
-		if (cv_rangeJ)
-			cv_range.dataFromJson(cv_rangeJ);
 	}
 };
 
