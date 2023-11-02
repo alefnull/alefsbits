@@ -322,26 +322,23 @@ void Slips::process(const ProcessArgs& args) {
 		// increment the step
 		current_step++;
 
+		// check if the current step is higher than the number of steps
+		if (current_step >= MAX_STEPS) {
+			// loop back around to the beginning
+			current_step = 0;
+		}
+
 		// increment the steps gone through counter
 		steps_gone_through++;
-		
-		// get the number of steps left in the sequence
-		int steps_left = num_steps - steps_gone_through;
 
 		// if there are no steps left in the sequence
-		if (steps_left <= 0) {
+		if (steps_gone_through >= num_steps) {
 			// reset the step
 			current_step = starting_step;
 			// reset the steps gone through counter
 			steps_gone_through = 0;
 			// generate an eoc pulse
 			eoc_pulse.trigger(0.1);
-		}
-
-		// check if the current step is higher than the number of steps
-		if (current_step >= MAX_STEPS) {
-			// loop back around to the beginning
-			current_step = 0;
 		}
 
 		// reset the skip flag
@@ -358,20 +355,6 @@ void Slips::process(const ProcessArgs& args) {
 		}
 	}
 	
-	// if we're on the first step
-	if (current_step == starting_step) {
-		// if we haven't generated new slips for this cycle
-		if (!slips_generated) {
-			// generate new slips
-			generate_slips(slip_amount);
-			// set the slips generated flag
-			slips_generated = true;
-		}
-	} else {
-		// reset the slips generated flag
-		slips_generated = false;
-	}
-
 	// check if the reset input is high
 	if (reset_trigger.process(inputs[RESET_INPUT].getVoltage())) {
 		// reset the step
@@ -412,6 +395,20 @@ void Slips::process(const ProcessArgs& args) {
 	// check if the mod generate button is pressed
 	if (modgen_button_trigger.process(params[MODGEN_PARAM].getValue())) {
 		generate_mod_sequence();
+	}
+
+	// if we're on the first step
+	if (current_step == starting_step) {
+		// if we haven't generated new slips for this cycle
+		if (!slips_generated) {
+			// generate new slips
+			generate_slips(slip_amount);
+			// set the slips generated flag
+			slips_generated = true;
+		}
+	} else {
+		// reset the slips generated flag
+		slips_generated = false;
 	}
 
 	// check if this step is a slip (the_slips[current_step] != 0)
