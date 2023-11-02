@@ -5,20 +5,6 @@
 #define MAX_POLY 16
 
 
-// reorganize a polyphonic signal's channel order on trigger
-// modes: shuffle, rotate up, rotate down
-// - shuffle: randomly reorganize the channels
-// - rotate up: move each channel up one position, wrapping around
-// - rotate down: move each channel down one position, wrapping around
-
-// include a reset trigger input to reset the channel order to the
-// default order (0, 1, 2, 3, ...).
-
-// when the shuffle or reset trigger is received, the status light
-// should light up and fade out over 5ms. the light should be off
-// otherwise.
-
-
 struct Polyshuffle : Module {
 	enum ParamId {
 		PARAMS_LEN
