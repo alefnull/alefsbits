@@ -45,6 +45,29 @@ struct Polycounter : Module {
 		}
 	}
 
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
+		json_t* countJ = json_array();
+		for (int c = 0; c < MAX_POLY; c++) {
+			json_t* valueJ = json_real(count[c]);
+			json_array_append_new(countJ, valueJ);
+		}
+		json_object_set_new(rootJ, "count", countJ);
+		return rootJ;
+	}
+
+	void dataFromJson(json_t* rootJ) override {
+		json_t* countJ = json_object_get(rootJ, "count");
+		if (countJ) {
+			for (int c = 0; c < MAX_POLY; c++) {
+				json_t* valueJ = json_array_get(countJ, c);
+				if (valueJ) {
+					count[c] = json_number_value(valueJ);
+				}
+			}
+		}
+	}
+
 	void onReset(const ResetEvent &e) override {
 		Module::onReset(e);
 		for (int c = 0; c < MAX_POLY; c++) {
