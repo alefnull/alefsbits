@@ -30,6 +30,7 @@ extern Model* modelSlipspander;
 extern Model* modelNos;
 extern Model* modelLucc;
 extern Model* modelPolyshuffle;
+extern Model* modelPolycounter;
 
 enum ModuleNames {
     SIMPLEXANDHOLD,
@@ -51,6 +52,7 @@ enum ModuleNames {
     NOS,
     LUCC,
     POLYSHUFFLE,
+    POLYCOUNTER,
     MODULES_LEN
 };
 

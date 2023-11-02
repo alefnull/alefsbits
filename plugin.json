@@ -175,8 +175,7 @@
         "Oscillator",
         "Random",
         "Polyphonic"
-      ],
-      "hidden": false
+      ]
     },
     {
       "slug": "lucc",
@@ -193,6 +192,15 @@
       "tags": [
         "polyphonic",
         "random",
+        "utility"
+      ]
+    },
+    {
+      "slug": "polycounter",
+      "name": "polycounter",
+      "description": "count up or down on trigger with custom start/end/increment values",
+      "tags": [
+        "polyphonic",
         "utility"
       ]
     }

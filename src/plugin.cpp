@@ -28,6 +28,7 @@ void init(Plugin* p) {
 	p->addModel(modelNos);
 	p->addModel(modelLucc);
 	p->addModel(modelPolyshuffle);
+	p->addModel(modelPolycounter);
 
 	// Any other plugin initialization may go here.
 	// As an alternative, consider lazy-loading assets and lookup tables when your module is created to reduce startup times of Rack.
@@ -42,10 +43,13 @@ void destroy() {
 }
 
 bool use_global_contrast[MODULES_LEN] = {
-	true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true
+	true, true, true, true, true, true, true, true,
+	true, true, true, true, true, true, true, true,
+	true, true, true, true
 };
 float global_contrast = CONTRAST_MAX;
 float module_contrast[MODULES_LEN] = {
+	CONTRAST_MAX,
 	CONTRAST_MAX,
 	CONTRAST_MAX,
 	CONTRAST_MAX,
