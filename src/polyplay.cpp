@@ -50,9 +50,8 @@ struct Polyplay : Module {
 	std::mutex lock_thread_mutex;
 	std::atomic<bool> process_audio{true};
 	float phase[MAX_POLY] = { 0.0f };
-	// float phase_range = 10.0f;
 	CVRange phase_range;
-	// bool phase_unipolar = true;
+	float gain = 1.f;
 
 	Polyplay() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -149,14 +148,6 @@ struct Polyplay : Module {
 			if (file_loaded && playing[i]) {
 				phase[i] = (float)current_wav_sample[i] / (float)num_samples;
 				if (outputs[PHASE_OUTPUT].isConnected()) {
-					// if (phase_unipolar) {
-					// 	float phase_out = phase[i] * phase_range;
-					// 	outputs[PHASE_OUTPUT].setVoltage(phase_out, i);
-					// }
-					// else {
-					// 	float phase_out = (phase[i] * 2 - 1) * phase_range;
-					// 	outputs[PHASE_OUTPUT].setVoltage(phase_out, i);
-					// }
 					float phase_out = phase_range.map(phase[i]);
 					outputs[PHASE_OUTPUT].setVoltage(phase_out, i);
 				}
@@ -166,12 +157,12 @@ struct Polyplay : Module {
 				}
 				if (outputs[LEFT_OUTPUT].isConnected() && outputs[RIGHT_OUTPUT].isConnected()) {
 					if (num_channels > 1) {
-						outputs[LEFT_OUTPUT].setVoltage(my_file.samples[0][current_wav_sample[i]], i);
-						outputs[RIGHT_OUTPUT].setVoltage(my_file.samples[1][current_wav_sample[i]], i);
+						outputs[LEFT_OUTPUT].setVoltage(my_file.samples[0][current_wav_sample[i]] * gain, i);
+						outputs[RIGHT_OUTPUT].setVoltage(my_file.samples[1][current_wav_sample[i]] * gain, i);
 					}
 					else {
-						outputs[LEFT_OUTPUT].setVoltage(my_file.samples[0][current_wav_sample[i]], i);
-						outputs[RIGHT_OUTPUT].setVoltage(my_file.samples[0][current_wav_sample[i]], i);
+						outputs[LEFT_OUTPUT].setVoltage(my_file.samples[0][current_wav_sample[i]] * gain, i);
+						outputs[RIGHT_OUTPUT].setVoltage(my_file.samples[0][current_wav_sample[i]] * gain, i);
 					}
 				}
 				else if (outputs[LEFT_OUTPUT].isConnected() && !outputs[RIGHT_OUTPUT].isConnected()) {
@@ -180,7 +171,7 @@ struct Polyplay : Module {
 						output_sample += my_file.samples[j][current_wav_sample[i]];
 					}
 					output_sample /= num_channels;
-					outputs[LEFT_OUTPUT].setVoltage(output_sample, i);
+					outputs[LEFT_OUTPUT].setVoltage(output_sample * gain, i);
 				}
 				current_wav_sample[i]++;
 			}
@@ -218,9 +209,7 @@ struct Polyplay : Module {
 		json_t* rootJ = json_object();
 		json_object_set_new(rootJ, "loaded_file_name", json_string(loaded_file_name.c_str()));
 		json_object_set_new(rootJ, "file_loaded", json_boolean(file_loaded));
-		// json_object_set_new(rootJ, "phase_range", json_real(phase_range));
 		json_object_set_new(rootJ, "phase_range", phase_range.dataToJson());
-		// json_object_set_new(rootJ, "phase_unipolar", json_boolean(phase_unipolar));
 		return rootJ;
 	}
 
@@ -243,18 +232,10 @@ struct Polyplay : Module {
 			}
 			current_poly_channel = 0;
 		}
-		// json_t* phase_rangeJ = json_object_get(rootJ, "phase_range");
-		// if (phase_rangeJ) {
-		// 	phase_range = json_real_value(phase_rangeJ);
-		// }
 		json_t* phase_rangeJ = json_object_get(rootJ, "phase_range");
 		if (phase_rangeJ) {
 			phase_range.dataFromJson(phase_rangeJ);
 		}
-		// json_t* phase_unipolarJ = json_object_get(rootJ, "phase_unipolar");
-		// if (phase_unipolarJ) {
-		// 	phase_unipolar = json_boolean_value(phase_unipolarJ);
-		// }
 	}
 };
 
@@ -316,6 +297,51 @@ struct PolyplayWidget : ModuleWidget {
 		ModuleWidget::step();
 	}
 
+	struct GainQuantity : Quantity {
+		float* gain;
+
+		GainQuantity(float* gain) {
+			this->gain = gain;
+		}
+
+		void setValue(float value) override {
+			*gain = clamp(value, 1.f, 2.f);
+		}
+
+		float getValue() override {
+			return *gain;
+		}
+
+		float getDefaultValue() override {
+			return 1.f;
+		}
+
+		float getMinValue() override {
+			return 1.f;
+		}
+
+		float getMaxValue() override {
+			return 2.f;
+		}
+
+		float getDisplayValue() override {
+			return getValue();
+		}
+
+		std::string getUnit() override {
+			return "";
+		}
+	};
+
+	struct GainSlider : ui::Slider {
+		GainSlider(float* gain) {
+			quantity = new GainQuantity(gain);
+		}
+		~GainSlider() {
+			delete quantity;
+		}
+	};
+
 	void appendContextMenu(Menu* menu) override {
 		Polyplay* module = dynamic_cast<Polyplay*>(this->module);
 		assert(module);
@@ -338,6 +364,14 @@ struct PolyplayWidget : ModuleWidget {
             menu->addChild(contrastMenu);
         }));
 
+		menu->addChild(new MenuSeparator());
+		menu->addChild(createSubmenuItem("gain", "", [=](Menu* menu) {
+			Menu* gainMenu = new Menu();
+			GainSlider *gainSlider = new GainSlider(&(module->gain));
+			gainSlider->box.size.x = 200.f;
+			gainMenu->addChild(gainSlider);
+			menu->addChild(gainMenu);
+		}));
 		menu->addChild(new MenuSeparator());
 		module->phase_range.addMenu(module, menu, "phase range");
 
