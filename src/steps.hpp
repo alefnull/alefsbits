@@ -54,9 +54,7 @@ struct Steps : Module {
 	dsp::SchmittTrigger rand_trigger;
 	dsp::SchmittTrigger prand_trigger;
 	dsp::SchmittTrigger reset_trigger;
-	dsp::PulseGenerator step_pulse[8];
 	bool reset_queued = false;
-	bool latch = true;
 	int step = 0;
 	int steps = 8;
 	CVRange cv_range;

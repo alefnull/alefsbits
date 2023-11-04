@@ -88,18 +88,8 @@ void Steps::advance_lights(int step) {
 }
 
 void Steps::advance_gate_outputs(int step) {
-	if (latch) {
-		for (int i = 1; i <= steps; i++) {
-			outputs[STEP1_OUTPUT + i - 1].setVoltage(i == step ? 10.f : 0.f);
-		}
-	}
-	else {
-		for (int i = 1; i <= steps; i++) {
-			if (i == step) {
-				step_pulse[i - 1].trigger(1e-3);
-			}
-		}
-		outputs[STEP1_OUTPUT + step - 1].setVoltage(step_pulse[step].process(1e-3) ? 10.f : 0.f);
+	for (int i = 1; i <= steps; i++) {
+		outputs[STEP1_OUTPUT + i - 1].setVoltage(i == step ? 10.f : 0.f);
 	}
 }
 
@@ -201,9 +191,6 @@ struct StepsWidget : ModuleWidget {
         }));
 
 		menu->addChild(new MenuSeparator());
-		menu->addChild(createCheckMenuItem("latch", "",
-			[=]() { return steps_module->latch; },
-			[=]() { steps_module->latch = !steps_module->latch; }));
 		steps_module->cv_range.addMenu(steps_module, menu);
 	}
 };
