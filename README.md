@@ -13,7 +13,7 @@ a simple clock divider based on the Lucas sequence of numbers.
 
 ## nos
 
-a noise-based experimental "oscillator" that generates waveforms from different random noise sources (random, perlin, simplex, and worley).
+a noise-based experimental "oscillator" that generates waveforms from different random noise sources (random, simplex, and worley).
 
 ## turnt
 
