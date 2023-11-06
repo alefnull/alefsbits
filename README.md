@@ -1,11 +1,18 @@
 # alef's bits
 
-![light screenshot](/bits-light.png "plugin screenshot (light)")
-![dark screenshot](/bits-dark.png "plugin screenshot (dark)")
+![screenshot](/plugin-screenshot.png "plugin screenshot")
 
 a small collection of my VCV Rack modules in a single plugin. [click here](https://github.com/alefnull/alefsbits/releases) for the latest pre-release build.
 
 - **NEW** - added a 'contrast' slider to all modules' menus, to adjust the 'contrast' of the module. once the contrast goes above or below 0.5, the module's foreground will invert to remain legible. set the 'global contrast' from any module, and every module with 'use global contrast' enabled will use that value.
+
+## polyshuffle
+
+takes a polyphonic input and on a trigger, will re-order the input's channels by either shuffling them randomly, or rotating them up or down. reset trigger will set the output's channel order back to the input's original order.
+
+## polycounter
+
+given a chosen set of 'start', 'end', and 'inc' (increment) values, each subsequent trigger received will increase the count from 'start' to 'end' by the 'inc' value. poly trigger input will result in a poly output with different counters for each channel, but using the same 'start/end/inc' values. a mono reset trigger will reset all channel counters, but poly reset input will only reset the matching channel's counter.
 
 ## lucc
 
@@ -21,7 +28,7 @@ generates triggers based on an input signal crossing certain thresholds. in "dir
 
 ## slips
 
-a 64 step sequencer, with randomly generated patterns ('generate' button or trigger input). there is an internal quantizer, and knobs to choose the root note and scale that the sequence should be quantized to. (the root note cv can be turned into a v/oct input from the menu). there is also an extra input and output for you to quantize an external signal to the module's current root/scale. you can specify the number of steps with the 'steps' knob, and the amount (percentage of steps in the generated sequence) of 'slips' to add to the sequence during each cycle. a 'slip' is essentially a random offset applied to a given step in the sequence. the range of the 'slip' can be controlled by the 'slip range' knob (up to -1V to +1V). at the beginning of each cycle of the sequence, a new set of random steps will be chosen to add new 'slips' to for that cycle. you can also control the probability that a step will be passed to the output (both its cv value and corresponding gate output).
+a 64 step sequencer, with randomly generated patterns ('generate' button or trigger input). there is an internal quantizer, and knobs to choose the root note and scale that the sequence should be quantized to. (the root note cv can be turned into a v/oct input from the menu). you can specify the number of steps with the 'steps' knob, and the amount (percentage of steps in the generated sequence) of 'slips' to add to the sequence during each cycle. a 'slip' is essentially a random offset applied to a given step in the sequence. at the beginning of each cycle of the sequence, a new set of random steps will be chosen to add new 'slips' to for that cycle. you can also control the probability that a step will be passed to the output (both its cv value and corresponding gate output). finally, there is now also a second "modulation" sequence that is generated with each new main sequence generation (or can be triggered manually with the 'mod gen' button/trigger). the main sequence, slips, and mod sequence can all have independent voltage ranges, which are all set within the right click menu.
 
 ## lights
 
@@ -69,7 +76,7 @@ a simple random noise generator with a duration parameter and optional 0-10V cv 
 
 ## polyrand
 
-a simple module that takes a trigger input and a polyphonic input, and outputs a random channel from that polyphonic input with each trigger, holding it's last output until the next trigger.
+a simple module that takes a trigger input and a polyphonic input, and picks a random channel to output with each trigger.
 
 ## simplex & hold
 
