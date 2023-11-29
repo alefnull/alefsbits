@@ -95,6 +95,8 @@ struct Slips : Module, Quantizer {
 		getInputInfo(PROB_CV_INPUT)->description = "0V to 10V";
 		configOutput(EOC_OUTPUT, "end of cycle");
 		configOutput(MOD_SEQUENCE_OUTPUT, "mod sequence");
+		generate_sequence();
+		generate_mod_sequence();
 		if (use_global_contrast[SLIPS]) {
 			module_contrast[SLIPS] = global_contrast;
 		}
