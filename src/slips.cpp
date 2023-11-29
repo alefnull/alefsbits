@@ -364,36 +364,15 @@ void Slips::process(const ProcessArgs& args) {
 	}
 
 	// check if the generate input is high
-	if (generate_trigger.process(inputs[GENERATE_TRIGGER_INPUT].getVoltage())) {
-		// reset the step
-		current_step = starting_step;
-		// reset the steps gone through counter
-		steps_gone_through = 0;
+	if (generate_trigger.process(inputs[GENERATE_TRIGGER_INPUT].getVoltage())
+		|| generate_button_trigger.process(params[GENERATE_PARAM].getValue())) {
 		// generate a new sequence
 		generate_sequence();
-		// generate a new mod sequence
-		generate_mod_sequence();
-	}
-
-	// check if the generate button is pressed
-	if (generate_button_trigger.process(params[GENERATE_PARAM].getValue())) {
-		// reset the step
-		current_step = starting_step;
-		// reset the steps gone through counter
-		steps_gone_through = 0;
-		// generate a new sequence
-		generate_sequence();
-		// generate a new mod sequence
-		generate_mod_sequence();
 	}
 
 	// check if the mod generate input is high
-	if (modgen_trigger.process(inputs[MODGEN_TRIGGER_INPUT].getVoltage())) {
-		generate_mod_sequence();
-	}
-
-	// check if the mod generate button is pressed
-	if (modgen_button_trigger.process(params[MODGEN_PARAM].getValue())) {
+	if (modgen_trigger.process(inputs[MODGEN_TRIGGER_INPUT].getVoltage())
+		|| modgen_button_trigger.process(params[MODGEN_PARAM].getValue())) {
 		generate_mod_sequence();
 	}
 
