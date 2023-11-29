@@ -133,7 +133,7 @@ jobs:
           file_glob: true
 
   publish-nightly:
-    name: Publish Nightly
+    name: Publish nightly
     # only create a release if a tag was created that is called e.g. v1.2.3
     # see also https://vcvrack.com/manual/Manifest#version
     if: ${{ github.ref == 'refs/heads/main' }}
@@ -147,12 +147,12 @@ jobs:
         uses: mknejp/delete-release-assets@v1
         with:
           token: ${{ github.token }}
-          tag: Nightly # This may also be of the form 'refs/tags/staging'
+          tag: nightly # This may also be of the form 'refs/tags/staging'
           assets: '*'
       - name: Upload release assets
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: _artifacts/**/*.vcvplugin
-          tag: Nightly
+          tag: nightly
           file_glob: true
