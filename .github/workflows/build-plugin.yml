@@ -147,7 +147,7 @@ jobs:
         uses: mknejp/delete-release-assets@v1
         with:
           token: ${{ github.token }}
-          tag: nightly # This may also be of the form 'refs/tags/staging'
+          tag: Nightly # This may also be of the form 'refs/tags/staging'
           fail-if-no-assets: false
           assets: '*'
       - name: Upload release assets
@@ -155,5 +155,5 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: _artifacts/**/*.vcvplugin
-          tag: nightly
+          tag: Nightly
           file_glob: true
