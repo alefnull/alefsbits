@@ -148,6 +148,12 @@ struct Slips : Module, Quantizer {
 	int starting_step = 0;
 	// the last frame's starting step
 	int last_starting_step = 0;
+	// output channels
+	int channels = 0;
+	// current channel
+	int curr_channel = 0;
+	// toggle poly mod output
+	bool poly_mod = true;
 
 	// a cv range object to convert voltages with a range of 0V to 1V into a given range
 	CVRange cv_range;

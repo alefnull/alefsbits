@@ -39,6 +39,10 @@ json_t* Slips::dataToJson() {
 	json_object_set_new(rootJ, "mod_add_slips", json_boolean(mod_add_slips));
 	// mod add prob bool
 	json_object_set_new(rootJ, "mod_add_prob", json_boolean(mod_add_prob));
+	// poly channels
+	json_object_set_new(rootJ, "poly_channels", json_integer(channels));
+	// poly mod bool
+	json_object_set_new(rootJ, "poly_mod", json_boolean(poly_mod));
 	return rootJ;
 }
 
@@ -108,6 +112,16 @@ void Slips::dataFromJson(json_t* rootJ) {
 	json_t* mod_add_probJ = json_object_get(rootJ, "mod_add_prob");
 	if (mod_add_probJ) {
 		mod_add_prob = json_boolean_value(mod_add_probJ);
+	}
+	// poly channels
+	json_t* poly_channelsJ = json_object_get(rootJ, "poly_channels");
+	if (poly_channelsJ) {
+		channels = json_integer_value(poly_channelsJ);
+	}
+	// poly mod bool
+	json_t* poly_modJ = json_object_get(rootJ, "poly_mod");
+	if (poly_modJ) {
+		poly_mod = json_boolean_value(poly_modJ);
 	}
 }
 
@@ -197,6 +211,15 @@ void Slips::onReset(const ResetEvent & e) {
 }
 
 void Slips::process(const ProcessArgs& args) {
+	// set output channels
+	outputs[SEQUENCE_OUTPUT].setChannels(channels + 1);
+	outputs[GATE_OUTPUT].setChannels(channels + 1);
+	if (poly_mod) {
+		outputs[MOD_SEQUENCE_OUTPUT].setChannels(channels + 1);
+	}
+	else {
+		outputs[MOD_SEQUENCE_OUTPUT].setChannels(1);
+	}
 	// get the starting step
 	starting_step = params[START_PARAM].getValue() - 1;
 	// get the number of steps
@@ -321,6 +344,9 @@ void Slips::process(const ProcessArgs& args) {
 	if (clock_trigger.process(inputs[CLOCK_INPUT].getVoltage())) {
 		// increment the step
 		current_step++;
+		// increment curr_channel % channels
+		curr_channel++;
+		if (curr_channel > channels) curr_channel = 0;
 
 		// check if the current step is higher than the number of steps
 		if (current_step >= MAX_STEPS) {
@@ -412,29 +438,56 @@ void Slips::process(const ProcessArgs& args) {
 		if (outputs[SEQUENCE_OUTPUT].isConnected()) {
 			// set the output voltage to the last value
 			// outputs[SEQUENCE_OUTPUT].setVoltage(quantize(last_value, root_note, current_scale));
-			if (expanded && custom_scale != NULL && custom_scale_len > 0) {
-				outputs[SEQUENCE_OUTPUT].setVoltage(quantize(last_value, root_note, custom_scale, custom_scale_len));
-			} else {
-				outputs[SEQUENCE_OUTPUT].setVoltage(quantize(last_value, root_note, current_scale));
+			for (int c = 0; c < channels + 1; c++) {
+				if (expanded && custom_scale != NULL && custom_scale_len > 0) {
+					if (c == curr_channel)
+						outputs[SEQUENCE_OUTPUT].setVoltage(quantize(last_value, root_note, custom_scale, custom_scale_len), c);
+				} else {
+					if (c == curr_channel)
+						outputs[SEQUENCE_OUTPUT].setVoltage(quantize(last_value, root_note, current_scale), c);
+				}
 			}
 		}
 		// check if the gate output is connected
 		if (outputs[GATE_OUTPUT].isConnected()) {
 			// set the gate output to 0
-			outputs[GATE_OUTPUT].setVoltage(0);
+			for (int c = 0; c < channels + 1; c++) {
+				outputs[GATE_OUTPUT].setVoltage(0.f, c);
+			}
 		}
 		if (outputs[MOD_SEQUENCE_OUTPUT].isConnected()) {
 			if (mod_add_prob) {
 				mod_out = last_mod_value;
 			}
 			if (mod_quantize) {
-				if (expanded && custom_scale != NULL && custom_scale_len > 0) {
-					outputs[MOD_SEQUENCE_OUTPUT].setVoltage(quantize(mod_out, root_note, custom_scale, custom_scale_len));
-				} else {
-					outputs[MOD_SEQUENCE_OUTPUT].setVoltage(quantize(mod_out, root_note, current_scale));
+				if (poly_mod) {
+					for (int c = 0; c < channels + 1; c++) {
+						if (expanded && custom_scale != NULL && custom_scale_len > 0) {
+							if (c == curr_channel)
+								outputs[MOD_SEQUENCE_OUTPUT].setVoltage(quantize(mod_out, root_note, custom_scale, custom_scale_len), c);
+						} else {
+							if (c == curr_channel)
+								outputs[MOD_SEQUENCE_OUTPUT].setVoltage(quantize(mod_out, root_note, current_scale));
+						}
+					}
+				}
+				else {
+					if (expanded && custom_scale != NULL && custom_scale_len > 0) {
+						outputs[MOD_SEQUENCE_OUTPUT].setVoltage(quantize(mod_out, root_note, custom_scale, custom_scale_len));
+					} else {
+						outputs[MOD_SEQUENCE_OUTPUT].setVoltage(quantize(mod_out, root_note, current_scale));
+					}
 				}
 			} else {
-				outputs[MOD_SEQUENCE_OUTPUT].setVoltage(mod_out);
+				if (poly_mod) {
+					for (int c = 0; c < channels + 1; c++) {
+						if (c == curr_channel)
+							outputs[MOD_SEQUENCE_OUTPUT].setVoltage(mod_out, c);
+					}
+				}
+				else {
+					outputs[MOD_SEQUENCE_OUTPUT].setVoltage(mod_out);
+				}
 			}
 		}
 		// set the gate light
@@ -447,16 +500,24 @@ void Slips::process(const ProcessArgs& args) {
 		// check if the sequence output is connected
 		if (outputs[SEQUENCE_OUTPUT].isConnected()) {
 			// set the output voltage
-			if (expanded && custom_scale != NULL && custom_scale_len > 0) {
-				outputs[SEQUENCE_OUTPUT].setVoltage(quantize(out, root_note, custom_scale, custom_scale_len));
-			} else {
-				outputs[SEQUENCE_OUTPUT].setVoltage(quantize(out, root_note, current_scale));
+			for (int c = 0; c < channels + 1; c++) {
+				if (expanded && custom_scale != NULL && custom_scale_len > 0) {
+					if (c == curr_channel)
+						outputs[SEQUENCE_OUTPUT].setVoltage(quantize(out, root_note, custom_scale, custom_scale_len), c);
+				} else {
+					if (c == curr_channel)
+						outputs[SEQUENCE_OUTPUT].setVoltage(quantize(out, root_note, current_scale), c);
+				}
 			}
 		}
 		// check if the gate output is connected
 		if (outputs[GATE_OUTPUT].isConnected()) {
 			// set the gate output to the incoming clock signal
-			outputs[GATE_OUTPUT].setVoltage(inputs[CLOCK_INPUT].getVoltage());
+			for (int c = 0; c < channels + 1; c++) {
+				c == curr_channel ?
+					outputs[GATE_OUTPUT].setVoltage(inputs[CLOCK_INPUT].getVoltage(), c)
+					: outputs[GATE_OUTPUT].setVoltage(0.f, c);
+			}
 		}
 		// check if the slip gate output is connected
 		if (outputs[SLIP_GATE_OUTPUT].isConnected()) {
@@ -466,13 +527,35 @@ void Slips::process(const ProcessArgs& args) {
 		// check if the mod sequence output is connected
 		if (outputs[MOD_SEQUENCE_OUTPUT].isConnected()) {
 			if (mod_quantize) {
-				if (expanded && custom_scale != NULL && custom_scale_len > 0) {
-					outputs[MOD_SEQUENCE_OUTPUT].setVoltage(quantize(mod_out, root_note, custom_scale, custom_scale_len));
-				} else {
-					outputs[MOD_SEQUENCE_OUTPUT].setVoltage(quantize(mod_out, root_note, current_scale));
+				if (poly_mod) {
+					for (int c = 0; c < channels + 1; c++) {
+						if (expanded && custom_scale != NULL && custom_scale_len > 0) {
+							if (c == curr_channel)
+								outputs[MOD_SEQUENCE_OUTPUT].setVoltage(quantize(mod_out, root_note, custom_scale, custom_scale_len), c);
+						} else {
+							if (c == curr_channel)
+								outputs[MOD_SEQUENCE_OUTPUT].setVoltage(quantize(mod_out, root_note, current_scale), c);
+						}
+					}
 				}
-			} else {
-				outputs[MOD_SEQUENCE_OUTPUT].setVoltage(mod_out);
+				else {
+					if (expanded && custom_scale != NULL && custom_scale_len > 0) {
+						outputs[MOD_SEQUENCE_OUTPUT].setVoltage(quantize(mod_out, root_note, custom_scale, custom_scale_len));
+					} else {
+						outputs[MOD_SEQUENCE_OUTPUT].setVoltage(quantize(mod_out, root_note, current_scale));
+					}
+				}
+			}
+			else {
+				if (poly_mod) {
+					for (int c = 0; c < channels + 1; c++) {
+						if (c == curr_channel)
+							outputs[MOD_SEQUENCE_OUTPUT].setVoltage(mod_out, c);
+					}
+				}
+				else {
+					outputs[MOD_SEQUENCE_OUTPUT].setVoltage(mod_out);
+				}
 			}
 		}
 
@@ -557,9 +640,15 @@ void SlipsWidget::appendContextMenu(Menu* menu) {
 	}));
 	menu->addChild(new MenuSeparator());
 	menu->addChild(createBoolPtrMenuItem("root input v/oct", "", &module->root_input_voct));
+	menu->addChild(createIndexPtrSubmenuItem("channels", {"1","2","3","4","5","6","7","8",
+														  "9","10","11","12","13","14","15","16"},
+														  &module->channels));
+	menu->addChild(createBoolPtrMenuItem("poly mod output", "", &module->poly_mod));
+	menu->addChild(new MenuSeparator());
 	module->cv_range.addMenu(module, menu, "sequence range");
 	module->slip_range.addMenu(module, menu, "slip range");
 	module->mod_range.addMenu(module, menu, "mod sequence range");
+	menu->addChild(new MenuSeparator());
 	menu->addChild(createBoolPtrMenuItem("quantize mod sequence", "", &module->mod_quantize));
 	menu->addChild(createBoolPtrMenuItem("apply slips to mod sequence", "", &module->mod_add_slips));
 	menu->addChild(createBoolPtrMenuItem("apply step probability to mod sequence", "", &module->mod_add_prob));
