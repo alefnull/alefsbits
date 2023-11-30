@@ -156,7 +156,8 @@
       "name": "turnt",
       "description": "generate triggers when a CV signal changes direction, crosses zero, or both",
       "tags": [
-        "Utility"
+        "Utility",
+        "Polyphonic"
       ]
     },
     {
@@ -191,9 +192,9 @@
       "name": "polyshuffle",
       "description": "shuffle the channels of a polyphonic signal, with various modes",
       "tags": [
-        "polyphonic",
-        "random",
-        "utility"
+        "Polyphonic",
+        "Random",
+        "Utility"
       ]
     },
     {
@@ -201,8 +202,8 @@
       "name": "polycounter",
       "description": "count up or down on trigger with custom start/end/increment values",
       "tags": [
-        "polyphonic",
-        "utility"
+        "Polyphonic",
+        "Utility"
       ]
     }
   ]
