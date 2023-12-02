@@ -240,7 +240,8 @@ void Slips::process(const ProcessArgs& args) {
 		// set the starting step
 		starting_step = (int) ((starting_step_input / 10) * 64);
 		starting_step %= 64;
-
+		if (starting_step < 0) starting_step += 64;
+		// x = (((x - x_min) % (x_max - x_min)) + (x_max - x_min)) % (x_max - x_min) + x_min;
 		if (starting_step != last_starting_step) {
 			current_step = starting_step + steps_gone_through;
 		}
