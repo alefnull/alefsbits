@@ -237,13 +237,9 @@ void Slips::process(const ProcessArgs& args) {
 	if (inputs[START_CV_INPUT].isConnected()) {
 		// get the starting step input voltage
 		float starting_step_input = inputs[START_CV_INPUT].getVoltage();
-		// check if the starting step input voltage is out of bounds
-		if (starting_step_input < 0 || starting_step_input > 10) {
-			// clamp the starting step input voltage
-			starting_step_input = clamp(starting_step_input, 0.0f, 10.0f);
-		}
 		// set the starting step
 		starting_step = (int) ((starting_step_input / 10) * 64);
+		starting_step %= 64;
 
 		if (starting_step != last_starting_step) {
 			current_step = starting_step + steps_gone_through;
