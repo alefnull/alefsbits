@@ -1,6 +1,7 @@
 #include "rack.hpp"
 
-struct Quantizer {
+struct Quantizer
+{
     // a series of scales represented as arrays of intervals
     // the first element of each array is the root note (0)
     int SCALE_CHROMATIC[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
@@ -16,7 +17,8 @@ struct Quantizer {
     int SCALE_BLUES[6] = {0, 3, 5, 6, 7, 10};
 
     // an enum of note names
-    enum NoteName {
+    enum NoteName
+    {
         C,
         C_SHARP,
         D,
@@ -32,7 +34,8 @@ struct Quantizer {
     };
 
     // an enum of scales
-    enum ScaleName {
+    enum ScaleName
+    {
         CHROMATIC,
         MAJOR,
         MINOR,
@@ -48,55 +51,57 @@ struct Quantizer {
 
     // a function that takes a volt/octave value, a root note, and a scale
     // and returns the closest note in the scale
-    float quantize(float input, int root, int scale) {
+    float quantize(float input, int root, int scale)
+    {
         // the current scale, initialized to the chromatic scale
         int *curr_scale = SCALE_CHROMATIC;
         int curr_scale_size = 12;
-        switch (scale) {
-            case CHROMATIC:
-                curr_scale = SCALE_CHROMATIC;
-                curr_scale_size = 12;
-                break;
-            case MAJOR:
-                curr_scale = SCALE_MAJOR;
-                curr_scale_size = 7;
-                break;
-            case MINOR:
-                curr_scale = SCALE_MINOR;
-                curr_scale_size = 7;
-                break;
-            case MAJOR_PENTATONIC:
-                curr_scale = SCALE_MAJOR_PENTATONIC;
-                curr_scale_size = 5;
-                break;
-            case MINOR_PENTATONIC:
-                curr_scale = SCALE_MINOR_PENTATONIC;
-                curr_scale_size = 5;
-                break;
-            case DORIAN:
-                curr_scale = SCALE_DORIAN;
-                curr_scale_size = 7;
-                break;
-            case LYDIAN:
-                curr_scale = SCALE_LYDIAN;
-                curr_scale_size = 7;
-                break;
-            case MIXOLYDIAN:
-                curr_scale = SCALE_MIXOLYDIAN;
-                curr_scale_size = 7;
-                break;
-            case PHRYGIAN:
-                curr_scale = SCALE_PHRYGIAN;
-                curr_scale_size = 7;
-                break;
-            case LOCRIAN:
-                curr_scale = SCALE_LOCRIAN;
-                curr_scale_size = 7;
-                break;
-            case BLUES:
-                curr_scale = SCALE_BLUES;
-                curr_scale_size = 6;
-                break;
+        switch (scale)
+        {
+        case CHROMATIC:
+            curr_scale = SCALE_CHROMATIC;
+            curr_scale_size = 12;
+            break;
+        case MAJOR:
+            curr_scale = SCALE_MAJOR;
+            curr_scale_size = 7;
+            break;
+        case MINOR:
+            curr_scale = SCALE_MINOR;
+            curr_scale_size = 7;
+            break;
+        case MAJOR_PENTATONIC:
+            curr_scale = SCALE_MAJOR_PENTATONIC;
+            curr_scale_size = 5;
+            break;
+        case MINOR_PENTATONIC:
+            curr_scale = SCALE_MINOR_PENTATONIC;
+            curr_scale_size = 5;
+            break;
+        case DORIAN:
+            curr_scale = SCALE_DORIAN;
+            curr_scale_size = 7;
+            break;
+        case LYDIAN:
+            curr_scale = SCALE_LYDIAN;
+            curr_scale_size = 7;
+            break;
+        case MIXOLYDIAN:
+            curr_scale = SCALE_MIXOLYDIAN;
+            curr_scale_size = 7;
+            break;
+        case PHRYGIAN:
+            curr_scale = SCALE_PHRYGIAN;
+            curr_scale_size = 7;
+            break;
+        case LOCRIAN:
+            curr_scale = SCALE_LOCRIAN;
+            curr_scale_size = 7;
+            break;
+        case BLUES:
+            curr_scale = SCALE_BLUES;
+            curr_scale_size = 6;
+            break;
         }
 
         // the closest value to the input
@@ -113,13 +118,15 @@ struct Quantizer {
         float volts_minus_octave = input - octave;
 
         // iterate through the scale
-        for (int i = 0; i < curr_scale_size; i++) {
+        for (int i = 0; i < curr_scale_size; i++)
+        {
             // calculate the scale note in volts
             note_in_volts = (curr_scale[i] + root) % 12 / 12.0f;
             // calculate the distance between the input and the scale note
             distance = fabsf(volts_minus_octave - note_in_volts);
             // if the distance is less than the closest distance
-            if (distance < closest_distance) {
+            if (distance < closest_distance)
+            {
                 // set the closest distance to the distance
                 closest_distance = distance;
                 // set the closest value to the scale note in volts
@@ -131,10 +138,12 @@ struct Quantizer {
         return closest_value + octave;
     }
 
-    float quantize(float input, int root, int scale[], int length) {
+    float quantize(float input, int root, int scale[], int length)
+    {
         // the current scale, initialized to the chromatic scale
         int curr_scale[length];
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < length; i++)
+        {
             curr_scale[i] = scale[i];
         }
         // the closest value to the input
@@ -151,13 +160,15 @@ struct Quantizer {
         float volts_minus_octave = input - octave;
 
         // iterate through the scale
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < length; i++)
+        {
             // calculate the scale note in volts
             note_in_volts = (curr_scale[i] + root) % 12 / 12.0f;
             // calculate the distance between the input and the scale note
             distance = fabsf(volts_minus_octave - note_in_volts);
             // if the distance is less than the closest distance
-            if (distance < closest_distance) {
+            if (distance < closest_distance)
+            {
                 // set the closest distance to the distance
                 closest_distance = distance;
                 // set the closest value to the scale note in volts

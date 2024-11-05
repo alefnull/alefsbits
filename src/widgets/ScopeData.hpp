@@ -4,7 +4,8 @@
 
 #define MAX_POLY 16
 
-struct ScopeData {
+struct ScopeData
+{
     int scopeMode[MAX_POLY];
     float zeroThreshold[MAX_POLY] = {0.f};
     float timeScale = 1.0f;

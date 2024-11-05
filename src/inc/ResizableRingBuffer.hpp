@@ -8,7 +8,8 @@
 // Resizing the buffer will always attempt to keep the latest data
 
 template <typename T>
-struct ResizableRingBuffer {
+struct ResizableRingBuffer
+{
     std::vector<T> buffer;
     int head = 0;
     int size = 0;
@@ -19,26 +20,33 @@ struct ResizableRingBuffer {
 };
 
 template <typename T>
-void ResizableRingBuffer<T>::resize(int newSize) {
-    if (newSize == size) {
+void ResizableRingBuffer<T>::resize(int newSize)
+{
+    if (newSize == size)
+    {
         return;
     }
 
-    if (newSize < size) {
+    if (newSize < size)
+    {
         // if the new size is smaller than the current size, we need to
         // copy size - newSize elements from the end of the buffer to the
         // beginning of the buffer
         int offset = size - newSize;
-        for (int i = 0; i < newSize; i++) {
+        for (int i = 0; i < newSize; i++)
+        {
             buffer[i] = buffer[i + offset];
         }
         head = newSize;
-    } else {
+    }
+    else
+    {
         // if the new size is larger than the current size, we need to
         // copy size elements from the beginning of the buffer to the
         // end of the buffer
         buffer.resize(newSize);
-        for (int i = size; i < newSize; i++) {
+        for (int i = size; i < newSize; i++)
+        {
             buffer[i] = buffer[i - size];
         }
         head = size;
@@ -48,12 +56,14 @@ void ResizableRingBuffer<T>::resize(int newSize) {
 }
 
 template <typename T>
-void ResizableRingBuffer<T>::add(T value) {
+void ResizableRingBuffer<T>::add(T value)
+{
     buffer[head] = value;
     head = (head + 1) % size;
 }
 
 template <typename T>
-T ResizableRingBuffer<T>::get(int index) {
+T ResizableRingBuffer<T>::get(int index)
+{
     return buffer[(head + index) % size];
 }

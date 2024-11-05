@@ -1,54 +1,66 @@
 #include "Scope.hpp"
 
-Scope::Scope(ScopeData* data) : data(data) {}
+Scope::Scope(ScopeData *data) : data(data) {}
 
-void Scope::onButton(const event::Button& e) {
-    if (e.button == GLFW_MOUSE_BUTTON_LEFT && e.action == GLFW_PRESS) {
+void Scope::onButton(const event::Button &e)
+{
+    if (e.button == GLFW_MOUSE_BUTTON_LEFT && e.action == GLFW_PRESS)
+    {
         data->scopeMode[data->activeChannel] = (data->scopeMode[data->activeChannel] + 1) % 2;
         e.consume(this);
         return;
     }
 }
 
-void Scope::onHover(const event::Hover& e) { e.consume(this); }
+void Scope::onHover(const event::Hover &e) { e.consume(this); }
 
-void Scope::onHoverScroll(const event::HoverScroll& e) {
+void Scope::onHoverScroll(const event::HoverScroll &e)
+{
     // adjust timeScale
-    if (e.scrollDelta.y > 0) {
+    if (e.scrollDelta.y > 0)
+    {
         data->timeScale = std::clamp(data->timeScale * 0.9f, 0.1f, 10.f);
-    } else if (e.scrollDelta.y < 0) {
+    }
+    else if (e.scrollDelta.y < 0)
+    {
         data->timeScale = std::clamp(data->timeScale * 1.1f, 0.1f, 10.f);
     }
 
     e.consume(this);
 }
 
-std::pair<float, float> Scope::rangeForMode() {
-    if (data->scopeMode[data->activeChannel] == 1) {
+std::pair<float, float> Scope::rangeForMode()
+{
+    if (data->scopeMode[data->activeChannel] == 1)
+    {
         return {0.f, 10.f};
     }
 
     return {-10.f, 10.f};
 }
 
-float Scope::calculateX(int i) {
+float Scope::calculateX(int i)
+{
     return (float)i / (data->buffer[data->activeChannel].size - 1) * box.size.x;
 }
 
-float Scope::calculateY(float min, float max, float value) {
+float Scope::calculateY(float min, float max, float value)
+{
     auto range = max - min;
     return (value - min) / range * box.size.y;
 }
 
-void Scope::drawCurve(const DrawArgs& args,
+void Scope::drawCurve(const DrawArgs &args,
                       std::function<float(float, float)> clamp,
-                      Vec gradientPoint) {
+                      Vec gradientPoint)
+{
     auto range = rangeForMode();
     auto valueMin = range.first;
     auto valueMax = range.second;
 
-    withPath(args, [=]() {
-        withStroke(args, 1.f, data->wavePrimaryColor, [=]() {
+    withPath(args, [=]()
+             { withStroke(args, 1.f, data->wavePrimaryColor, [=]()
+                          {
             // draw the zero line
             float zeroY = calculateY(valueMin, valueMax, data->zeroThreshold[data->activeChannel]);
             zeroY = box.size.y - zeroY;  // invert y axis
@@ -78,31 +90,37 @@ void Scope::drawCurve(const DrawArgs& args,
                                                // color2
                                                data->wavePrimaryColor);
             nvgFillPaint(args.vg, paint);
-            nvgFill(args.vg);
-        });
-    });
+            nvgFill(args.vg); }); });
 }
 
-void Scope::drawMinCurve(const DrawArgs& args) {
-    if (!data) {
+void Scope::drawMinCurve(const DrawArgs &args)
+{
+    if (!data)
+    {
         return;
     }
 
-    auto min = [](float a, float b) { return std::min(a, b); };
+    auto min = [](float a, float b)
+    { return std::min(a, b); };
     drawCurve(args, min, Vec(box.size.x / 2, 0));
 }
 
-void Scope::drawMaxCurve(const DrawArgs& args) {
-    if (!data) {
+void Scope::drawMaxCurve(const DrawArgs &args)
+{
+    if (!data)
+    {
         return;
     }
 
-    auto max = [](float a, float b) { return std::max(a, b); };
+    auto max = [](float a, float b)
+    { return std::max(a, b); };
     drawCurve(args, max, Vec(box.size.x / 2, box.size.y));
 }
 
-void Scope::drawWave(const DrawArgs& args) {
-    if (!data) {
+void Scope::drawWave(const DrawArgs &args)
+{
+    if (!data)
+    {
         return;
     }
 
@@ -111,66 +129,80 @@ void Scope::drawWave(const DrawArgs& args) {
     drawMaxCurve(args);
 }
 
-void Scope::drawTriggers(const DrawArgs& args) {
-    if (!data) {
+void Scope::drawTriggers(const DrawArgs &args)
+{
+    if (!data)
+    {
         return;
     }
 
-    for (int i = 0; i < data->buffer[data->activeChannel].size; i++) {
+    for (int i = 0; i < data->buffer[data->activeChannel].size; i++)
+    {
         auto triggered = data->buffer[data->activeChannel].get(i).second;
-        if (triggered) {
+        if (triggered)
+        {
             float x = calculateX(i);
-            withStroke(args, 1.f, data->triggerColor, [=]() {
-                withPath(args, [=]() {
+            withStroke(args, 1.f, data->triggerColor, [=]()
+                       { withPath(args, [=]()
+                                  {
                     nvgMoveTo(args.vg, x, 0);
-                    nvgLineTo(args.vg, x, box.size.y);
-                });
-            });
+                    nvgLineTo(args.vg, x, box.size.y); }); });
         }
     }
 }
 
-void Scope::drawGridline(const DrawArgs& args, float percent) {
-    if (!data) {
+void Scope::drawGridline(const DrawArgs &args, float percent)
+{
+    if (!data)
+    {
         return;
     }
 
     auto quarterY = box.size.y - box.size.y * percent;
-    withPath(args, [=]() {
-        withStroke(args, 1.f, data->gridColor, [=] {
+    withPath(args, [=]()
+             { withStroke(args, 1.f, data->gridColor, [=]
+                          {
             nvgMoveTo(args.vg, 0, quarterY);
-            nvgLineTo(args.vg, box.size.x, quarterY);
-        });
-    });
+            nvgLineTo(args.vg, box.size.x, quarterY); }); });
 }
 
-void Scope::drawGridlines(const DrawArgs& args) {
-    if (!data) {
+void Scope::drawGridlines(const DrawArgs &args)
+{
+    if (!data)
+    {
         return;
     }
 
-    if (data->scopeMode[data->activeChannel] == 0) {
+    if (data->scopeMode[data->activeChannel] == 0)
+    {
         drawGridline(args, 0.25f);
         drawGridline(args, 0.75f);
-    } else {
+    }
+    else
+    {
         drawGridline(args, 0.5f);
     }
 }
 
-void Scope::drawBackground(const DrawArgs& args) {
-    if (!data) {
+void Scope::drawBackground(const DrawArgs &args)
+{
+    if (!data)
+    {
         return;
     }
 
-    withFill(args, data->backgroundColor, [=] {
-        // withStroke(args, 1.f, data->backgroundColor, [=]() {
-            withPath(args,
-                    [=]() { nvgRect(args.vg, 0, 0, box.size.x, box.size.y); });
-        // });
-    });
+    withFill(args, data->backgroundColor, [=]
+             {
+                 // withStroke(args, 1.f, data->backgroundColor, [=]() {
+                 withPath(args,
+                          [=]()
+                          { nvgRect(args.vg, 0, 0, box.size.x, box.size.y); });
+                 // });
+             });
 }
 
-void Scope::draw(const DrawArgs& args) {
+void Scope::draw(const DrawArgs &args)
+{
     OpaqueWidget::draw(args);
     drawBackground(args);
     drawGridlines(args);
