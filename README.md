@@ -1,5 +1,7 @@
 # alef's bits
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/E1E11F8P04)
+
 ![screenshot](/plugin-screenshot.png "plugin screenshot")
 
 a small collection of my VCV Rack modules in a single plugin. [click here](https://github.com/alefnull/alefsbits/releases) for the latest pre-release build.
