@@ -3,6 +3,7 @@
 
 #define CONTRAST_MIN 0.1f
 #define CONTRAST_MAX 0.9f
+#define MAX_POLY 16
 
 using namespace rack;
 

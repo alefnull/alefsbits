@@ -3,7 +3,6 @@
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
 
-#define MAX_POLY 16
 #define MIN_TABLE_SIZE 64
 #define MAX_TABLE_SIZE 1024
 #define DEFAULT_TABLE_SIZE 64

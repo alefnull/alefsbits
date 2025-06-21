@@ -8,8 +8,6 @@
 #include "widgets/PanelBackground.hpp"
 #include "widgets/InverterWidget.hpp"
 
-#define MAX_POLY 16
-
 struct Polyplay : Module
 {
     enum ParamId

@@ -7,7 +7,6 @@
 #include "widgets/InverterWidget.hpp"
 #include "slipspander.hpp"
 
-#define MAX_POLY 16
 #define MAX_STEPS 64
 
 struct Slips : Module, Quantizer

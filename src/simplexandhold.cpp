@@ -4,8 +4,6 @@
 #include "inc/SimplexNoise.cpp"
 #include "inc/cvRange.hpp"
 
-#define MAX_POLY 16
-
 struct Simplexandhold : Module
 {
     enum ParamId
