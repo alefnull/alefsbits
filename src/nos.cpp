@@ -21,8 +21,8 @@ struct NoiseOSC
     std::vector<std::string> modeNames = {"rand", "simplex", "worley"};
     SimplexNoise simplexNoise;
     float xInc = 0.01f;
-    float_4 phase = float_4(0.f);
-    float_4 freq = float_4(dsp::FREQ_C4);
+    std::vector<float> phase;
+    std::vector<float> freq;
 
     float sampleRate = 44100.f;
     int tableSize = DEFAULT_TABLE_SIZE;
@@ -104,6 +104,7 @@ struct NoiseOSC
     }
 
     // regenerate the lookup table
+    // using random noise
     void rand_regen()
     {
         table.clear();
@@ -182,9 +183,13 @@ struct NoiseOSC
     }
 
     // set the frequency simd
-    void setFreqSimd(float_4 freq)
+    void setFreqSimd(int chan, float_4 freq4)
     {
-        this->freq = freq;
+        for (int i = 0; i < 4; i++)
+        {
+            if (chan + i < (int)freq.size())
+                freq[chan + i] = freq4[i];
+        }
     }
 
     // set the sample rate
@@ -193,21 +198,32 @@ struct NoiseOSC
         this->sampleRate = sampleRate;
     }
 
-    // get the next sample simd
-    float_4 next4()
+    // Ensure phase/freq vectors are sized for the current polyphony
+    void setChannels(int channels)
     {
-        phase += freq / sampleRate;
+        phase.resize(channels, 0.f);
+        freq.resize(channels, dsp::FREQ_C4);
+    }
+
+    // get the next samples simd
+    float_4 next4(int chan)
+    {
+        float_4 out = 0.f;
         for (int i = 0; i < 4; i++)
         {
-            if (phase[i] >= 1.f)
+            int c = chan + i;
+            if (c < (int)phase.size())
             {
-                phase[i] -= 1.f;
+                phase[c] += freq[c] / sampleRate;
+                if (phase[c] >= 1.f)
+                    phase[c] -= 1.f;
+                int idx = (int)(phase[c] * tableSize) % tableSize;
+                out[i] = table[idx];
             }
-        }
-        float_4 out;
-        for (int i = 0; i < 4; i++)
-        {
-            out[i] = table[(int)(phase[i] * tableSize)];
+            else
+            {
+                out[i] = 0.f;
+            }
         }
         return out;
     }
@@ -333,13 +349,15 @@ struct Nos : Module
             channels = MAX_POLY;
         outputs[SIGNAL_OUTPUT].setChannels(channels);
 
+        osc.setChannels(channels);
+
         float freq = params[FREQ_PARAM].getValue();
 
         for (int c = 0; c < channels; c += 4)
         {
             float_4 pitch = inputs[PITCH_INPUT].getVoltageSimd<float_4>(c);
-            osc.setFreqSimd(freq * simd::pow(2.f, pitch));
-            float_4 out = osc.next4() * 5.f;
+            osc.setFreqSimd(c, freq * simd::pow(2.f, pitch));
+            float_4 out = osc.next4(c) * 5.f;
             outputs[SIGNAL_OUTPUT].setVoltageSimd(clamp(out, -5.f, 5.f), c);
         }
 
