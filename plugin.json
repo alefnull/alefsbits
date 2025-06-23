@@ -17,194 +17,127 @@
       "slug": "simplexandhold",
       "name": "simplex & hold",
       "description": "sample & hold module using internal simplex noise source",
-      "tags": [
-        "S&H",
-        "Polyphonic",
-        "Random"
-      ]
+      "tags": ["S&H", "Polyphonic", "Random"]
     },
     {
       "slug": "blank6hp",
       "name": "blank 6hp",
       "description": "a simple blank",
-      "tags": [
-        "Blank"
-      ]
+      "tags": ["Blank"]
     },
     {
       "slug": "polyrand",
       "name": "polyrand",
       "description": "output a random channel of a poly input with a trigger",
-      "tags": [
-        "Utility",
-        "Polyphonic",
-        "Random"
-      ]
+      "tags": ["Utility", "Polyphonic", "Random"]
     },
     {
       "slug": "noize",
       "name": "noize",
       "description": "random noise generator with duration parameter and 0-10V cv input",
-      "tags": [
-        "Noise",
-        "Random"
-      ]
+      "tags": ["Noise", "Random"]
     },
     {
       "slug": "steps",
       "name": "steps",
       "description": "a simple 8 step sequencer with randomize trigger and eoc output",
-      "tags": [
-        "Sequencer"
-      ]
+      "tags": ["Sequencer"]
     },
     {
       "slug": "fibb",
       "name": "fibb",
       "description": "a clock divider based on the fibonacci sequence",
-      "tags": [
-        "Clock modulator"
-      ]
+      "tags": ["Clock modulator"]
     },
     {
       "slug": "octsclr",
       "name": "oct sclr",
       "description": "scales voltage to specified octave range",
-      "tags": [
-        "Utility"
-      ]
+      "tags": ["Utility"]
     },
     {
       "slug": "shift",
       "name": "shift",
       "description": "an 8-step shift register with probability params for each step",
-      "tags": [
-        "Sample and hold",
-        "Utility"
-      ]
+      "tags": ["Sample and hold", "Utility"]
     },
     {
       "slug": "mlt",
       "name": "mlt",
       "description": "two 1:5 polyphonic multiples",
-      "tags": [
-        "Polyphonic",
-        "Utility"
-      ]
+      "tags": ["Polyphonic", "Utility"]
     },
     {
       "slug": "math",
       "name": "math",
       "description": "applies various math operations on two inputs, clamped to +/-10V",
-      "tags": [
-        "Logic",
-        "Utility",
-        "Polyphonic"
-      ]
+      "tags": ["Logic", "Utility", "Polyphonic"]
     },
     {
       "slug": "logic",
       "name": "logic",
       "description": "perform logical operations on two inputs",
-      "tags": [
-        "Logic",
-        "Utility",
-        "Polyphonic"
-      ]
+      "tags": ["Logic", "Utility", "Polyphonic"]
     },
     {
       "slug": "probablynot",
       "name": "probably not",
       "description": "mute a signal on trigger, based on probability",
-      "tags": [
-        "Random",
-        "Utility",
-        "Polyphonic"
-      ]
+      "tags": ["Random", "Utility", "Polyphonic"]
     },
     {
       "slug": "polyplay",
       "name": "polyplay",
       "description": "load and play a sample polyphonically",
-      "tags": [
-        "Sampler",
-        "Polyphonic"
-      ]
+      "tags": ["Sampler", "Polyphonic"]
     },
     {
       "slug": "lights",
       "name": "lights",
       "description": "lights turn on when gate is high. 'latch' mode toggles lights on trigger",
-      "tags": [
-        "Utility",
-        "Visual"
-      ]
+      "tags": ["Utility", "Visual"]
     },
     {
       "slug": "slips",
       "name": "slips",
       "description": "generate random melodies, with optional random offsets each cycle, quantized to a scale",
-      "tags": [
-        "Sequencer",
-        "Random",
-        "Quantizer",
-        "Polyphonic"
-      ]
+      "tags": ["Sequencer", "Random", "Quantizer", "Polyphonic"]
     },
     {
       "slug": "turnt",
       "name": "turnt",
       "description": "generate triggers when a CV signal changes direction, crosses zero, or both",
-      "tags": [
-        "Utility",
-        "Polyphonic"
-      ]
+      "tags": ["Utility", "Polyphonic"]
     },
     {
       "slug": "slipspander",
       "name": "slipspander",
       "description": "expander for slips to enter custom scale",
-      "tags": [
-        "Expander",
-        "Quantizer"
-      ]
+      "tags": ["Expander", "Quantizer"]
     },
     {
       "slug": "nos",
       "name": "nos",
       "description": "a weird noise-based oscillator thing",
-      "tags": [
-        "Oscillator",
-        "Random",
-        "Polyphonic"
-      ]
+      "tags": ["Oscillator", "Random", "Polyphonic"]
     },
     {
       "slug": "lucc",
       "name": "lucc",
       "description": "a clock divider based on the lucas sequence",
-      "tags": [
-        "Clock modulator"
-      ]
+      "tags": ["Clock modulator"]
     },
     {
       "slug": "polyshuffle",
       "name": "polyshuffle",
       "description": "shuffle the channels of a polyphonic signal, with various modes",
-      "tags": [
-        "Polyphonic",
-        "Random",
-        "Utility"
-      ]
+      "tags": ["Polyphonic", "Random", "Utility"]
     },
     {
       "slug": "polycounter",
       "name": "polycounter",
       "description": "count up or down on trigger with custom start/end/increment values",
-      "tags": [
-        "Polyphonic",
-        "Utility"
-      ]
+      "tags": ["Polyphonic", "Utility"]
     }
   ]
 }

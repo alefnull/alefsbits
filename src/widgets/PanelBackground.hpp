@@ -9,22 +9,22 @@ using namespace rack;
 
 struct PanelBackground : TransparentWidget
 {
-    float contrast = CONTRAST_MAX;
-    bool inverted = false;
-    NVGcolor color = nvgRGB(0xff * contrast, 0xff * contrast, 0xff * contrast);
+  float contrast = CONTRAST_MAX;
+  bool inverted = false;
+  NVGcolor color = nvgRGB(0xff * contrast, 0xff * contrast, 0xff * contrast);
 
-    PanelBackground()
+  PanelBackground()
+  {
+    if (this->parent)
     {
-        if (this->parent)
-        {
-            this->box.size.x = this->parent->box.size.x - 2;
-            this->box.size.y = this->parent->box.size.y - 2;
-            this->box.pos.x = 1;
-            this->box.pos.y = 1;
-        }
+      this->box.size.x = this->parent->box.size.x - 2;
+      this->box.size.y = this->parent->box.size.y - 2;
+      this->box.pos.x = 1;
+      this->box.pos.y = 1;
     }
+  }
 
-    void invert(bool invert);
-    void drawPanel(const DrawArgs &args);
-    void draw(const DrawArgs &args) override;
+  void invert(bool invert);
+  void drawPanel(const DrawArgs &args);
+  void draw(const DrawArgs &args) override;
 };
