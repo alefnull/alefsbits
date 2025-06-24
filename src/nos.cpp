@@ -337,7 +337,10 @@ struct Nos : Module
 
     for (int c = 0; c < channels; c += 4)
     {
-      float_4 pitch = inputs[PITCH_INPUT].getVoltageSimd<float_4>(c);
+      // float_4 pitch = inputs[PITCH_INPUT].getVoltageSimd<float_4>(c);
+      float_4 pitch = inputs[PITCH_INPUT].isConnected()
+                          ? clamp(inputs[PITCH_INPUT].getVoltageSimd<float_4>(c), -4.f, 4.f)
+                          : float_4(0.f);
       osc.setFreqSimd(c, freq * simd::pow(2.f, pitch));
       float_4 out = osc.next4(c) * 5.f;
       outputs[SIGNAL_OUTPUT].setVoltageSimd(clamp(out, -5.f, 5.f), c);
