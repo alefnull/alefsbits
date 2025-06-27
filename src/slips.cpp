@@ -28,6 +28,7 @@ json_t *Slips::dataToJson()
   json_object_set_new(rootJ, "cv_range", cv_range.dataToJson());
   json_object_set_new(rootJ, "mod_range", mod_range.dataToJson());
   json_object_set_new(rootJ, "slip_range", slip_range.dataToJson());
+  json_object_set_new(rootJ, "remap_on_generate", json_boolean(remap_on_generate));
   json_object_set_new(rootJ, "root_input_voct", json_boolean(root_input_voct));
   json_object_set_new(rootJ, "mod_quantize", json_boolean(mod_quantize));
   json_object_set_new(rootJ, "mod_add_slips", json_boolean(mod_add_slips));
@@ -89,6 +90,11 @@ void Slips::dataFromJson(json_t *rootJ)
   if (slip_rangeJ)
   {
     slip_range.dataFromJson(slip_rangeJ);
+  }
+  json_t *remap_on_generateJ = json_object_get(rootJ, "remap_on_generate");
+  if (remap_on_generateJ)
+  {
+    remap_on_generate = json_boolean_value(remap_on_generateJ);
   }
   json_t *root_input_voctJ = json_object_get(rootJ, "root_input_voct");
   if (root_input_voctJ)
@@ -154,7 +160,15 @@ void Slips::generate_sequence()
   the_sequence.clear();
   for (int i = 0; i < MAX_STEPS; i++)
   {
-    float random_value = random::uniform();
+    float random_value = 0.0f;
+    if (remap_on_generate)
+    {
+      random_value = cv_range.map(random::uniform());
+    }
+    else
+    {
+      random_value = random::uniform();
+    }
     the_sequence.push_back(random_value);
   }
 }
@@ -164,7 +178,15 @@ void Slips::generate_mod_sequence()
   mod_sequence.clear();
   for (int i = 0; i < MAX_STEPS; i++)
   {
-    float random_value = random::uniform();
+    float random_value = 0.0f;
+    if (remap_on_generate)
+    {
+      random_value = mod_range.map(random::uniform());
+    }
+    else
+    {
+      random_value = random::uniform();
+    }
     mod_sequence.push_back(random_value);
   }
 }
@@ -184,7 +206,15 @@ void Slips::generate_slips(float slip_amount)
     {
       slip_step = random::u32() % MAX_STEPS;
     }
-    float slip_value = random::uniform();
+    float slip_value = 0.0f;
+    if (remap_on_generate)
+    {
+      slip_value = slip_range.map(random::uniform());
+    }
+    else
+    {
+      slip_value = random::uniform();
+    }
     the_slips[slip_step] = slip_value;
   }
 }
@@ -366,15 +396,34 @@ void Slips::process(const ProcessArgs &args)
 
   bool is_slip = the_slips[current_step] != 0;
 
-  float out = clamp(cv_range.map(the_sequence[current_step]), -10.f, 10.f);
-  float mod_out = clamp(mod_range.map(mod_sequence[current_step]), -10.f, 10.f);
-
-  if (is_slip)
+  float out = 0.0f;
+  float mod_out = 0.0f;
+  if (remap_on_generate)
   {
-    out = clamp(cv_range.map(the_sequence[current_step]) + slip_range.map(the_slips[current_step]), -10.f, 10.f);
-    if (mod_add_slips)
+    out = clamp(the_sequence[current_step], -10.f, 10.f);
+    mod_out = clamp(mod_sequence[current_step], -10.f, 10.f);
+
+    if (is_slip)
     {
-      mod_out = clamp(mod_range.map(mod_sequence[current_step]) + slip_range.map(the_slips[current_step]), -10.f, 10.f);
+      out = clamp(the_sequence[current_step] + the_slips[current_step], -10.f, 10.f);
+      if (mod_add_slips)
+      {
+        mod_out = clamp(mod_sequence[current_step] + the_slips[current_step], -10.f, 10.f);
+      }
+    }
+  }
+  else
+  {
+    out = clamp(cv_range.map(the_sequence[current_step]), -10.f, 10.f);
+    mod_out = clamp(mod_range.map(mod_sequence[current_step]), -10.f, 10.f);
+
+    if (is_slip)
+    {
+      out = clamp(cv_range.map(the_sequence[current_step]) + slip_range.map(the_slips[current_step]), -10.f, 10.f);
+      if (mod_add_slips)
+      {
+        mod_out = clamp(mod_range.map(mod_sequence[current_step]) + slip_range.map(the_slips[current_step]), -10.f, 10.f);
+      }
     }
   }
 
@@ -643,6 +692,8 @@ void SlipsWidget::appendContextMenu(Menu *menu)
     }));
     menu->addChild(contrastMenu); }));
   menu->addChild(new MenuSeparator());
+  menu->addChild(
+      createBoolPtrMenuItem("remap on generate", "", &module->remap_on_generate));
   menu->addChild(
       createBoolPtrMenuItem("root input v/oct", "", &module->root_input_voct));
   menu->addChild(

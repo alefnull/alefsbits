@@ -132,6 +132,7 @@ struct Slips : Module, Quantizer
   CVRange mod_range;
   CVRange slip_range;
 
+  bool remap_on_generate = true;
   bool mod_quantize = false;
   bool mod_add_slips = false;
   bool mod_add_prob = false;
