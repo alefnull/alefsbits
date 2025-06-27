@@ -154,7 +154,7 @@ void Slips::generate_sequence()
   the_sequence.clear();
   for (int i = 0; i < MAX_STEPS; i++)
   {
-    float random_value = cv_range.map(random::uniform());
+    float random_value = random::uniform();
     the_sequence.push_back(random_value);
   }
 }
@@ -164,7 +164,7 @@ void Slips::generate_mod_sequence()
   mod_sequence.clear();
   for (int i = 0; i < MAX_STEPS; i++)
   {
-    float random_value = mod_range.map(random::uniform());
+    float random_value = random::uniform();
     mod_sequence.push_back(random_value);
   }
 }
@@ -184,7 +184,7 @@ void Slips::generate_slips(float slip_amount)
     {
       slip_step = random::u32() % MAX_STEPS;
     }
-    float slip_value = slip_range.map(random::uniform());
+    float slip_value = random::uniform();
     the_slips[slip_step] = slip_value;
   }
 }
@@ -366,17 +366,15 @@ void Slips::process(const ProcessArgs &args)
 
   bool is_slip = the_slips[current_step] != 0;
 
-  float out = clamp(the_sequence[current_step], -10.f, 10.f);
-  float mod_out = clamp(mod_sequence[current_step], -10.f, 10.f);
+  float out = clamp(cv_range.map(the_sequence[current_step]), -10.f, 10.f);
+  float mod_out = clamp(mod_range.map(mod_sequence[current_step]), -10.f, 10.f);
 
   if (is_slip)
   {
-    out = clamp(the_sequence[current_step] + the_slips[current_step], -10.f,
-                10.f);
+    out = clamp(cv_range.map(the_sequence[current_step]) + slip_range.map(the_slips[current_step]), -10.f, 10.f);
     if (mod_add_slips)
     {
-      mod_out = clamp(mod_sequence[current_step] + the_slips[current_step],
-                      -10.f, 10.f);
+      mod_out = clamp(mod_range.map(mod_sequence[current_step]) + slip_range.map(the_slips[current_step]), -10.f, 10.f);
     }
   }
 
