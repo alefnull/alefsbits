@@ -693,27 +693,31 @@ void SlipsWidget::appendContextMenu(Menu *menu)
     menu->addChild(contrastMenu); }));
   menu->addChild(new MenuSeparator());
   menu->addChild(
-      createBoolPtrMenuItem("remap on generate", "", &module->remap_on_generate));
-  menu->addChild(
       createBoolPtrMenuItem("root input v/oct", "", &module->root_input_voct));
   menu->addChild(
-      createIndexPtrSubmenuItem("channels",
+      createIndexPtrSubmenuItem("poly channels",
                                 {"1", "2", "3", "4", "5", "6", "7", "8", "9",
                                  "10", "11", "12", "13", "14", "15", "16"},
                                 &module->channels));
-  menu->addChild(
-      createBoolPtrMenuItem("poly mod output", "", &module->poly_mod));
+  menu->addChild(createBoolPtrMenuItem("poly mod output", "",
+                                       &module->poly_mod));
   menu->addChild(new MenuSeparator());
+  menu->addChild(
+      createBoolPtrMenuItem("remap on generate", "", &module->remap_on_generate));
   module->cv_range.addMenu(module, menu, "sequence range");
-  module->slip_range.addMenu(module, menu, "slip range");
+  module->slip_range.addMenu(module, menu, "slip sequence range");
   module->mod_range.addMenu(module, menu, "mod sequence range");
   menu->addChild(new MenuSeparator());
-  menu->addChild(createBoolPtrMenuItem("quantize mod sequence", "",
-                                       &module->mod_quantize));
-  menu->addChild(createBoolPtrMenuItem("apply slips to mod sequence", "",
-                                       &module->mod_add_slips));
-  menu->addChild(createBoolPtrMenuItem("apply step probability to mod sequence",
-                                       "", &module->mod_add_prob));
+  menu->addChild(createSubmenuItem("mod sequence options", "",
+                                   [=](Menu *menu)
+                                   {
+                                     menu->addChild(createBoolPtrMenuItem("quantize mod sequence", "",
+                                                                          &module->mod_quantize));
+                                     menu->addChild(createBoolPtrMenuItem("apply slips to mod sequence", "",
+                                                                          &module->mod_add_slips));
+                                     menu->addChild(createBoolPtrMenuItem("apply step probability to mod sequence",
+                                                                          "", &module->mod_add_prob));
+                                   }));
   menu->addChild(new MenuSeparator());
   if (module->rightExpander.module &&
       module->rightExpander.module->model == modelSlipspander)
