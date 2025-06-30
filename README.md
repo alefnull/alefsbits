@@ -8,11 +8,11 @@ a small collection of my VCV Rack modules in a single plugin. [click here](https
 
 - **NEW** - added a 'contrast' slider to all modules' menus, to adjust the 'contrast' of the module. once the contrast goes above or below 0.5, the module's foreground will invert to remain legible. set the 'global contrast' from any module, and every module with 'use global contrast' enabled will use that value.
 
-## polyshuffle
+## poly shuffle
 
 takes a polyphonic input and on a trigger, will re-order the input's channels by either shuffling them randomly, or rotating them up or down. reset trigger will set the output's channel order back to the input's original order.
 
-## polycounter
+## poly counter
 
 given a chosen set of 'start', 'end', and 'inc' (increment) values, each subsequent trigger received will increase the count from 'start' to 'end' by the 'inc' value. poly trigger input will result in a poly output with different counters for each channel, but using the same 'start/end/inc' values. a mono reset trigger will reset all channel counters, but poly reset input will only reset the matching channel's counter.
 
@@ -76,7 +76,7 @@ a simple clock divider based on the Fibonacci sequence of numbers.
 
 a simple random noise generator with a duration parameter and optional 0-10V cv input.
 
-## polyrand
+## poly rand
 
 a simple module that takes a trigger input and a polyphonic input, and picks a random channel to output with each trigger.
 
