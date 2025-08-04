@@ -82,27 +82,27 @@ struct Polyplay : Module
 
   void resample_file(AudioFile<float> &file, int new_sample_rate)
   {
-    int file_sample_rate = file.getSampleRate();
-    int num_samples = file.getNumSamplesPerChannel();
-    int num_channels = file.getNumChannels();
-    int new_num_samples = (int)((float)num_samples * (float)new_sample_rate / (float)file_sample_rate);
+    int curr_sample_rate = file.getSampleRate();
+    int curr_num_samples = file.getNumSamplesPerChannel();
+    int curr_num_channels = file.getNumChannels();
+    int new_num_samples = (int)((float)curr_num_samples * (float)new_sample_rate / (float)curr_sample_rate);
     int processed_samples = 0;
     AudioFile<float> new_file;
     new_file.setBitDepth(file.getBitDepth());
     new_file.setSampleRate(new_sample_rate);
-    new_file.setNumChannels(num_channels);
+    new_file.setNumChannels(curr_num_channels);
     new_file.setNumSamplesPerChannel(new_num_samples);
     float *data = new float[new_num_samples];
-    for (int i = 0; i < num_channels; i++)
+    for (int i = 0; i < curr_num_channels; i++)
     {
       src = src_new(SRC_SINC_FASTEST, 1, NULL);
       SRC_DATA src_data;
       src_data.end_of_input = 1;
       src_data.data_in = file.samples[i].data();
       src_data.data_out = data;
-      src_data.input_frames = num_samples;
+      src_data.input_frames = curr_num_samples;
       src_data.output_frames = new_num_samples;
-      src_data.src_ratio = (double)new_sample_rate / (double)file_sample_rate;
+      src_data.src_ratio = (double)new_sample_rate / (double)curr_sample_rate;
       src_process(src, &src_data);
       processed_samples = src_data.output_frames_gen;
       for (int j = 0; j < processed_samples; j++)
@@ -111,9 +111,12 @@ struct Polyplay : Module
       }
       src_delete(src);
     }
-    new_file.setAudioBufferSize(num_channels, processed_samples);
+    new_file.setAudioBufferSize(curr_num_channels, processed_samples);
     delete[] data;
     file = new_file;
+    file_sample_rate = new_file.getSampleRate();
+    num_channels = new_file.getNumChannels();
+    num_samples = new_file.getNumSamplesPerChannel();
   }
 
   void load_from_file()
@@ -260,14 +263,29 @@ struct Polyplay : Module
     if (file_loaded)
     {
       load_success = my_file.load(loaded_file_name);
+      if (load_success)
+      {
       file_sample_rate = my_file.getSampleRate();
       num_samples = my_file.getNumSamplesPerChannel();
       num_channels = my_file.getNumChannels();
+        if (file_sample_rate != rack_sample_rate)
+        {
+          resample_file(my_file, rack_sample_rate);
+        }
+      }
+      else
+      {
+        file_loaded = false;
+        loaded_file_name = "";
+        file_sample_rate = 0;
+        num_samples = 0;
+        num_channels = 0;
       for (int i = 0; i < MAX_POLY; i++)
       {
+          playing[i] = false;
         current_wav_sample[i] = 0;
+        }
       }
-      current_poly_channel = 0;
     }
     json_t *phase_rangeJ = json_object_get(rootJ, "phase_range");
     if (phase_rangeJ)
@@ -475,6 +493,10 @@ struct PolyplayWidget : ModuleWidget
           module->file_loaded = false;
           module->load_success = false;
           module->loaded_file_name = "";
+          for (int i = 0; i < MAX_POLY; i++) {
+              module->playing[i] = false;
+              module->current_wav_sample[i] = 0;
+          }
         }
       };
       UnloadWavItem *unloadWavItem = createMenuItem<UnloadWavItem>(module->loaded_file_name);
