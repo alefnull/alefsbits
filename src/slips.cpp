@@ -11,6 +11,7 @@ json_t *Slips::dataToJson()
     json_array_append_new(sequenceJ, valueJ);
   }
   json_object_set_new(rootJ, "sequence", sequenceJ);
+  json_object_set_new(rootJ, "current_step", json_integer(current_step));
   json_t *mod_sequenceJ = json_array();
   for (int i = 0; i < MAX_STEPS; i++)
   {
@@ -51,6 +52,11 @@ void Slips::dataFromJson(json_t *rootJ)
         the_sequence[i] = json_number_value(valueJ);
       }
     }
+  }
+  json_t *currentStepJ = json_object_get(rootJ, "current_step");
+  if (currentStepJ)
+  {
+    current_step = json_integer_value(currentStepJ);
   }
   json_t *mod_sequenceJ = json_object_get(rootJ, "mod_sequence");
   if (mod_sequenceJ)
@@ -283,10 +289,9 @@ void Slips::process(const ProcessArgs &args)
     else
     {
       float root_note_input = inputs[ROOT_CV_INPUT].getVoltage();
-      root_note_input += 10;
-      float octave = floor(root_note_input);
+      int octave = (int)floor(root_note_input);
       float note = root_note_input - octave;
-      root_note = (int)floor(note * 12) % 12;
+      root_note = (int)round(note * 12) % 12;
     }
   }
 

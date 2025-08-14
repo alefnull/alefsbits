@@ -2,17 +2,17 @@
 
 struct Quantizer
 {
-  int SCALE_CHROMATIC[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-  int SCALE_MAJOR[7] = {0, 2, 4, 5, 7, 9, 11};
-  int SCALE_MINOR[7] = {0, 2, 3, 5, 7, 8, 10};
-  int SCALE_MAJOR_PENTATONIC[5] = {0, 2, 4, 7, 9};
-  int SCALE_MINOR_PENTATONIC[5] = {0, 3, 5, 7, 10};
-  int SCALE_DORIAN[7] = {0, 2, 3, 5, 7, 9, 10};
-  int SCALE_LYDIAN[7] = {0, 2, 4, 6, 7, 9, 11};
-  int SCALE_MIXOLYDIAN[7] = {0, 2, 4, 5, 7, 9, 10};
-  int SCALE_PHRYGIAN[7] = {0, 1, 3, 5, 7, 8, 10};
-  int SCALE_LOCRIAN[7] = {0, 1, 3, 5, 6, 8, 10};
-  int SCALE_BLUES[6] = {0, 3, 5, 6, 7, 10};
+  const int SCALE_CHROMATIC[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+  const int SCALE_MAJOR[7] = {0, 2, 4, 5, 7, 9, 11};
+  const int SCALE_MINOR[7] = {0, 2, 3, 5, 7, 8, 10};
+  const int SCALE_MAJOR_PENTATONIC[5] = {0, 2, 4, 7, 9};
+  const int SCALE_MINOR_PENTATONIC[5] = {0, 3, 5, 7, 10};
+  const int SCALE_DORIAN[7] = {0, 2, 3, 5, 7, 9, 10};
+  const int SCALE_LYDIAN[7] = {0, 2, 4, 6, 7, 9, 11};
+  const int SCALE_MIXOLYDIAN[7] = {0, 2, 4, 5, 7, 9, 10};
+  const int SCALE_PHRYGIAN[7] = {0, 1, 3, 5, 7, 8, 10};
+  const int SCALE_LOCRIAN[7] = {0, 1, 3, 5, 6, 8, 10};
+  const int SCALE_BLUES[6] = {0, 3, 5, 6, 7, 10};
 
   enum NoteName
   {
@@ -47,7 +47,7 @@ struct Quantizer
 
   float quantize(float input, int root, int scale)
   {
-    int *curr_scale = SCALE_CHROMATIC;
+    const int *curr_scale = SCALE_CHROMATIC;
     int curr_scale_size = 12;
     switch (scale)
     {
